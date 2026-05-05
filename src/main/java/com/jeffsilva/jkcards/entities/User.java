@@ -16,10 +16,7 @@ public class User {
     private String name;
     private String email;
     private String phone;
-
-    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDate birthDate;
-
     private String password;
 
     @OneToMany(mappedBy = "client")
