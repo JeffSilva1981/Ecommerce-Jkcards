@@ -2,6 +2,7 @@ package com.jeffsilva.jkcards.Controllers;
 
 import com.jeffsilva.jkcards.Dtos.ProductDto;
 import com.jeffsilva.jkcards.Services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,14 +32,14 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDto> created(@RequestBody ProductDto dto) {
+    public ResponseEntity<ProductDto> created(@Valid @RequestBody ProductDto dto) {
         ProductDto result = service.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(result.getId()).toUri();
         return ResponseEntity.created(uri).body(result);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> update(@RequestBody ProductDto dto, @PathVariable Long id) {
+    public ResponseEntity<ProductDto> update(@Valid @RequestBody ProductDto dto, @PathVariable Long id) {
         ProductDto result = service.update(id, dto);
         return ResponseEntity.ok(result);
     }

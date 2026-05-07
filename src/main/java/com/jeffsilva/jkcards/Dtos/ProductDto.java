@@ -1,13 +1,25 @@
 package com.jeffsilva.jkcards.Dtos;
 
 import com.jeffsilva.jkcards.entities.Product;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class ProductDto {
 
     private Long id;
+
+    @Size(min = 3, max = 100, message = "The name must be between 3 and 10 characters long.")
+    @NotBlank(message = "Name must be empty.")
     private String name;
+
+    @Size(min = 10, max = 1500, message = "The name must be between 10 and 1500 characters long.")
+    @NotBlank(message = "Description must be empty.")
     private String description;
+
+    @Positive(message = "The price cannot be zero or negative.")
     private Double price;
+
     private String imgUrl;
 
     public ProductDto(){
