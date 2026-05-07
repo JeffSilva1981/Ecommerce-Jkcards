@@ -1,6 +1,6 @@
 package com.jeffsilva.jkcards.entities;
 
-import com.jeffsilva.jkcards.enums.OrderStatus;
+import com.jeffsilva.jkcards.entities.enums.OrderStatus;
 import jakarta.persistence.*;
 
 import java.time.Instant;

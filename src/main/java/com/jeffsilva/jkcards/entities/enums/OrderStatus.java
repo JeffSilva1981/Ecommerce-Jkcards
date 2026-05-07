@@ -1,4 +1,4 @@
-package com.jeffsilva.jkcards.enums;
+package com.jeffsilva.jkcards.entities.enums;
 
 public enum OrderStatus {
 
