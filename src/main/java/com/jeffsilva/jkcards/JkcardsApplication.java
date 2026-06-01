@@ -7,18 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
-public class JkcardsApplication implements CommandLineRunner {
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+public class JkcardsApplication {
 
 	public static void main(String[] args) {
 
 		SpringApplication.run(JkcardsApplication.class, args);
-	}
-
-	@Override
-	public void run(String... args) throws Exception {
-		System.out.println("Encode:" + passwordEncoder.encode( "123456"));
 	}
 }
