@@ -1,6 +1,7 @@
 package com.jeffsilva.jkcards.Controllers;
 
 import com.jeffsilva.jkcards.Dtos.ProductDto;
+import com.jeffsilva.jkcards.Dtos.ProductMinDto;
 import com.jeffsilva.jkcards.Services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,10 @@ public class ProductController {
     private ProductService service;
 
     @GetMapping
-    public ResponseEntity<Page<ProductDto>> findAll(
+    public ResponseEntity<Page<ProductMinDto>> findAll(
             @RequestParam(name = "name", defaultValue = " ") String name,
             Pageable pageable) {
-        Page<ProductDto> result = service.findAll(name, pageable);
+        Page<ProductMinDto> result = service.findAll(name, pageable);
         return ResponseEntity.ok(result);
     }
 

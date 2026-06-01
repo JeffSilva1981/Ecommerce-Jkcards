@@ -1,6 +1,7 @@
 package com.jeffsilva.jkcards.Services;
 
 import com.jeffsilva.jkcards.Dtos.ProductDto;
+import com.jeffsilva.jkcards.Dtos.ProductMinDto;
 import com.jeffsilva.jkcards.Repositories.ProductRepository;
 import com.jeffsilva.jkcards.Services.exceptions.ResourceNotFoundException;
 import com.jeffsilva.jkcards.entities.Product;
@@ -19,9 +20,9 @@ public class ProductService {
     private ProductRepository repository;
 
     @Transactional(readOnly = true)
-    public Page<ProductDto> findAll(String name, Pageable pageable) {
+    public Page<ProductMinDto> findAll(String name, Pageable pageable) {
         Page<Product> result = repository.searchByName(name, pageable);
-        return result.map(x -> new ProductDto(x));
+        return result.map(x -> new ProductMinDto(x));
     }
 
     @Transactional
