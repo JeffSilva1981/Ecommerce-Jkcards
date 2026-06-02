@@ -1,9 +1,11 @@
 package com.jeffsilva.jkcards.Services;
 
+import com.jeffsilva.jkcards.Dtos.CategoryDto;
 import com.jeffsilva.jkcards.Dtos.ProductDto;
 import com.jeffsilva.jkcards.Dtos.ProductMinDto;
 import com.jeffsilva.jkcards.Repositories.ProductRepository;
 import com.jeffsilva.jkcards.Services.exceptions.ResourceNotFoundException;
+import com.jeffsilva.jkcards.entities.Category;
 import com.jeffsilva.jkcards.entities.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -66,6 +68,14 @@ public class ProductService {
         entity.setDescription(dto.getDescription());
         entity.setPrice(dto.getPrice());
         entity.setImgUrl(dto.getImgUrl());
+
+        entity.getCategories().clear();
+
+        for (CategoryDto categoryDto : dto.getCategories()){
+            Category cat = new Category();
+            cat.setId(categoryDto.getId());
+            entity.getCategories().add(cat);
+        }
     }
 
 }

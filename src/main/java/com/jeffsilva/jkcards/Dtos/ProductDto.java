@@ -1,9 +1,14 @@
 package com.jeffsilva.jkcards.Dtos;
 
+import com.jeffsilva.jkcards.entities.Category;
 import com.jeffsilva.jkcards.entities.Product;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProductDto {
 
@@ -22,6 +27,9 @@ public class ProductDto {
 
     private String imgUrl;
 
+    @NotEmpty(message = "The product must belong to at least one category.")
+    private List<CategoryDto> categories = new ArrayList<>();
+
     public ProductDto(){
 
     }
@@ -39,6 +47,10 @@ public class ProductDto {
         description = entity.getDescription();
         price = entity.getPrice();
         imgUrl = entity.getImgUrl();
+
+        for (Category cat : entity.getCategories()){
+            categories.add(new CategoryDto(cat));
+        }
     }
 
     public Long getId() {
@@ -59,5 +71,9 @@ public class ProductDto {
 
     public String getImgUrl() {
         return imgUrl;
+    }
+
+    public List<CategoryDto> getCategories() {
+        return categories;
     }
 }
