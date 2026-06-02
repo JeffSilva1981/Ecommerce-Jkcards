@@ -22,6 +22,7 @@ public class ProductDto {
     @NotBlank(message = "Description must be empty.")
     private String description;
 
+    @NotEmpty(message = "The price must not be empty.")
     @Positive(message = "The price cannot be zero or negative.")
     private Double price;
 
