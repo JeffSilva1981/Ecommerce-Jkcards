@@ -1,9 +1,6 @@
 package com.jeffsilva.jkcards.Dtos;
 
 import com.jeffsilva.jkcards.entities.Product;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 
 public class ProductMinDto {
 
@@ -12,7 +9,7 @@ public class ProductMinDto {
     private Double price;
     private String imgUrl;
 
-    public ProductMinDto(){
+    public ProductMinDto() {
 
     }
 

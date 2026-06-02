@@ -46,19 +46,19 @@ public class ProductService {
         Product entity = repository.getReferenceById(id);
         copyDtoToEntity(dto, entity);
         entity = repository.save(entity);
-         return new ProductDto(entity);
+        return new ProductDto(entity);
     }
 
     @Transactional(propagation = Propagation.SUPPORTS)
     public void delete(Long id) {
 
-        if (!repository.existsById(id)){
+        if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Products does not exists");
         }
 
         try {
             repository.deleteById(id);
-        }catch (DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             throw new ResourceNotFoundException("Referential integrity failure");
         }
     }
@@ -71,7 +71,7 @@ public class ProductService {
 
         entity.getCategories().clear();
 
-        for (CategoryDto categoryDto : dto.getCategories()){
+        for (CategoryDto categoryDto : dto.getCategories()) {
             Category cat = new Category();
             cat.setId(categoryDto.getId());
             entity.getCategories().add(cat);

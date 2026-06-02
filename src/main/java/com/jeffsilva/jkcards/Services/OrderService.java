@@ -32,23 +32,25 @@ public class OrderService {
     @Autowired
     private UserService service;
 
+    @Autowired
+    private AuthService authService;
+
     @Transactional
     public OrderDto findById(Long id) {
-        Order result = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-        return new OrderDto(result);
+        Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        authService.validateSelfOrdAdmin(order.getClient().getId());
+        return new OrderDto(order);
     }
 
     @Transactional
     public OrderDto insert(OrderDto dto) {
-
         Order order = new Order();
         order.setMoment(Instant.now());
         order.setStatus(OrderStatus.WAITING_PAYMENT);
-
         User user = service.authenticated();
         order.setClient(user);
 
-        for (OrderItemDto itemDto : dto.getItems()){
+        for (OrderItemDto itemDto : dto.getItems()) {
             Product product = productRepository.getReferenceById(itemDto.getProductId());
             OrderItem item = new OrderItem(order, product, itemDto.getQuantity(), itemDto.getPrice());
             order.getItems().add(item);

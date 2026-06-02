@@ -25,7 +25,7 @@ public class UserDto {
         phone = entity.getPhone();
         birthDate = entity.getBirthDate();
 
-        for (GrantedAuthority role: entity.getRoles()){
+        for (GrantedAuthority role : entity.getRoles()) {
             roles.add(role.getAuthority());
         }
     }

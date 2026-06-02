@@ -10,7 +10,7 @@ public class OrderItemDto {
     private Integer quantity;
     private String imgUrl;
 
-    public OrderItemDto(){
+    public OrderItemDto() {
 
     }
 
@@ -46,8 +46,8 @@ public class OrderItemDto {
         return quantity;
     }
 
-    public Double getSubTotal(){
-       return price * quantity;
+    public Double getSubTotal() {
+        return price * quantity;
     }
 
     public String getImgUrl() {

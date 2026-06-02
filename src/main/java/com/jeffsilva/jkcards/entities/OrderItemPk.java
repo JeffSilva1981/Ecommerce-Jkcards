@@ -17,7 +17,7 @@ public class OrderItemPk {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    public OrderItemPk(){
+    public OrderItemPk() {
 
     }
 
@@ -39,8 +39,10 @@ public class OrderItemPk {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         OrderItemPk that = (OrderItemPk) o;
         return Objects.equals(product, that.product) && Objects.equals(order, that.order);

@@ -30,7 +30,7 @@ public class ProductDto {
     @NotEmpty(message = "The product must belong to at least one category.")
     private List<CategoryDto> categories = new ArrayList<>();
 
-    public ProductDto(){
+    public ProductDto() {
 
     }
 
@@ -48,7 +48,7 @@ public class ProductDto {
         price = entity.getPrice();
         imgUrl = entity.getImgUrl();
 
-        for (Category cat : entity.getCategories()){
+        for (Category cat : entity.getCategories()) {
             categories.add(new CategoryDto(cat));
         }
     }

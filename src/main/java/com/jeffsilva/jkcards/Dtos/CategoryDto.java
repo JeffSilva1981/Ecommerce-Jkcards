@@ -7,7 +7,7 @@ public class CategoryDto {
     private Long id;
     private String name;
 
-    public CategoryDto(){
+    public CategoryDto() {
 
     }
 

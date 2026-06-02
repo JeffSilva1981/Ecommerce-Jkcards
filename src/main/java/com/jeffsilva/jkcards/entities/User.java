@@ -28,11 +28,11 @@ public class User implements UserDetails {
 
     @ManyToMany
     @JoinTable(name = "tb_user_role",
-    joinColumns = @JoinColumn(name = "user_id"),
-    inverseJoinColumns = @JoinColumn(name = "role_id"))
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-    public User(){
+    public User() {
 
     }
 
@@ -54,6 +54,7 @@ public class User implements UserDetails {
     }
 
     public String getName() {
+
         return name;
     }
 
@@ -94,6 +95,10 @@ public class User implements UserDetails {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public String getUsername() {
         return email;
@@ -119,10 +124,6 @@ public class User implements UserDetails {
         return true;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public List<Order> getOrders() {
         return orders;
     }
@@ -131,13 +132,13 @@ public class User implements UserDetails {
         return roles;
     }
 
-    public void addRole(Role role){
+    public void addRole(Role role) {
         roles.add(role);
     }
 
-    public boolean hasRole(String roleName){
-        for (Role roles : roles){
-            if (roles.getAuthority().equals(roleName)){
+    public boolean hasRole(String roleName) {
+        for (Role roles : roles) {
+            if (roles.getAuthority().equals(roleName)) {
                 return true;
             }
         }
@@ -146,8 +147,10 @@ public class User implements UserDetails {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         User user = (User) o;
         return Objects.equals(id, user.id);

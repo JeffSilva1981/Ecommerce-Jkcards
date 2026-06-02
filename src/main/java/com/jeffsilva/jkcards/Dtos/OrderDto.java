@@ -20,7 +20,7 @@ public class OrderDto {
     @NotEmpty(message = "The order must belong to at least one item.")
     private List<OrderItemDto> items = new ArrayList<>();
 
-    public OrderDto(){
+    public OrderDto() {
 
     }
 
@@ -39,7 +39,7 @@ public class OrderDto {
         client = new ClientDto(entity.getClient());
         payment = (entity.getPayment() == null) ? null : new PaymentDto(entity.getPayment());
 
-        for (OrderItem item : entity.getItems()){
+        for (OrderItem item : entity.getItems()) {
             OrderItemDto orderItemDto = new OrderItemDto(item);
             items.add(orderItemDto);
         }
@@ -69,10 +69,10 @@ public class OrderDto {
         return items;
     }
 
-    public Double getTotal(){
+    public Double getTotal() {
         Double sum = 0.0;
 
-        for (OrderItemDto item : items){
+        for (OrderItemDto item : items) {
             sum += item.getSubTotal();
         }
         return sum;
