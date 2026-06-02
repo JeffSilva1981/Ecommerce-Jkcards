@@ -3,6 +3,7 @@ package com.jeffsilva.jkcards.Dtos;
 import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
 import com.jeffsilva.jkcards.entities.enums.OrderStatus;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,7 +17,12 @@ public class OrderDto {
     private ClientDto client;
     private PaymentDto payment;
 
+    @NotEmpty(message = "The order must belong to at least one item.")
     private List<OrderItemDto> items = new ArrayList<>();
+
+    public OrderDto(){
+
+    }
 
     public OrderDto(Long id, Instant moment, OrderStatus status, ClientDto client, PaymentDto payment) {
         this.id = id;
