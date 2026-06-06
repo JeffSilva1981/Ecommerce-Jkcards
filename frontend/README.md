@@ -4,6 +4,14 @@ Frontend do ecommerce JKCards, feito com React, Vite, TypeScript, Tailwind CSS, 
 
 Este guia foi escrito para conseguir rodar e testar o front mesmo sem o backend ligado.
 
+## Visual
+
+- Tema escuro com paleta sky/gold, gradientes `brand-gradient` e `panel-gradient` em `tailwind.config.js`.
+- Fonte Inter carregada via Google Fonts (precisa de internet no primeiro load; sem internet, cai pro stack de fallback do navegador).
+- Componentes-base reutilizados em todas as telas: `Button`, `Panel`, `Input`, `Select`, `Textarea`, `EmptyState`, `StatusBadge`, `Pagination`, `StatCard`, `ProductCard`.
+- Layouts separados: `StoreLayout` (loja, com header e footer) e `AdminLayout` (sidebar + header).
+- Animacoes utilitarias em `src/styles/global.css` (`shimmer` para skeletons, `fade-in-up` para entrada).
+
 ## Requisitos
 
 Instale antes:
@@ -175,4 +183,11 @@ npm run dev
 npm test
 npm run build
 ```
+
+## Solucao de problemas
+
+- Tela em branco no `npm run dev`: confira se o `vite.config.js` nao tem `optimizeDeps.disabled: true`. No Vite 7 essa flag quebra o dev server.
+- `Cannot find module` ou erro em `import`: rode `npm install` novamente; o `package-lock.json` precisa estar sincronizado.
+- Build falha com erro de tipo: o `npm run build` roda `tsc --noEmit` antes do Vite, entao qualquer erro de TypeScript bloqueia o build. Rode `npm test` para isolar.
+- Login nao funciona: confira `VITE_ENABLE_MOCKS=true` no `.env` se o backend nao estiver ligado.
 
