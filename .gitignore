@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
+frontend/tmp/
+frontend/.tmp/
+frontend/.vite/
+frontend/.env
+
+### Claude Code (local) ###
+.claude/
