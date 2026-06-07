@@ -2,10 +2,7 @@ package com.jeffsilva.jkcards.Dtos;
 
 import com.jeffsilva.jkcards.entities.Category;
 import com.jeffsilva.jkcards.entities.Product;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +19,7 @@ public class ProductDto {
     @NotBlank(message = "Description must be empty.")
     private String description;
 
-    @NotEmpty(message = "The price must not be empty.")
+    @NotNull(message = "The price must not be empty.")
     @Positive(message = "The price cannot be zero or negative.")
     private Double price;
 
@@ -44,6 +41,7 @@ public class ProductDto {
     }
 
     public ProductDto(Product entity) {
+        id = entity.getId();
         name = entity.getName();
         description = entity.getDescription();
         price = entity.getPrice();

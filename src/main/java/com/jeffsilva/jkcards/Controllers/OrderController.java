@@ -2,8 +2,11 @@ package com.jeffsilva.jkcards.Controllers;
 
 import com.jeffsilva.jkcards.Dtos.OrderDto;
 import com.jeffsilva.jkcards.Services.OrderService;
+import com.jeffsilva.jkcards.entities.User;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,14 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<OrderDto> findById(@PathVariable Long id) {
         OrderDto result = service.findById(id);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    public ResponseEntity<Page<OrderDto>> findAll(@RequestParam(value = "client",
+            required = false) Long client, Pageable pageable){
+        Page<OrderDto> result = service.findAll(client, pageable);
         return ResponseEntity.ok(result);
     }
 
