@@ -24,7 +24,7 @@ export function ProductsPage() {
   });
 
   const title = useMemo(
-    () => (debouncedName ? `Resultados para "${debouncedName}"` : "Produtos em destaque"),
+    () => (debouncedName ? `Resultados para "${debouncedName}"` : "Produtos"),
     [debouncedName],
   );
 
@@ -38,9 +38,6 @@ export function ProductsPage() {
     <section className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-skysoft">
-            JKCards Store
-          </p>
           <h2 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">
             {title}
           </h2>
@@ -56,11 +53,6 @@ export function ProductsPage() {
             placeholder="Booster, deck, sleeve..."
           />
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 rounded-xl border border-line/80 bg-white/5 px-4 py-3 text-sm text-slate-300">
-        <SlidersHorizontal size={16} className="text-skysoft" />
-        Filtros por categoria serao ativados quando o backend expor busca por categoria.
       </div>
 
       {query.isLoading ? (

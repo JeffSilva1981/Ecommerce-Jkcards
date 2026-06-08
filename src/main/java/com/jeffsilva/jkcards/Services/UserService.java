@@ -26,10 +26,14 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
+        System.out.println("LOGIN RECEBIDO: " + username);
+
         List<UserDetailsProjection> result = repository.searchUserAndRolesByEmail(username);
         if (result.size() == 0) {
             throw new UsernameNotFoundException("Email not found");
         }
+
+        System.out.println("USUARIO: " + result.get(0).getUsername());
 
         User user = new User();
         user.setEmail(result.get(0).getUsername());

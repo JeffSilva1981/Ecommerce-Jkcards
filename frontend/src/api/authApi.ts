@@ -18,45 +18,51 @@ function createMockToken(user: User) {
   return `mock.${payload}.token`;
 }
 
-export async function login(credentials: LoginCredentials) {
-  if (isMockEnabled) {
-    await delay();
-    const user = mockUsers.find((item) => item.email === credentials.email);
-    if (!user || credentials.password.length < 3) {
-      throw new Error("Credenciais invalidas.");
-    }
-    return {
-      token: createMockToken(user),
-      user,
-    };
-  }
+export async function login(credentials) {
+  console.log("CLIENT_ID =", import.meta.env.VITE_CLIENT_ID);
+  console.log("CLIENT_SECRET =", import.meta.env.VITE_CLIENT_SECRET);
 
   const body = new URLSearchParams();
   body.set("grant_type", "password");
   body.set("username", credentials.email);
   body.set("password", credentials.password);
 
-  const clientId = import.meta.env.VITE_CLIENT_ID ?? "myclientid";
-  const clientSecret = import.meta.env.VITE_CLIENT_SECRET ?? "myclientsecret";
-  const basic = btoa(`${clientId}:${clientSecret}`);
+  const basic = btoa(
+    `${import.meta.env.VITE_CLIENT_ID}:${import.meta.env.VITE_CLIENT_SECRET}`
+  );
 
-  const tokenResponse = await apiClient.post<TokenResponse>("/oauth2/token", body, {
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-  });
+  console.log("BASIC =", basic);
 
-  const meResponse = await apiClient.get<User>("/users/me", {
-    headers: {
-      Authorization: `Bearer ${tokenResponse.data.access_token}`,
-    },
-  });
+  try {
+    const token = await apiClient.post("/oauth2/token", body, {
+      headers: {
+        Authorization: `Basic ${basic}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
 
-  return {
-    token: tokenResponse.data.access_token,
-    user: meResponse.data,
-  };
+    console.log("TOKEN RESPONSE =", token.data);
+
+    const me = await apiClient.get("/users/me", {
+      headers: {
+        Authorization: `Bearer ${token.data.access_token}`,
+      },
+    });
+
+    console.log("ME RESPONSE =", me.data);
+
+    return {
+      token: token.data.access_token,
+      user: me.data,
+    };
+  } catch (error: any) {
+    console.log("STATUS:", error?.response?.status);
+    console.log("DATA:", error?.response?.data);
+    console.log("HEADERS:", error?.response?.headers);
+    console.log("ERRO COMPLETO:", error);
+
+    throw error;
+  }
 }
 
 export async function registerUser(payload: LoginCredentials & { name: string }) {

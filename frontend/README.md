@@ -45,7 +45,7 @@ npm install
 Copie o arquivo de exemplo:
 
 ```bash
-copy .env.example .env
+copy .env .env
 ```
 
 No Windows PowerShell, se preferir:
