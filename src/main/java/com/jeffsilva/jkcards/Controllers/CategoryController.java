@@ -30,4 +30,33 @@ public class CategoryController {
         return ResponseEntity.ok(list);
     }
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryDto> findByid(@PathVariable Long id){
+        CategoryDto result = service.findById(id);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping
+    public ResponseEntity<CategoryDto> created(@RequestBody CategoryDto dto){
+        CategoryDto result = service.created(dto);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(result.getId()).toUri();
+        return ResponseEntity.created(uri).body(result);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryDto> update(@Valid @RequestBody CategoryDto dto,@PathVariable Long id){
+        CategoryDto result = service.update(dto, id);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id){
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

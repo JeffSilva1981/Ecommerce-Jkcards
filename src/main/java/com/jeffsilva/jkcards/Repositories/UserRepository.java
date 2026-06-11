@@ -2,6 +2,8 @@ package com.jeffsilva.jkcards.Repositories;
 
 import com.jeffsilva.jkcards.entities.User;
 import com.jeffsilva.jkcards.projections.UserDetailsProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<UserDetailsProjection> searchUserAndRolesByEmail(String email);
 
     Optional<User> findByEmail(String email);
+
+    Page<User> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

@@ -4,6 +4,7 @@ import com.jeffsilva.jkcards.Dtos.CategoryDto;
 import com.jeffsilva.jkcards.Dtos.ProductDto;
 import com.jeffsilva.jkcards.Dtos.ProductMinDto;
 import com.jeffsilva.jkcards.Repositories.ProductRepository;
+import com.jeffsilva.jkcards.Services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.Services.exceptions.ResourceNotFoundException;
 import com.jeffsilva.jkcards.entities.Category;
 import com.jeffsilva.jkcards.entities.Product;
@@ -24,7 +25,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductMinDto> findAll(String name, Pageable pageable) {
         Page<Product> result = repository.searchByName(name, pageable);
-        return result.map(x -> new ProductMinDto(x));
+        return result.map(ProductMinDto::new);
     }
 
     @Transactional
@@ -53,13 +54,13 @@ public class ProductService {
     public void delete(Long id) {
 
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Products does not exists");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         try {
             repository.deleteById(id);
         } catch (DataIntegrityViolationException e) {
-            throw new ResourceNotFoundException("Referential integrity failure");
+            throw new DataBaseException("Integrity violation - product is related to other entities");
         }
     }
 
