@@ -1,14 +1,6 @@
-import { apiClient, delay, isMockEnabled } from "./apiClient";
-import { mockDashboard } from "../mocks/data";
-import type { DashboardSummary } from "../types/dashboard";
+import { apiClient } from "./apiClient";
 
 export async function getDashboardSummary() {
-  if (isMockEnabled) {
-    await delay();
-    return mockDashboard;
-  }
-
-  const response = await apiClient.get<DashboardSummary>("/admin/dashboard");
+  const response = await apiClient.get("/dashboard");
   return response.data;
 }
-

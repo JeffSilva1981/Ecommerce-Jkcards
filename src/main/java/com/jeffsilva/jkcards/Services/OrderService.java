@@ -57,6 +57,18 @@ public class OrderService {
         return entity.map(x -> new OrderDto(x));
     }
 
+    @Transactional(readOnly = true)
+    public Page<OrderDto> findMyOrders(Pageable pageable) {
+
+        User user = service.authenticated();
+        Page<Order> entity = repository.findByClientId(
+                user.getId(),
+                pageable
+        );
+
+        return entity.map(OrderDto::new);
+    }
+
     @Transactional
     public OrderDto insert(OrderDto dto) {
         Order order = new Order();

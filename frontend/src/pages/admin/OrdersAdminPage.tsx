@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { getAdminOrders, updateOrderStatus } from "../../api/ordersApi";
 import { Panel } from "../../components/Panel";
 import { Select } from "../../components/Select";
@@ -17,6 +18,7 @@ const statuses: OrderStatus[] = [
 
 export function OrdersAdminPage() {
   const queryClient = useQueryClient();
+
   const query = useQuery({
     queryKey: ["admin-orders"],
     queryFn: getAdminOrders,
@@ -25,7 +27,8 @@ export function OrdersAdminPage() {
   const mutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
       updateOrderStatus(id, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
   });
 
   return (
@@ -33,12 +36,13 @@ export function OrdersAdminPage() {
       <div>
         <h1 className="text-3xl font-bold text-white">Pedidos</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Atualizacao manual de status preparada para `PUT /orders/:id/status`.
+          Gerencie os pedidos e acompanhe os detalhes das compras.
         </p>
       </div>
+
       <Panel className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-left text-sm">
+          <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="border-b border-line bg-white/5 text-slate-300">
               <tr>
                 <th className="px-4 py-3">Pedido</th>
@@ -47,16 +51,36 @@ export function OrdersAdminPage() {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Alterar</th>
+                <th className="px-4 py-3">Detalhes</th>
               </tr>
             </thead>
+
             <tbody>
               {query.data?.content?.map((order) => (
-                <tr key={order.id} className="border-b border-line last:border-b-0">
-                  <td className="px-4 py-3 font-semibold text-white">#{order.id}</td>
-                  <td className="px-4 py-3 text-slate-300">{order.client.name}</td>
-                  <td className="px-4 py-3 text-slate-300">{formatDate(order.moment)}</td>
-                  <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
-                  <td className="px-4 py-3 font-bold text-gold">{formatCurrency(order.total)}</td>
+                <tr
+                  key={order.id}
+                  className="border-b border-line last:border-b-0"
+                >
+                  <td className="px-4 py-3 font-semibold text-white">
+                    #{order.id}
+                  </td>
+
+                  <td className="px-4 py-3 text-slate-300">
+                    {order.client.name}
+                  </td>
+
+                  <td className="px-4 py-3 text-slate-300">
+                    {formatDate(order.moment)}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <StatusBadge status={order.status} />
+                  </td>
+
+                  <td className="px-4 py-3 font-bold text-gold">
+                    {formatCurrency(order.total)}
+                  </td>
+
                   <td className="px-4 py-3">
                     <Select
                       label="Status"
@@ -76,6 +100,15 @@ export function OrdersAdminPage() {
                       ))}
                     </Select>
                   </td>
+
+                  <td className="px-4 py-3">
+                    <Link
+                      to={`/pedidos/${order.id}`}
+                      className="rounded-md bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-sky-500"
+                    >
+                      Ver Detalhes
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -85,4 +118,3 @@ export function OrdersAdminPage() {
     </section>
   );
 }
-

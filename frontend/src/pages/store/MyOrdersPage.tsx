@@ -13,6 +13,7 @@ export function MyOrdersPage() {
     queryFn: getMyOrders,
   });
 
+
   if (query.isLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-white/5" />;
   }

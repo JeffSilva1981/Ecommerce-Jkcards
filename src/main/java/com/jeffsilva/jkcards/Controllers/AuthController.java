@@ -2,6 +2,7 @@ package com.jeffsilva.jkcards.Controllers;
 
 import com.jeffsilva.jkcards.Dtos.RegisterDTO;
 import com.jeffsilva.jkcards.Services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +18,7 @@ public class AuthController {
     private UserService service;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterDTO dto) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterDTO dto) {
         service.register(dto);
         return ResponseEntity.ok().build();
     }

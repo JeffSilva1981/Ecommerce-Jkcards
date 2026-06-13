@@ -49,6 +49,7 @@ export function RegisterPage() {
               name: values.name,
               email: values.email,
               password: values.password,
+              phone: values.phone,
             })
           )}
         >
@@ -77,6 +78,14 @@ export function RegisterPage() {
             type="password"
             error={form.formState.errors.confirmPassword?.message}
             {...form.register("confirmPassword")}
+          />
+
+          {/* NOVO CAMPO TELEFONE */}
+          <Input
+            label="Telefone"
+            type="text"
+            error={form.formState.errors.phone?.message}
+            {...form.register("phone")}
           />
 
           <Button

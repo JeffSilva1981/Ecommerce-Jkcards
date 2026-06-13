@@ -37,6 +37,13 @@ public class OrderController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_OPERATOR')")
+    @GetMapping("/my")
+    public ResponseEntity<Page<OrderDto>> findMyOrders(Pageable pageable) {
+        Page<OrderDto> result = service.findMyOrders(pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_OPERATOR')")
     @PostMapping
     public ResponseEntity<OrderDto> created(@Valid @RequestBody OrderDto dto) {
         OrderDto result = service.insert(dto);

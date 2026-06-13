@@ -1,6 +1,7 @@
 package com.jeffsilva.jkcards.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -20,6 +21,7 @@ public class User implements UserDetails {
     private String email;
 
     private String phone;
+
     private LocalDate birthDate;
     private String password;
 

@@ -44,6 +44,7 @@ public class UserService implements UserDetailsService {
         User user = new User();
         user.setName(dto.name());
         user.setEmail(dto.email());
+        user.setPhone(dto.phone());
         user.setPassword(passwordEncoder.encode(dto.password()));
         Role role = roleRepository.findByAuthority("ROLE_OPERATOR").orElseThrow(()-> new ResourceNotFoundException("Role Not Found"));
         user.addRole(role);

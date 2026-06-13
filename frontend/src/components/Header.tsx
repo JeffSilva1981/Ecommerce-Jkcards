@@ -2,10 +2,11 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Package,
   ShoppingCart,
   UserRound,
   ShieldCheck,
-  X
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,6 +21,8 @@ export function Header() {
   const isAdmin = useAuthStore((state) => state.isAdmin());
   const totalItems = useCartStore((state) => state.totalItems());
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const canSeeOrders = user && !isAdmin;
 
   function handleLogout() {
     logout();
@@ -47,6 +50,16 @@ export function Header() {
               title="Painel admin"
             >
               <LayoutDashboard size={18} />
+            </Link>
+          ) : null}
+
+          {canSeeOrders ? (
+            <Link
+              to="/pedidos"
+              className="rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
+              title="Meus pedidos"
+            >
+              <Package size={18} />
             </Link>
           ) : null}
 
@@ -110,6 +123,16 @@ export function Header() {
                 className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
               >
                 Painel admin
+              </Link>
+            ) : null}
+
+            {canSeeOrders ? (
+              <Link
+                to="/pedidos"
+                onClick={() => setMobileOpen(false)}
+                className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+              >
+                Meus pedidos
               </Link>
             ) : null}
 
