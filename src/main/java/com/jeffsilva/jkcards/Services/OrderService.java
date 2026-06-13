@@ -2,6 +2,7 @@ package com.jeffsilva.jkcards.Services;
 
 import com.jeffsilva.jkcards.Dtos.OrderDto;
 import com.jeffsilva.jkcards.Dtos.OrderItemDto;
+import com.jeffsilva.jkcards.Dtos.OrderStatusDto;
 import com.jeffsilva.jkcards.Repositories.OrderItemRepository;
 import com.jeffsilva.jkcards.Repositories.OrderRepository;
 import com.jeffsilva.jkcards.Repositories.ProductRepository;
@@ -86,6 +87,15 @@ public class OrderService {
         repository.save(order);
         orderItemRepository.saveAll(order.getItems());
 
+        return new OrderDto(order);
+    }
+
+    @Transactional
+    public OrderDto updateStatus(Long id, OrderStatusDto dto) {
+
+        Order order = repository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Order Not Found"));
+        order.setStatus(dto.status());
+        order = repository.save(order);
         return new OrderDto(order);
     }
 }

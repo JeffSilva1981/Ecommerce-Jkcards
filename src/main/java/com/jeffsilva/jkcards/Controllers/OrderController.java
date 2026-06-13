@@ -1,6 +1,7 @@
 package com.jeffsilva.jkcards.Controllers;
 
 import com.jeffsilva.jkcards.Dtos.OrderDto;
+import com.jeffsilva.jkcards.Dtos.OrderStatusDto;
 import com.jeffsilva.jkcards.Services.OrderService;
 import com.jeffsilva.jkcards.entities.User;
 import jakarta.validation.Valid;
@@ -49,6 +50,13 @@ public class OrderController {
         OrderDto result = service.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(result.getId()).toUri();
         return ResponseEntity.created(uri).body(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @PutMapping("/{id}/status")
+    public ResponseEntity<OrderDto> updateStatus(@PathVariable Long id,@RequestBody OrderStatusDto dto){
+        OrderDto update = service.updateStatus(id, dto);
+        return ResponseEntity.ok(update);
     }
 
 }
