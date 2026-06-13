@@ -13,7 +13,7 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-export const isMockEnabled = import.meta.env.VITE_ENABLE_MOCKS !== "false";
+export const isMockEnabled = import.meta.env.VITE_ENABLE_MOCKS === "true";
 
 export function delay(ms = 250) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));

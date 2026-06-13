@@ -1,6 +1,7 @@
 package com.jeffsilva.jkcards.Services;
 
 import com.jeffsilva.jkcards.Dtos.ProductDto;
+import com.jeffsilva.jkcards.Dtos.RegisterDTO;
 import com.jeffsilva.jkcards.Dtos.UserDto;
 import com.jeffsilva.jkcards.Repositories.RoleRepository;
 import com.jeffsilva.jkcards.Repositories.UserRepository;
@@ -38,13 +39,25 @@ public class UserService implements UserDetailsService {
     @Autowired
     private RoleRepository roleRepository;
 
+    public void register(RegisterDTO dto) {
+
+        User user = new User();
+        user.setName(dto.name());
+        user.setEmail(dto.email());
+        user.setPassword(passwordEncoder.encode(dto.password()));
+        Role role = roleRepository.findByAuthority("ROLE_OPERATOR").orElseThrow(()-> new ResourceNotFoundException("Role Not Found"));
+        user.addRole(role);
+
+        repository.save(user);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         System.out.println("LOGIN RECEBIDO: " + username);
 
         List<UserDetailsProjection> result = repository.searchUserAndRolesByEmail(username);
-        if (result.size() == 0) {
+        if (result.isEmpty()) {
             throw new UsernameNotFoundException("Email not found");
         }
 

@@ -12,3 +12,18 @@ export async function getCategories() {
   return response.data;
 }
 
+export async function createCategory(data: { name: string }) {
+  if (isMockEnabled) {
+    await delay();
+
+    const newCategory: Category = {
+      id: Math.floor(Math.random() * 10000),
+      name: data.name,
+    };
+
+    return newCategory;
+  }
+
+  const response = await apiClient.post<Category>("/categories", data);
+  return response.data;
+}

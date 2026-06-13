@@ -50,7 +50,7 @@ export function OrdersAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {query.data?.map((order) => (
+              {query.data?.content?.map((order) => (
                 <tr key={order.id} className="border-b border-line last:border-b-0">
                   <td className="px-4 py-3 font-semibold text-white">#{order.id}</td>
                   <td className="px-4 py-3 text-slate-300">{order.client.name}</td>

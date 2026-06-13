@@ -18,7 +18,7 @@ function createMockToken(user: User) {
   return `mock.${payload}.token`;
 }
 
-export async function login(credentials) {
+export async function login(credentials: LoginCredentials) {
   console.log("CLIENT_ID =", import.meta.env.VITE_CLIENT_ID);
   console.log("CLIENT_SECRET =", import.meta.env.VITE_CLIENT_SECRET);
 
@@ -31,25 +31,23 @@ export async function login(credentials) {
     `${import.meta.env.VITE_CLIENT_ID}:${import.meta.env.VITE_CLIENT_SECRET}`
   );
 
-  console.log("BASIC =", basic);
-
   try {
-    const token = await apiClient.post("/oauth2/token", body, {
-      headers: {
-        Authorization: `Basic ${basic}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    const token = await apiClient.post<TokenResponse>(
+      "/oauth2/token",
+      body,
+      {
+        headers: {
+          Authorization: `Basic ${basic}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
 
-    console.log("TOKEN RESPONSE =", token.data);
-
-    const me = await apiClient.get("/users/me", {
+    const me = await apiClient.get<User>("/users/me", {
       headers: {
         Authorization: `Bearer ${token.data.access_token}`,
       },
     });
-
-    console.log("ME RESPONSE =", me.data);
 
     return {
       token: token.data.access_token,
@@ -65,9 +63,16 @@ export async function login(credentials) {
   }
 }
 
-export async function registerUser(payload: LoginCredentials & { name: string }) {
+type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+export async function registerUser(payload: RegisterPayload) {
   if (isMockEnabled) {
     await delay();
+
     return {
       id: 99,
       name: payload.name,
@@ -76,7 +81,10 @@ export async function registerUser(payload: LoginCredentials & { name: string })
     } satisfies User;
   }
 
-  const response = await apiClient.post<User>("/users", payload);
+  const response = await apiClient.post(
+    "/auth/register",
+    payload
+  );
+
   return response.data;
 }
-

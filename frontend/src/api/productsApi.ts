@@ -12,6 +12,7 @@ type ProductListParams = {
 function toPage(items: ProductSummary[], page = 0, size = 8): Page<ProductSummary> {
   const start = page * size;
   const content = items.slice(start, start + size);
+
   return {
     content,
     totalPages: Math.max(1, Math.ceil(items.length / size)),
@@ -24,26 +25,42 @@ function toPage(items: ProductSummary[], page = 0, size = 8): Page<ProductSummar
 export async function getProducts(params: ProductListParams = {}) {
   if (isMockEnabled) {
     await delay();
+
     const term = params.name?.trim().toLowerCase();
+
     const filtered = term
-      ? mockProducts.filter((product) => product.name.toLowerCase().includes(term))
+      ? mockProducts.filter((product) =>
+          product.name.toLowerCase().includes(term)
+        )
       : mockProducts;
+
     return toPage(filtered, params.page, params.size);
   }
 
   const response = await apiClient.get<Page<ProductSummary>>("/products", {
     params,
   });
-  return response.data;
+
+  // 🔥 GARANTIA: nunca quebrar se backend vier diferente
+  return {
+    content: response.data?.content ?? [],
+    totalPages: response.data?.totalPages ?? 1,
+    totalElements: response.data?.totalElements ?? 0,
+    size: response.data?.size ?? (params.size ?? 8),
+    number: response.data?.number ?? (params.page ?? 0),
+  };
 }
 
 export async function getProductById(id: number) {
   if (isMockEnabled) {
     await delay();
+
     const product = mockProducts.find((item) => item.id === id);
+
     if (!product) {
       throw new Error("Produto nao encontrado.");
     }
+
     return product;
   }
 
@@ -54,6 +71,7 @@ export async function getProductById(id: number) {
 export async function saveProduct(payload: ProductFormData, id?: number) {
   if (isMockEnabled) {
     await delay();
+
     return {
       id: id ?? Math.max(...mockProducts.map((item) => item.id)) + 1,
       ...payload,
@@ -82,4 +100,3 @@ export async function deleteProduct(id: number) {
 
   await apiClient.delete(`/products/${id}`);
 }
-
