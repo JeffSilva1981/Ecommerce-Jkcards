@@ -44,7 +44,7 @@ public class ProductService {
 
     @Transactional
     public ProductDto update(Long id, ProductDto dto) {
-        Product entity = repository.getReferenceById(id);
+        Product entity = repository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Product Not Found"));
         copyDtoToEntity(dto, entity);
         entity = repository.save(entity);
         return new ProductDto(entity);
