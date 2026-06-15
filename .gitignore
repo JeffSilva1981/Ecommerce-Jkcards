@@ -42,3 +42,7 @@ frontend/.env
 
 ### Claude Code (local) ###
 .claude/
+
+# Environment variables
+.env
+.env.*
