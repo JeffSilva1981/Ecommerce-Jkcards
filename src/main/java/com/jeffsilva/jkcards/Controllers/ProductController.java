@@ -2,6 +2,7 @@ package com.jeffsilva.jkcards.Controllers;
 
 import com.jeffsilva.jkcards.Dtos.ProductDto;
 import com.jeffsilva.jkcards.Dtos.ProductMinDto;
+import com.jeffsilva.jkcards.Services.CloudinaryService;
 import com.jeffsilva.jkcards.Services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -18,8 +20,13 @@ import java.net.URI;
 @RequestMapping(value = "/products")
 public class ProductController {
 
-    @Autowired
-    private ProductService service;
+    private final ProductService service;
+    private final CloudinaryService cloudinaryService;
+
+    public ProductController(ProductService service, CloudinaryService cloudinaryService) {
+        this.service = service;
+        this.cloudinaryService = cloudinaryService;
+    }
 
     @GetMapping
     public ResponseEntity<Page<ProductMinDto>> findAll(
@@ -55,6 +62,16 @@ public class ProductController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/upload-image")
+    public ResponseEntity<String> uploadImage(
+            @RequestParam("file") MultipartFile file) {
+
+        String imageUrl = cloudinaryService.uploadImage(file);
+
+        return ResponseEntity.ok(imageUrl);
     }
 
 }

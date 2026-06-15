@@ -3,6 +3,7 @@ package com.jeffsilva.jkcards.Controllers.handlers;
 import com.jeffsilva.jkcards.Dtos.CustomError;
 import com.jeffsilva.jkcards.Dtos.ValidationError;
 import com.jeffsilva.jkcards.Services.exceptions.DataBaseException;
+import com.jeffsilva.jkcards.Services.exceptions.FileUploadException;
 import com.jeffsilva.jkcards.Services.exceptions.ForbiddenException;
 import com.jeffsilva.jkcards.Services.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,6 +51,14 @@ public class ControllerExceptionHandler {
 
         HttpStatus status = HttpStatus.FORBIDDEN;
         CustomError error = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<CustomError> fileUpload(FileUploadException e, HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError error = new CustomError(Instant.now(), status.value(), "File upload error: " + e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(error);
     }
 }
