@@ -24,6 +24,7 @@ public class AdminSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
+        // ROLE_ADMIN
         Role adminRole = roleRepository.findByAuthority("ROLE_ADMIN")
                 .orElseGet(() -> {
                     Role role = new Role();
@@ -31,6 +32,13 @@ public class AdminSeeder implements CommandLineRunner {
                     return roleRepository.save(role);
                 });
 
+        // ROLE_OPERATOR
+        roleRepository.findByAuthority("ROLE_OPERATOR")
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setAuthority("ROLE_OPERATOR");
+                    return roleRepository.save(role);
+                });
 
         String adminEmail = "admin@jkcards.com";
         String adminName = "Admin";
@@ -42,7 +50,6 @@ public class AdminSeeder implements CommandLineRunner {
             admin.setName(adminName);
             admin.setEmail(adminEmail);
             admin.setPhone("000000000");
-
             admin.setPassword(passwordEncoder.encode(adminPassword));
 
             admin.addRole(adminRole);
