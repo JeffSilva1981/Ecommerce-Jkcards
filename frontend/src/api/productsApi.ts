@@ -40,9 +40,28 @@ export async function saveProduct(payload: ProductFormData, id?: number) {
     "/products",
     payload
   );
+
   return response.data;
 }
 
 export async function deleteProduct(id: number) {
   await apiClient.delete(`/products/${id}`);
+}
+
+export async function uploadProductImage(file: File) {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  const response = await apiClient.post<string>(
+    "/products/upload-image",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
 }

@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCategories } from "../../api/categoriesApi";
-import { getProductById, saveProduct } from "../../api/productsApi";
+import {getProductById,saveProduct,uploadProductImage,} from "../../api/productsApi";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { Panel } from "../../components/Panel";
@@ -18,6 +18,7 @@ export function ProductFormPage() {
   const productId = id === "novo" || !id ? undefined : Number(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const form = useForm<ProductSchema>({
     resolver: zodResolver(productSchema),
@@ -52,6 +53,30 @@ export function ProductFormPage() {
       });
     }
   }, [form, productQuery.data]);
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+
+      const imageUrl = await uploadProductImage(file);
+
+      form.setValue("imgUrl", imageUrl);
+
+    } catch (error) {
+      console.error("Erro ao enviar imagem", error);
+      alert("Erro ao enviar imagem.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: (values: ProductSchema) =>
@@ -99,7 +124,31 @@ export function ProductFormPage() {
               ))}
             </Select>
           </div>
-          <Input label="URL da imagem" error={form.formState.errors.imgUrl?.message} {...form.register("imgUrl")} />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">
+              Imagem do produto
+            </label>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full rounded-md border p-2"
+            />
+
+            {uploadingImage && (
+              <p className="text-sm text-slate-400">
+                Enviando imagem...
+              </p>
+            )}
+
+            <Input
+              label="URL da imagem"
+              error={form.formState.errors.imgUrl?.message}
+              {...form.register("imgUrl")}
+              readOnly
+            />
+          </div>
           {mutation.error ? (
             <p className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
               Nao foi possivel salvar o produto.
