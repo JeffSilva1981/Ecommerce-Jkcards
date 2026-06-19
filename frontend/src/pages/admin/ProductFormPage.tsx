@@ -5,7 +5,11 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCategories } from "../../api/categoriesApi";
-import {getProductById,saveProduct,uploadProductImage,} from "../../api/productsApi";
+import {
+  getProductById,
+  saveProduct,
+  uploadProductImage,
+} from "../../api/productsApi";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { Panel } from "../../components/Panel";
@@ -30,6 +34,8 @@ export function ProductFormPage() {
       categoryId: 1,
     },
   });
+
+  const imageUrl = form.watch("imgUrl");
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -59,17 +65,14 @@ export function ProductFormPage() {
   ) => {
     const file = event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     try {
       setUploadingImage(true);
 
-      const imageUrl = await uploadProductImage(file);
+      const uploadedImageUrl = await uploadProductImage(file);
 
-      form.setValue("imgUrl", imageUrl);
-
+      form.setValue("imgUrl", uploadedImageUrl);
     } catch (error) {
       console.error("Erro ao enviar imagem", error);
       alert("Erro ao enviar imagem.");
@@ -88,7 +91,7 @@ export function ProductFormPage() {
           imgUrl: values.imgUrl,
           categories: [{ id: values.categoryId }],
         },
-        productId,
+        productId
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
@@ -112,11 +115,32 @@ export function ProductFormPage() {
           className="space-y-4"
           onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
         >
-          <Input label="Nome" error={form.formState.errors.name?.message} {...form.register("name")} />
-          <Textarea label="Descricao" error={form.formState.errors.description?.message} {...form.register("description")} />
+          <Input
+            label="Nome"
+            error={form.formState.errors.name?.message}
+            {...form.register("name")}
+          />
+
+          <Textarea
+            label="Descricao"
+            error={form.formState.errors.description?.message}
+            {...form.register("description")}
+          />
+
           <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Preco" type="number" step="0.01" error={form.formState.errors.price?.message} {...form.register("price")} />
-            <Select label="Categoria" error={form.formState.errors.categoryId?.message} {...form.register("categoryId")}>
+            <Input
+              label="Preco"
+              type="number"
+              step="0.01"
+              error={form.formState.errors.price?.message}
+              {...form.register("price")}
+            />
+
+            <Select
+              label="Categoria"
+              error={form.formState.errors.categoryId?.message}
+              {...form.register("categoryId")}
+            >
               {categoriesQuery.data?.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -124,37 +148,57 @@ export function ProductFormPage() {
               ))}
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">
+
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-slate-200">
               Imagem do produto
             </label>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="w-full rounded-md border p-2"
-            />
+            <label className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-line bg-ink/70 px-4 text-center transition hover:border-skybrand hover:bg-skybrand/10">
+              <span className="text-sm font-semibold text-skysoft">
+                Clique para escolher uma imagem
+              </span>
+
+              <span className="mt-1 text-xs text-slate-400">
+                PNG, JPG ou WEBP
+              </span>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
 
             {uploadingImage && (
-              <p className="text-sm text-slate-400">
-                Enviando imagem...
-              </p>
+              <p className="text-sm text-slate-400">Enviando imagem...</p>
             )}
 
-            <Input
-              label="URL da imagem"
-              error={form.formState.errors.imgUrl?.message}
-              {...form.register("imgUrl")}
-              readOnly
-            />
+            <input type="hidden" {...form.register("imgUrl")} />
+
+            {imageUrl && (
+              <div className="mt-3">
+                <img
+                  src={imageUrl}
+                  alt="Preview do produto"
+                  className="h-48 w-48 rounded-lg border border-line object-cover"
+                />
+              </div>
+            )}
           </div>
+
           {mutation.error ? (
             <p className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
               Nao foi possivel salvar o produto.
             </p>
           ) : null}
-          <Button type="submit" icon={<Save size={17} />} disabled={mutation.isPending}>
+
+          <Button
+            type="submit"
+            icon={<Save size={17} />}
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? "Salvando..." : "Salvar produto"}
           </Button>
         </form>
@@ -162,4 +206,3 @@ export function ProductFormPage() {
     </section>
   );
 }
-
