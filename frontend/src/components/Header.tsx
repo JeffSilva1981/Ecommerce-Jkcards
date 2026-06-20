@@ -5,17 +5,17 @@ import {
   Package,
   ShoppingCart,
   UserRound,
-  ShieldCheck,
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { useCartStore } from "../stores/cartStore";
 import { Button } from "./Button";
 
 export function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const isAdmin = useAuthStore((state) => state.isAdmin());
@@ -23,6 +23,9 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const canSeeOrders = user && !isAdmin;
+  const canSeeCart = user && !isAdmin;
+  const canSeeLogin = !user && location.pathname === "/";
+  const hasMobileMenu = Boolean(isAdmin || canSeeOrders || user || canSeeLogin);
 
   function handleLogout() {
     logout();
@@ -63,19 +66,21 @@ export function Header() {
             </Link>
           ) : null}
 
-          <Link
-            to="/carrinho"
-            className="relative rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
-            title="Carrinho"
-          >
-            <ShoppingCart size={18} />
+          {canSeeCart ? (
+            <Link
+              to="/carrinho"
+              className="relative rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
+              title="Carrinho"
+            >
+              <ShoppingCart size={18} />
 
-            {totalItems > 0 ? (
-              <span className="absolute -right-2 -top-2 grid min-w-5 place-items-center rounded-full bg-gold px-1 text-xs font-bold text-ink shadow-glow-gold">
-                {totalItems}
-              </span>
-            ) : null}
-          </Link>
+              {totalItems > 0 ? (
+                <span className="absolute -right-2 -top-2 grid min-w-5 place-items-center rounded-full bg-gold px-1 text-xs font-bold text-ink shadow-glow-gold">
+                  {totalItems}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
 
           {user ? (
             <Button
@@ -86,30 +91,26 @@ export function Header() {
             >
               <span className="hidden sm:inline">Sair</span>
             </Button>
-          ) : (
-            <>
-              <Link to="/login" className="hidden sm:block">
-                <Button variant="secondary" icon={<UserRound size={17} />}>
-                  Entrar
-                </Button>
-              </Link>
+          ) : null}
 
-              <Link to="/login" className="hidden sm:block">
-                <Button variant="secondary" icon={<ShieldCheck size={17} />}>
-                  Entrar como admin
-                </Button>
-              </Link>
-            </>
-          )}
+          {canSeeLogin ? (
+            <Link to="/login" className="hidden sm:block">
+              <Button variant="secondary" icon={<UserRound size={17} />}>
+                Entrar
+              </Button>
+            </Link>
+          ) : null}
 
-          <button
-            type="button"
-            className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:hidden"
-            onClick={() => setMobileOpen((value) => !value)}
-            aria-label="Abrir menu"
-          >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          {hasMobileMenu ? (
+            <button
+              type="button"
+              className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:hidden"
+              onClick={() => setMobileOpen((value) => !value)}
+              aria-label="Abrir menu"
+            >
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -136,6 +137,16 @@ export function Header() {
               </Link>
             ) : null}
 
+            {canSeeLogin ? (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+              >
+                Entrar
+              </Link>
+            ) : null}
+
             {user ? (
               <button
                 onClick={handleLogout}
@@ -143,25 +154,7 @@ export function Header() {
               >
                 Sair
               </button>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
-                >
-                  Entrar
-                </Link>
-
-                <Link
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
-                >
-                  Entrar como admin
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       ) : null}
