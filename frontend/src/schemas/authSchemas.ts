@@ -8,6 +8,7 @@ export const loginSchema = z.object({
 export const registerSchema = loginSchema
   .extend({
     name: z.string().min(3, "Informe seu nome."),
+    phone: z.string().min(8, "Informe seu telefone."),
     confirmPassword: z.string().min(3, "Confirme sua senha."),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -17,4 +18,3 @@ export const registerSchema = loginSchema
 
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type RegisterSchema = z.infer<typeof registerSchema>;
-

@@ -4,7 +4,7 @@ import { getAdminOrders, updateOrderStatus } from "../../api/ordersApi";
 import { Panel } from "../../components/Panel";
 import { Select } from "../../components/Select";
 import { StatusBadge } from "../../components/StatusBadge";
-import type { OrderStatus } from "../../types/order";
+import type { Order, OrderStatus } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 import { formatDate } from "../../utils/dates";
 
@@ -15,6 +15,10 @@ const statuses: OrderStatus[] = [
   "DELIVERED",
   "CANCELED",
 ];
+
+type PageResponse<T> = {
+  content: T[];
+};
 
 export function OrdersAdminPage() {
   const queryClient = useQueryClient();
@@ -30,6 +34,12 @@ export function OrdersAdminPage() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
   });
+
+  const data = query.data as Order[] | PageResponse<Order> | undefined;
+
+  const orders = Array.isArray(data)
+    ? data
+    : data?.content ?? [];
 
   return (
     <section className="space-y-5">
@@ -56,7 +66,7 @@ export function OrdersAdminPage() {
             </thead>
 
             <tbody>
-              {query.data?.content?.map((order) => (
+              {orders.map((order) => (
                 <tr
                   key={order.id}
                   className="border-b border-line last:border-b-0"

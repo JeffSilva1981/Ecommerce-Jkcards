@@ -8,14 +8,14 @@ export function UsersAdminPage() {
     queryFn: getUsers,
   });
 
-  const users = query.data?.content ?? query.data ?? [];
+  const users = query.data ?? [];
 
   return (
     <section className="space-y-5">
       <div>
         <h1 className="text-3xl font-bold text-white">Usuarios</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Tela preparada para o CRUD admin de usuarios quando o backend liberar os endpoints.
+          Lista de usuarios cadastrados na plataforma.
         </p>
       </div>
 
@@ -33,21 +33,10 @@ export function UsersAdminPage() {
 
             <tbody>
               {users.map((user) => (
-                <tr
-                  key={user.id}
-                  className="border-b border-line last:border-b-0"
-                >
-                  <td className="px-4 py-3 font-semibold text-white">
-                    {user.name}
-                  </td>
-
-                  <td className="px-4 py-3 text-slate-300">
-                    {user.email}
-                  </td>
-
-                  <td className="px-4 py-3 text-slate-300">
-                    {user.phone ?? "-"}
-                  </td>
+                <tr key={user.id} className="border-b border-line last:border-b-0">
+                  <td className="px-4 py-3 font-semibold text-white">{user.name}</td>
+                  <td className="px-4 py-3 text-slate-300">{user.email}</td>
+                  <td className="px-4 py-3 text-slate-300">{user.phone ?? "-"}</td>
 
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">

@@ -4,6 +4,7 @@ import { getMyOrders } from "../../api/ordersApi";
 import { EmptyState } from "../../components/EmptyState";
 import { Panel } from "../../components/Panel";
 import { StatusBadge } from "../../components/StatusBadge";
+import type { Order } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 import { formatDate } from "../../utils/dates";
 
@@ -13,12 +14,13 @@ export function MyOrdersPage() {
     queryFn: getMyOrders,
   });
 
+  const orders = (query.data ?? []) as Order[];
 
   if (query.isLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-white/5" />;
   }
 
-  if (!query.data?.length) {
+  if (!orders.length) {
     return (
       <EmptyState
         title="Nenhum pedido ainda"
@@ -31,15 +33,19 @@ export function MyOrdersPage() {
     <section className="space-y-5">
       <h1 className="text-3xl font-bold text-white">Meus pedidos</h1>
       <div className="space-y-3">
-        {query.data.map((order) => (
+        {orders.map((order) => (
           <Link key={order.id} to={`/pedidos/${order.id}`}>
             <Panel className="flex flex-col gap-3 p-4 transition hover:border-skybrand/60 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="font-semibold text-white">Pedido #{order.id}</p>
-                <p className="text-sm text-slate-400">{formatDate(order.moment)}</p>
+                <p className="text-sm text-slate-400">
+                  {formatDate(order.moment)}
+                </p>
               </div>
               <StatusBadge status={order.status} />
-              <p className="font-bold text-gold">{formatCurrency(order.total)}</p>
+              <p className="font-bold text-gold">
+                {formatCurrency(order.total)}
+              </p>
             </Panel>
           </Link>
         ))}
@@ -47,4 +53,3 @@ export function MyOrdersPage() {
     </section>
   );
 }
-
