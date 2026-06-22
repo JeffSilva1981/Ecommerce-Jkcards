@@ -20,6 +20,7 @@ export const mockProducts: Product[] = [
     price: 29.9,
     imgUrl:
       "https://images.unsplash.com/photo-1613771404721-1f92d799e49f?auto=format&fit=crop&w=900&q=80",
+    stockQuantity: 12,
     categories: [mockCategories[0]],
   },
   {
@@ -30,6 +31,7 @@ export const mockProducts: Product[] = [
     price: 119.9,
     imgUrl:
       "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=900&q=80",
+    stockQuantity: 8,
     categories: [mockCategories[1]],
   },
   {
@@ -40,6 +42,7 @@ export const mockProducts: Product[] = [
     price: 39.9,
     imgUrl:
       "https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=900&q=80",
+    stockQuantity: 20,
     categories: [mockCategories[2]],
   },
   {
@@ -50,6 +53,7 @@ export const mockProducts: Product[] = [
     price: 249.9,
     imgUrl:
       "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=900&q=80",
+    stockQuantity: 1,
     categories: [mockCategories[3]],
   },
   {
@@ -60,6 +64,7 @@ export const mockProducts: Product[] = [
     price: 179.9,
     imgUrl:
       "https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=900&q=80",
+    stockQuantity: 5,
     categories: [mockCategories[0], mockCategories[2]],
   },
   {
@@ -70,6 +75,7 @@ export const mockProducts: Product[] = [
     price: 54.9,
     imgUrl:
       "https://images.unsplash.com/photo-1580247817119-c6c9a3f47f5f?auto=format&fit=crop&w=900&q=80",
+    stockQuantity: 0,
     categories: [mockCategories[2]],
   },
 ];
@@ -153,4 +159,3 @@ export const mockDashboard: DashboardSummary = {
     { status: "CANCELED", count: 1 },
   ],
 };
-

@@ -25,6 +25,10 @@ public class ProductDto {
 
     private String imgUrl;
 
+    @NotNull(message = "The stock quantity must not be empty.")
+    @PositiveOrZero(message = "The stock quantity cannot be negative.")
+    private Integer stockQuantity;
+
     @NotEmpty(message = "The product must belong to at least one category.")
     private List<CategoryDto> categories = new ArrayList<>();
 
@@ -32,12 +36,13 @@ public class ProductDto {
 
     }
 
-    public ProductDto(Long id, String name, String description, Double price, String imgUrl) {
+    public ProductDto(Long id, String name, String description, Double price, String imgUrl, Integer stockQuantity) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.imgUrl = imgUrl;
+        this.stockQuantity = stockQuantity;
     }
 
     public ProductDto(Product entity) {
@@ -46,6 +51,7 @@ public class ProductDto {
         description = entity.getDescription();
         price = entity.getPrice();
         imgUrl = entity.getImgUrl();
+        stockQuantity = entity.getStockQuantity();
 
         for (Category cat : entity.getCategories()) {
             categories.add(new CategoryDto(cat));
@@ -70,6 +76,10 @@ public class ProductDto {
 
     public String getImgUrl() {
         return imgUrl;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
     }
 
     public List<CategoryDto> getCategories() {

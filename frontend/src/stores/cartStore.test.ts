@@ -6,6 +6,7 @@ const product = {
   name: "Booster Teste",
   price: 25,
   imgUrl: "https://example.com/card.jpg",
+  stockQuantity: 10,
 };
 
 describe("cartStore", () => {
@@ -30,4 +31,3 @@ describe("cartStore", () => {
     expect(useCartStore.getState().items).toHaveLength(0);
   });
 });
-

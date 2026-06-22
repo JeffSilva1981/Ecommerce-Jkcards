@@ -10,6 +10,9 @@ export const registerSchema = loginSchema
     name: z.string().min(3, "Informe seu nome."),
     phone: z.string().min(8, "Informe seu telefone."),
     confirmPassword: z.string().min(3, "Confirme sua senha."),
+    acceptTerms: z.boolean().refine((value) => value === true, {
+      message: "Voce precisa aceitar os termos para criar a conta.",
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas precisam ser iguais.",

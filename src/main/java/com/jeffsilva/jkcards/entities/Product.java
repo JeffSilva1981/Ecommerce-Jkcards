@@ -20,6 +20,7 @@ public class Product {
     private String description;
     private Double price;
     private String imgUrl;
+    private Integer stockQuantity = 0;
 
     @ManyToMany
     @JoinTable(name = "tb_product_category",
@@ -34,12 +35,13 @@ public class Product {
 
     }
 
-    public Product(Long id, String name, String description, Double price, String imgUrl) {
+    public Product(Long id, String name, String description, Double price, String imgUrl, Integer stockQuantity) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.imgUrl = imgUrl;
+        this.stockQuantity = stockQuantity;
     }
 
     public Long getId() {
@@ -84,6 +86,14 @@ public class Product {
 
     public Set<Category> getCategories() {
         return categories;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
     }
 
     public Set<OrderItem> getItems() {

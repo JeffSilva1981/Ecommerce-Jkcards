@@ -6,6 +6,7 @@ import com.jeffsilva.jkcards.Dtos.OrderStatusDto;
 import com.jeffsilva.jkcards.Repositories.OrderItemRepository;
 import com.jeffsilva.jkcards.Repositories.OrderRepository;
 import com.jeffsilva.jkcards.Repositories.ProductRepository;
+import com.jeffsilva.jkcards.Services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.Services.exceptions.ResourceNotFoundException;
 import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
@@ -49,7 +50,7 @@ public class OrderService {
     public Page<OrderDto> findAll(Long client, Pageable pageable) {
         Page<Order> entity;
 
-        if (client != null){
+        if (client != null) {
             entity = repository.findByClientId(client, pageable);
         } else {
             entity = repository.findAll(pageable);
@@ -60,8 +61,8 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Page<OrderDto> findMyOrders(Pageable pageable) {
-
         User user = service.authenticated();
+
         Page<Order> entity = repository.findByClientId(
                 user.getId(),
                 pageable
@@ -75,12 +76,34 @@ public class OrderService {
         Order order = new Order();
         order.setMoment(Instant.now());
         order.setStatus(OrderStatus.WAITING_PAYMENT);
+
         User user = service.authenticated();
         order.setClient(user);
 
         for (OrderItemDto itemDto : dto.getItems()) {
-            Product product = productRepository.getReferenceById(itemDto.getProductId());
-            OrderItem item = new OrderItem(order, product, itemDto.getQuantity(), product.getPrice());
+            Product product = productRepository.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+            Integer currentStock = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
+            Integer requestedQuantity = itemDto.getQuantity() == null ? 0 : itemDto.getQuantity();
+
+            if (requestedQuantity <= 0) {
+                throw new DataBaseException("Invalid quantity for product: " + product.getName());
+            }
+
+            if (currentStock < requestedQuantity) {
+                throw new DataBaseException("Insufficient stock for product: " + product.getName());
+            }
+
+            product.setStockQuantity(currentStock - requestedQuantity);
+
+            OrderItem item = new OrderItem(
+                    order,
+                    product,
+                    requestedQuantity,
+                    product.getPrice()
+            );
+
             order.getItems().add(item);
         }
 
@@ -92,8 +115,7 @@ public class OrderService {
 
     @Transactional
     public OrderDto updateStatus(Long id, OrderStatusDto dto) {
-
-        Order order = repository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Order Not Found"));
+        Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
         order.setStatus(dto.status());
         order = repository.save(order);
         return new OrderDto(order);

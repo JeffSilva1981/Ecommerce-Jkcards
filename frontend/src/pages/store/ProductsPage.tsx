@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getProducts } from "../../api/productsApi";
@@ -45,6 +44,7 @@ export function ProductsPage() {
             Cards, decks, sleeves e acessorios com uma experiencia feita para compra rapida.
           </p>
         </div>
+
         <div className="w-full md:max-w-sm">
           <Input
             label="Buscar produto"
@@ -73,6 +73,7 @@ export function ProductsPage() {
               <ProductCard key={product.id} product={product} onAdd={addItem} />
             ))}
           </div>
+
           <Pagination
             page={query.data.number}
             totalPages={query.data.totalPages}

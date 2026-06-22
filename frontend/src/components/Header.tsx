@@ -23,7 +23,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const canSeeOrders = user && !isAdmin;
-  const canSeeCart = user && !isAdmin;
+  const canSeeCart = !isAdmin;
   const canSeeLogin = !user && location.pathname === "/";
   const hasMobileMenu = Boolean(isAdmin || canSeeOrders || user || canSeeLogin);
 

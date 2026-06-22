@@ -9,6 +9,7 @@ const product = {
   name: "Booster Eclipse Azul",
   price: 29.9,
   imgUrl: "https://example.com/card.jpg",
+  stockQuantity: 10,
 };
 
 describe("ProductCard", () => {
@@ -30,4 +31,3 @@ describe("ProductCard", () => {
     expect(onAdd).toHaveBeenCalledWith(product);
   });
 });
-
