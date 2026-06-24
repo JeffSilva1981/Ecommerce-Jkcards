@@ -3,7 +3,6 @@ package com.jeffsilva.jkcards.Controllers;
 import com.jeffsilva.jkcards.Dtos.OrderDto;
 import com.jeffsilva.jkcards.Dtos.OrderStatusDto;
 import com.jeffsilva.jkcards.Services.OrderService;
-import com.jeffsilva.jkcards.entities.User;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -57,6 +56,13 @@ public class OrderController {
     public ResponseEntity<OrderDto> updateStatus(@PathVariable Long id,@RequestBody OrderStatusDto dto){
         OrderDto update = service.updateStatus(id, dto);
         return ResponseEntity.ok(update);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id){
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

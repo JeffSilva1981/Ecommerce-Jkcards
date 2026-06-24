@@ -38,3 +38,7 @@ export async function updateOrderStatus(id: number, status: OrderStatus) {
 
   return response.data;
 }
+
+export async function deleteOrder(id: number) {
+  await apiClient.delete(`/orders/${id}`);
+}

@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getAdminOrders, updateOrderStatus } from "../../api/ordersApi";
+import {
+  deleteOrder,
+  getAdminOrders,
+  updateOrderStatus,
+} from "../../api/ordersApi";
 import { Panel } from "../../components/Panel";
 import { Select } from "../../components/Select";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -28,9 +33,15 @@ export function OrdersAdminPage() {
     queryFn: getAdminOrders,
   });
 
-  const mutation = useMutation({
+  const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
       updateOrderStatus(id, status),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteOrder,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
   });
@@ -40,6 +51,18 @@ export function OrdersAdminPage() {
   const orders = Array.isArray(data)
     ? data
     : data?.content ?? [];
+
+  function handleDeleteOrder(id: number) {
+    const confirmed = window.confirm(
+      `Deseja realmente excluir o pedido #${id}? Essa acao nao pode ser desfeita.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteMutation.mutate(id);
+  }
 
   return (
     <section className="space-y-5">
@@ -52,7 +75,7 @@ export function OrdersAdminPage() {
 
       <Panel className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1000px] text-left text-sm">
+          <table className="w-full min-w-[1100px] text-left text-sm">
             <thead className="border-b border-line bg-white/5 text-slate-300">
               <tr>
                 <th className="px-4 py-3">Pedido</th>
@@ -62,6 +85,7 @@ export function OrdersAdminPage() {
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Alterar</th>
                 <th className="px-4 py-3">Detalhes</th>
+                <th className="px-4 py-3">Acoes</th>
               </tr>
             </thead>
 
@@ -97,7 +121,7 @@ export function OrdersAdminPage() {
                       className="w-56"
                       value={order.status}
                       onChange={(event) =>
-                        mutation.mutate({
+                        updateStatusMutation.mutate({
                           id: order.id,
                           status: event.target.value as OrderStatus,
                         })
@@ -118,6 +142,18 @@ export function OrdersAdminPage() {
                     >
                       Ver Detalhes
                     </Link>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => handleDeleteOrder(order.id)}
+                      className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Trash2 size={14} />
+                      Excluir
+                    </button>
                   </td>
                 </tr>
               ))}

@@ -14,6 +14,7 @@ import com.jeffsilva.jkcards.entities.Product;
 import com.jeffsilva.jkcards.entities.User;
 import com.jeffsilva.jkcards.entities.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -119,5 +120,28 @@ public class OrderService {
         order.setStatus(dto.status());
         order = repository.save(order);
         return new OrderDto(order);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Order order = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found"));
+
+        try {
+            for (OrderItem item : order.getItems()) {
+                Product product = item.getProduct();
+
+                Integer currentStock = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
+                Integer quantityToReturn = item.getQuantity() == null ? 0 : item.getQuantity();
+
+                product.setStockQuantity(currentStock + quantityToReturn);
+            }
+
+            orderItemRepository.deleteAll(order.getItems());
+            repository.delete(order);
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new DataBaseException("Integrity violation");
+        }
     }
 }

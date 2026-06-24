@@ -24,7 +24,14 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Page<ProductMinDto> findAll(String name, Pageable pageable) {
-        Page<Product> result = repository.searchByName(name, pageable);
+        Page<Product> result;
+
+        if (name == null || name.isBlank()) {
+            result = repository.findAll(pageable);
+        } else {
+            result = repository.searchByName(name, pageable);
+        }
+
         return result.map(ProductMinDto::new);
     }
 
