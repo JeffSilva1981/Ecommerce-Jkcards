@@ -1,6 +1,6 @@
 package com.jeffsilva.jkcards.Services;
 
-import com.jeffsilva.jkcards.Dtos.ProductDto;
+
 import com.jeffsilva.jkcards.Dtos.RegisterDTO;
 import com.jeffsilva.jkcards.Dtos.UserDto;
 import com.jeffsilva.jkcards.Repositories.RoleRepository;
@@ -122,16 +122,27 @@ public class UserService implements UserDetailsService {
     @Transactional(propagation = Propagation.SUPPORTS)
     public void delete(Long id) {
 
-        if (!repository.existsById(id)){
-            throw new ResourceNotFoundException("User not found");
+        User user = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        User authenticatedUser = authenticated();
+
+        if (authenticatedUser.getId().equals(id)) {
+            throw new DataBaseException("You cannot delete your own user");
+        }
+
+        boolean isAdmin = user.getRoles().stream()
+                .anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            throw new DataBaseException("Admin users cannot be deleted");
         }
 
         try {
-            repository.deleteById(id);
-        }catch (DataIntegrityViolationException e){
+            repository.delete(user);
+        } catch (DataIntegrityViolationException e) {
             throw new DataBaseException("Integrity violation - user is related to other entities");
         }
-
     }
 
     private void copyDtoToEnityToUpadate(UserDto dto, User user) {

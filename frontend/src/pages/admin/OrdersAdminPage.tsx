@@ -36,14 +36,24 @@ export function OrdersAdminPage() {
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
       updateOrderStatus(id, status),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
+    onSuccess: () => {
+      alert("Status do pedido atualizado com sucesso.");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: () => {
+      alert("Nao foi possivel atualizar o status do pedido.");
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteOrder,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
+    onSuccess: () => {
+      alert("Pedido excluido com sucesso.");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: () => {
+      alert("Nao foi possivel excluir o pedido.");
+    },
   });
 
   const data = query.data as Order[] | PageResponse<Order> | undefined;
@@ -120,6 +130,7 @@ export function OrdersAdminPage() {
                       label="Status"
                       className="w-56"
                       value={order.status}
+                      disabled={updateStatusMutation.isPending}
                       onChange={(event) =>
                         updateStatusMutation.mutate({
                           id: order.id,
@@ -152,7 +163,7 @@ export function OrdersAdminPage() {
                       className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <Trash2 size={14} />
-                      Excluir
+                      {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
                     </button>
                   </td>
                 </tr>

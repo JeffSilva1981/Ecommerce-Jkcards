@@ -16,9 +16,27 @@ export function ProductsAdminPage() {
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: () => {
+      alert("Produto excluido com sucesso.");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: () => {
+      alert("Nao foi possivel excluir o produto.");
+    },
   });
+
+  function handleDeleteProduct(id: number, name: string) {
+    const confirmed = window.confirm(
+      `Deseja realmente excluir o produto "${name}"? Essa acao nao pode ser desfeita.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteMutation.mutate(id);
+  }
 
   return (
     <section className="space-y-5">
@@ -100,9 +118,11 @@ export function ProductsAdminPage() {
                           variant="danger"
                           icon={<Trash2 size={15} />}
                           disabled={deleteMutation.isPending}
-                          onClick={() => deleteMutation.mutate(product.id)}
+                          onClick={() =>
+                            handleDeleteProduct(product.id, product.name)
+                          }
                         >
-                          Excluir
+                          {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
                         </Button>
                       </div>
                     </td>

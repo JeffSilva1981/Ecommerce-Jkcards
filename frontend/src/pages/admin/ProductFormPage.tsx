@@ -97,8 +97,18 @@ export function ProductFormPage() {
         productId
       ),
     onSuccess: () => {
+      alert(
+        productId
+          ? "Produto atualizado com sucesso."
+          : "Produto cadastrado com sucesso."
+      );
+
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       navigate("/admin/produtos");
+    },
+    onError: () => {
+      alert("Nao foi possivel salvar o produto.");
     },
   });
 
@@ -209,7 +219,7 @@ export function ProductFormPage() {
           <Button
             type="submit"
             icon={<Save size={17} />}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || uploadingImage}
           >
             {mutation.isPending ? "Salvando..." : "Salvar produto"}
           </Button>

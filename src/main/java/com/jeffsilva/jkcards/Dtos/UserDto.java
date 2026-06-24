@@ -1,5 +1,6 @@
 package com.jeffsilva.jkcards.Dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jeffsilva.jkcards.entities.User;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -74,6 +75,7 @@ public class UserDto {
         this.birthDate = birthDate;
     }
 
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
