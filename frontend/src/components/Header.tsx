@@ -36,7 +36,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-ink/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to="/produtos" className="flex items-center gap-2.5">
           <span className="grid size-10 place-items-center rounded-lg bg-brand-gradient font-black tracking-tight text-ink shadow-glow-soft">
             JK
           </span>
