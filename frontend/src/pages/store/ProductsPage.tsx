@@ -27,10 +27,22 @@ export function ProductsPage() {
     [debouncedName],
   );
 
+  function scrollToTop() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
   function handleSearch(value: string) {
     setName(value);
     setPage(0);
     setSearchParams(value ? { name: value } : {});
+    scrollToTop();
+  }
+
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+    scrollToTop();
   }
 
   return (
@@ -77,7 +89,7 @@ export function ProductsPage() {
           <Pagination
             page={query.data.number}
             totalPages={query.data.totalPages}
-            onChange={setPage}
+            onChange={handlePageChange}
           />
         </>
       ) : null}
