@@ -5,6 +5,7 @@ import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
 import com.jeffsilva.jkcards.entities.Payment;
 import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
@@ -30,11 +31,7 @@ public class MercadoPagoService {
 
     public Payment createPaymentPreference(Order order) {
 
-        System.out.println("TOKEN MERCADO PAGO LIDO? " + (accessToken == null ? "NULL" : "TAMANHO: " + accessToken.length()));
-
-        if (accessToken == null || accessToken.isBlank()) {
-            throw new DataBaseException("Mercado Pago access token is not configured");
-        }
+        validateAccessToken();
 
         try {
             MercadoPagoConfig.setAccessToken(accessToken);
@@ -82,6 +79,31 @@ public class MercadoPagoService {
         }
         catch (MPException e) {
             throw new DataBaseException("Mercado Pago error: " + e.getMessage());
+        }
+    }
+
+    public com.mercadopago.resources.payment.Payment findPaymentById(Long mercadoPagoPaymentId) {
+
+        validateAccessToken();
+
+        try {
+            MercadoPagoConfig.setAccessToken(accessToken);
+
+            PaymentClient client = new PaymentClient();
+
+            return client.get(mercadoPagoPaymentId);
+        }
+        catch (MPApiException e) {
+            throw new DataBaseException("Mercado Pago API error: " + e.getMessage());
+        }
+        catch (MPException e) {
+            throw new DataBaseException("Mercado Pago error: " + e.getMessage());
+        }
+    }
+
+    private void validateAccessToken() {
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new DataBaseException("Mercado Pago access token is not configured");
         }
     }
 }
