@@ -14,6 +14,13 @@ export type OrderItem = {
   subTotal?: number;
 };
 
+export type Payment = {
+  id: number;
+  moment: string | null;
+  checkoutUrl?: string;
+  paymentStatus?: string;
+};
+
 export type Order = {
   id: number;
   moment: string;
@@ -22,10 +29,7 @@ export type Order = {
     id: number;
     name: string;
   };
-  payment?: {
-    id: number;
-    moment: string;
-  } | null;
+  payment?: Payment | null;
   items: OrderItem[];
   total: number;
 };
@@ -37,4 +41,3 @@ export type CreateOrderPayload = {
     price: number;
   }>;
 };
-

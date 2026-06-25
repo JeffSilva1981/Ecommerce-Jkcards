@@ -10,6 +10,7 @@ import com.jeffsilva.jkcards.Services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.Services.exceptions.ResourceNotFoundException;
 import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
+import com.jeffsilva.jkcards.entities.Payment;
 import com.jeffsilva.jkcards.entities.Product;
 import com.jeffsilva.jkcards.entities.User;
 import com.jeffsilva.jkcards.entities.enums.OrderStatus;
@@ -39,6 +40,9 @@ public class OrderService {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private MercadoPagoService mercadoPagoService;
 
     @Transactional
     public OrderDto findById(Long id) {
@@ -108,8 +112,13 @@ public class OrderService {
             order.getItems().add(item);
         }
 
-        repository.save(order);
+        order = repository.save(order);
         orderItemRepository.saveAll(order.getItems());
+
+        Payment payment = mercadoPagoService.createPaymentPreference(order);
+        order.setPayment(payment);
+
+        order = repository.save(order);
 
         return new OrderDto(order);
     }

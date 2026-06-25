@@ -91,6 +91,13 @@
 			<version>1.39.0</version>
 		</dependency>
 
+		<!-- Mercado Pago -->
+		<dependency>
+			<groupId>com.mercadopago</groupId>
+			<artifactId>sdk-java</artifactId>
+			<version>3.2.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

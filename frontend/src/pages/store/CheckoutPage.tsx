@@ -43,29 +43,39 @@ export function CheckoutPage() {
           Revise os itens. O pedido sera criado como aguardando pagamento.
         </p>
       </div>
+
       <Panel className="p-5">
         <div className="space-y-4">
           {items.map((item) => (
-            <div key={item.productId} className="flex items-center justify-between gap-4 border-b border-line pb-4 last:border-b-0 last:pb-0">
+            <div
+              key={item.productId}
+              className="flex items-center justify-between gap-4 border-b border-line pb-4 last:border-b-0 last:pb-0"
+            >
               <div>
                 <p className="font-semibold text-white">{item.name}</p>
                 <p className="text-sm text-slate-400">
                   {item.quantity} x {formatCurrency(item.price)}
                 </p>
               </div>
-              <p className="font-bold text-gold">{formatCurrency(item.price * item.quantity)}</p>
+
+              <p className="font-bold text-gold">
+                {formatCurrency(item.price * item.quantity)}
+              </p>
             </div>
           ))}
         </div>
+
         <div className="mt-6 flex items-center justify-between text-xl font-bold text-white">
           <span>Total</span>
           <span>{formatCurrency(totalPrice())}</span>
         </div>
+
         {mutation.error ? (
           <p className="mt-4 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
             Nao foi possivel criar o pedido agora.
           </p>
         ) : null}
+
         <Button
           className="mt-6 w-full"
           disabled={mutation.isPending}
@@ -77,4 +87,3 @@ export function CheckoutPage() {
     </section>
   );
 }
-
