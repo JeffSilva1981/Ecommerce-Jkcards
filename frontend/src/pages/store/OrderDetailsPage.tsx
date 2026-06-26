@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard } from "lucide-react";
+import { CreditCard, MessageCircle } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { getOrderById } from "../../api/ordersApi";
 import { Button } from "../../components/Button";
@@ -8,6 +8,8 @@ import { Panel } from "../../components/Panel";
 import { StatusBadge } from "../../components/StatusBadge";
 import { formatCurrency } from "../../utils/currency";
 import { formatDate } from "../../utils/dates";
+
+const whatsappNumber = "5515988233584";
 
 export function OrderDetailsPage() {
   const { id } = useParams();
@@ -40,6 +42,26 @@ export function OrderDetailsPage() {
     if (order.payment?.checkoutUrl) {
       window.location.href = order.payment.checkoutUrl;
     }
+  }
+
+  function handleWhatsappOrder() {
+    const itemsText = order.items
+      .map((item) => {
+        const subtotal = item.subTotal ?? item.price * item.quantity;
+
+        return `- ${item.quantity}x ${item.name} - ${formatCurrency(subtotal)}`;
+      })
+      .join("\n");
+
+    const message = encodeURIComponent(
+      `Olá! Gostaria de falar sobre meu pedido #${order.id}.\n\n` +
+        `Cliente: ${order.client.name}\n` +
+        `Status: ${order.status}\n\n` +
+        `Itens:\n${itemsText}\n\n` +
+        `Total: ${formatCurrency(order.total)}`
+    );
+
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
   }
 
   return (
@@ -75,7 +97,17 @@ export function OrderDetailsPage() {
       ) : null}
 
       <Panel className="p-5">
-        <h2 className="text-lg font-bold text-white">Itens</h2>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-lg font-bold text-white">Itens</h2>
+
+          <Button
+            variant="secondary"
+            icon={<MessageCircle size={17} />}
+            onClick={handleWhatsappOrder}
+          >
+            Enviar pedido pelo WhatsApp
+          </Button>
+        </div>
 
         <div className="mt-4 space-y-4">
           {order.items.map((item) => (
