@@ -37,11 +37,12 @@ public class PaymentWebhookController {
             if ("payment".equalsIgnoreCase(eventType) && paymentId != null) {
                 paymentService.processMercadoPagoPayment(paymentId);
             }
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             System.out.println("Mercado Pago webhook ignored: " + e.getMessage());
+            return ResponseEntity.ok().build();
         }
-
-        return ResponseEntity.ok().build();
     }
 
     private Long extractPaymentIdFromBody(Map<String, Object> body) {
