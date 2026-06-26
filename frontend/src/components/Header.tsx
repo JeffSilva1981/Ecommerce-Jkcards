@@ -24,7 +24,8 @@ export function Header() {
 
   const canSeeOrders = user && !isAdmin;
   const canSeeCart = !isAdmin;
-  const canSeeLogin = !user && location.pathname === "/";
+  const canSeeLogin =
+    !user && location.pathname !== "/login" && location.pathname !== "/cadastro";
   const hasMobileMenu = Boolean(isAdmin || canSeeOrders || user || canSeeLogin);
 
   function handleLogout() {
