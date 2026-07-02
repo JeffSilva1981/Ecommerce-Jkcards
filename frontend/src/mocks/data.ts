@@ -151,6 +151,11 @@ export const mockDashboard: DashboardSummary = {
   grossRevenue: 8630.4,
   netRevenue: 5120.2,
   averageTicket: 253.84,
+  inventoryValue: 1800.0,
+  productsCount: 8,
+  stockUnits: 88,
+  outOfStockProducts: 1,
+  waitingPaymentOrders: 2,
   byStatus: [
     { status: "WAITING_PAYMENT", count: 8 },
     { status: "PAID", count: 15 },
