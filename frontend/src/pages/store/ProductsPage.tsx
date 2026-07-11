@@ -2,19 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getProducts } from "../../api/productsApi";
+import homeBanner from "../../assets/home-banner-desktop.png";
 import { EmptyState } from "../../components/EmptyState";
-import { Input } from "../../components/Input";
 import { Pagination } from "../../components/Pagination";
 import { ProductCard } from "../../components/ProductCard";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useCartStore } from "../../stores/cartStore";
 
 export function ProductsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialName = searchParams.get("name") ?? "";
-  const [name, setName] = useState(initialName);
   const [page, setPage] = useState(0);
-  const debouncedName = useDebounce(name);
+  const debouncedName = useDebounce(initialName);
   const addItem = useCartStore((state) => state.addItem);
 
   const query = useQuery({
@@ -23,7 +22,10 @@ export function ProductsPage() {
   });
 
   const title = useMemo(
-    () => (debouncedName ? `Resultados para "${debouncedName}"` : "Produtos"),
+    () =>
+      debouncedName
+        ? `Resultados para "${debouncedName}"`
+        : "Produtos em destaque",
     [debouncedName],
   );
 
@@ -33,38 +35,25 @@ export function ProductsPage() {
     document.body.scrollTop = 0;
   }
 
-  function handleSearch(value: string) {
-    setName(value);
-    setPage(0);
-    setSearchParams(value ? { name: value } : {});
-    scrollToTop();
-  }
-
   function handlePageChange(nextPage: number) {
     setPage(nextPage);
     scrollToTop();
   }
 
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h2 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">
-            {title}
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            Cards, decks, sleeves e acessorios com uma experiencia feita para compra rapida.
-          </p>
-        </div>
+    <section className="space-y-8">
+      <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden border-y border-line/80 bg-white/5 shadow-inset">
+        <img
+          src={homeBanner}
+          alt="JKCards - Pokémon TCG original"
+          className="h-[180px] w-full object-cover sm:h-[240px] lg:h-[320px]"
+        />
+      </div>
 
-        <div className="w-full md:max-w-sm">
-          <Input
-            label="Buscar produto"
-            value={name}
-            onChange={(event) => handleSearch(event.target.value)}
-            placeholder="Booster, deck, sleeve..."
-          />
-        </div>
+      <div>
+        <h2 className="text-3xl font-black tracking-tight text-white md:text-4xl">
+          {title}
+        </h2>
       </div>
 
       {query.isLoading ? (

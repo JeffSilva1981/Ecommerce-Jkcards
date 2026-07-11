@@ -59,11 +59,11 @@ export function ProductDetailsPage() {
 
   return (
     <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-      <div className="flex min-h-96 items-center justify-center overflow-hidden rounded-lg border border-line bg-white p-5">
+      <div className="group flex min-h-96 items-center justify-center overflow-hidden rounded-lg border border-line bg-white p-5">
         <img
           src={product.imgUrl}
           alt={product.name}
-          className="max-h-[520px] max-w-full object-contain"
+          className="max-h-[520px] max-w-full object-contain transition duration-500 group-hover:scale-110"
         />
       </div>
 
@@ -79,9 +79,19 @@ export function ProductDetailsPage() {
           ))}
         </div>
 
-        <h1 className="mt-5 text-3xl font-bold text-white">{product.name}</h1>
+        <h1 className="mt-5 text-3xl font-bold leading-tight text-white">
+          {product.name}
+        </h1>
 
-        <p className="mt-4 text-slate-300">{product.description}</p>
+        <div className="mt-6">
+          <h2 className="text-lg font-bold text-white">
+            Descrição do produto
+          </h2>
+
+          <p className="mt-3 whitespace-pre-line text-base leading-7 text-slate-300">
+            {product.description}
+          </p>
+        </div>
 
         <div className="mt-5">
           {isOutOfStock ? (
