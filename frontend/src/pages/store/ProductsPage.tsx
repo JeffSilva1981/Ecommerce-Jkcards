@@ -1,33 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getProducts } from "../../api/productsApi";
 import homeBanner from "../../assets/home-banner-desktop.png";
 import { EmptyState } from "../../components/EmptyState";
 import { Pagination } from "../../components/Pagination";
 import { ProductCard } from "../../components/ProductCard";
-import { useDebounce } from "../../hooks/useDebounce";
 import { useCartStore } from "../../stores/cartStore";
 
 export function ProductsPage() {
   const [searchParams] = useSearchParams();
-  const initialName = searchParams.get("name") ?? "";
+  const name = searchParams.get("name") ?? "";
   const [page, setPage] = useState(0);
-  const debouncedName = useDebounce(initialName);
   const addItem = useCartStore((state) => state.addItem);
 
   const query = useQuery({
-    queryKey: ["products", debouncedName, page],
-    queryFn: () => getProducts({ name: debouncedName, page, size: 8 }),
+    queryKey: ["products", name, page],
+    queryFn: () => getProducts({ name, page, size: 8 }),
   });
 
   const title = useMemo(
-    () =>
-      debouncedName
-        ? `Resultados para "${debouncedName}"`
-        : "Produtos em destaque",
-    [debouncedName],
+    () => (name ? `Resultados para "${name}"` : "Produtos em destaque"),
+    [name],
   );
+
+  useEffect(() => {
+    setPage(0);
+  }, [name]);
 
   function scrollToTop() {
     window.scrollTo(0, 0);
@@ -46,7 +45,7 @@ export function ProductsPage() {
         <img
           src={homeBanner}
           alt="JKCards - Pokémon TCG original"
-          className="h-[180px] w-full object-cover sm:h-[240px] lg:h-[320px]"
+          className="h-auto w-full object-contain sm:h-[240px] sm:object-cover lg:h-[320px]"
         />
       </div>
 
