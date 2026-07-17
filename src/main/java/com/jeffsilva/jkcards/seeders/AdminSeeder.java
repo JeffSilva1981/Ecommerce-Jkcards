@@ -1,7 +1,7 @@
 package com.jeffsilva.jkcards.seeders;
 
-import com.jeffsilva.jkcards.Repositories.RoleRepository;
-import com.jeffsilva.jkcards.Repositories.UserRepository;
+import com.jeffsilva.jkcards.repositories.RoleRepository;
+import com.jeffsilva.jkcards.repositories.UserRepository;
 import com.jeffsilva.jkcards.entities.Role;
 import com.jeffsilva.jkcards.entities.User;
 import org.springframework.beans.factory.annotation.Value;
