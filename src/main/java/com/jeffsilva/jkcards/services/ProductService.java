@@ -3,12 +3,11 @@ package com.jeffsilva.jkcards.services;
 import com.jeffsilva.jkcards.dtos.CategoryDto;
 import com.jeffsilva.jkcards.dtos.ProductDto;
 import com.jeffsilva.jkcards.dtos.ProductMinDto;
+import com.jeffsilva.jkcards.entities.Category;
+import com.jeffsilva.jkcards.entities.Product;
 import com.jeffsilva.jkcards.repositories.ProductRepository;
 import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.services.exceptions.ResourceNotFoundException;
-import com.jeffsilva.jkcards.entities.Category;
-import com.jeffsilva.jkcards.entities.Product;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,72 +18,142 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProductService {
 
-    @Autowired
-    private ProductRepository repository;
+    private final ProductRepository repository;
+
+    public ProductService(
+            ProductRepository repository
+    ) {
+        this.repository = repository;
+    }
 
     @Transactional(readOnly = true)
-    public Page<ProductMinDto> findAll(String name, Pageable pageable) {
-        Page<Product> result;
+    public Page<ProductMinDto> findAll(
+            String name,
+            Long categoryId,
+            Long excludeCategoryId,
+            boolean inStock,
+            Pageable pageable
+    ) {
+        String normalizedName =
+                name == null ? "" : name.trim();
 
-        if (name == null || name.isBlank()) {
-            result = repository.findAll(pageable);
-        } else {
-            result = repository.searchByName(name, pageable);
-        }
+        Page<Product> result = repository.search(
+                normalizedName,
+                categoryId,
+                excludeCategoryId,
+                inStock,
+                pageable
+        );
 
         return result.map(ProductMinDto::new);
     }
 
-    @Transactional
+    /*
+     * Mantém compatibilidade com testes e chamadas
+     * antigas que ainda utilizem a assinatura anterior.
+     */
+    @Transactional(readOnly = true)
+    public Page<ProductMinDto> findAll(
+            String name,
+            Long categoryId,
+            Pageable pageable
+    ) {
+        return findAll(
+                name,
+                categoryId,
+                null,
+                false,
+                pageable
+        );
+    }
+
+    @Transactional(readOnly = true)
     public ProductDto findById(Long id) {
-        Product result = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        return new ProductDto(result);
+        Product product = repository.findById(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Product not found"
+                        )
+                );
+
+        return new ProductDto(product);
     }
 
     @Transactional
     public ProductDto insert(ProductDto dto) {
-        Product entity = new Product();
-        copyDtoToEntity(dto, entity);
-        entity = repository.save(entity);
-        return new ProductDto(entity);
+        Product product = new Product();
+
+        copyDtoToEntity(dto, product);
+
+        product = repository.save(product);
+
+        return new ProductDto(product);
     }
 
     @Transactional
-    public ProductDto update(Long id, ProductDto dto) {
-        Product entity = repository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Product Not Found"));
-        copyDtoToEntity(dto, entity);
-        entity = repository.save(entity);
-        return new ProductDto(entity);
+    public ProductDto update(
+            Long id,
+            ProductDto dto
+    ) {
+        Product product = repository.findById(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Product not found"
+                        )
+                );
+
+        copyDtoToEntity(dto, product);
+
+        product = repository.save(product);
+
+        return new ProductDto(product);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional(
+            propagation = Propagation.SUPPORTS
+    )
     public void delete(Long id) {
-
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
+            throw new ResourceNotFoundException(
+                    "Product not found"
+            );
         }
 
         try {
             repository.deleteById(id);
         } catch (DataIntegrityViolationException e) {
-            throw new DataBaseException("Integrity violation - product is related to other entities");
+            throw new DataBaseException(
+                    "Integrity violation - product " +
+                            "is related to other entities"
+            );
         }
     }
 
-    private void copyDtoToEntity(ProductDto dto, Product entity) {
-        entity.setName(dto.getName());
-        entity.setDescription(dto.getDescription());
-        entity.setPrice(dto.getPrice());
-        entity.setImgUrl(dto.getImgUrl());
-        entity.setStockQuantity(dto.getStockQuantity());
+    private void copyDtoToEntity(
+            ProductDto dto,
+            Product product
+    ) {
+        product.setName(dto.getName());
+        product.setDescription(
+                dto.getDescription()
+        );
+        product.setPrice(dto.getPrice());
+        product.setImgUrl(dto.getImgUrl());
+        product.setStockQuantity(
+                dto.getStockQuantity()
+        );
 
-        entity.getCategories().clear();
+        product.getCategories().clear();
 
-        for (CategoryDto categoryDto : dto.getCategories()) {
-            Category cat = new Category();
-            cat.setId(categoryDto.getId());
-            entity.getCategories().add(cat);
+        for (
+                CategoryDto categoryDto
+                : dto.getCategories()
+        ) {
+            Category category = new Category();
+
+            category.setId(categoryDto.getId());
+
+            product.getCategories().add(category);
         }
     }
-
 }

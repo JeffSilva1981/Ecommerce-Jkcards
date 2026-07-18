@@ -5,8 +5,7 @@ import {
 } from "@tanstack/react-query";
 import {
   Edit,
-  Layers,
-  Plus,
+  PlusCircle,
   Search,
   Trash2,
   X,
@@ -27,7 +26,7 @@ import { Pagination } from "../../components/Pagination";
 import { Panel } from "../../components/Panel";
 import { formatCurrency } from "../../utils/currency";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 function normalizeCategoryName(name: string) {
   return name
@@ -37,7 +36,7 @@ function normalizeCategoryName(name: string) {
     .toLowerCase();
 }
 
-export function ProductsAdminPage() {
+export function CardsAdminPage() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
@@ -45,7 +44,7 @@ export function ProductsAdminPage() {
     useState("");
   const [page, setPage] = useState(0);
 
-  const [deletingProductId, setDeletingProductId] =
+  const [deletingCardId, setDeletingCardId] =
     useState<number | null>(null);
 
   const categoriesQuery = useQuery({
@@ -65,9 +64,9 @@ export function ProductsAdminPage() {
       );
     }) ?? null;
 
-  const query = useQuery({
+  const cardsQuery = useQuery({
     queryKey: [
-      "admin-products",
+      "admin-cards",
       appliedSearch,
       cardCategory?.id,
       page,
@@ -76,13 +75,12 @@ export function ProductsAdminPage() {
     queryFn: () =>
       getProducts({
         name: appliedSearch,
-        excludeCategoryId:
-          cardCategory?.id,
+        categoryId: cardCategory?.id,
         page,
         size: PAGE_SIZE,
       }),
 
-    enabled: categoriesQuery.isSuccess,
+    enabled: Boolean(cardCategory),
   });
 
   useEffect(() => {
@@ -94,13 +92,17 @@ export function ProductsAdminPage() {
 
     onSuccess: async () => {
       if (
-        query.data?.content.length === 1 &&
+        cardsQuery.data?.content.length === 1 &&
         page > 0
       ) {
         setPage((currentPage) =>
           Math.max(currentPage - 1, 0),
         );
       }
+
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-cards"],
+      });
 
       await queryClient.invalidateQueries({
         queryKey: ["admin-products"],
@@ -110,26 +112,26 @@ export function ProductsAdminPage() {
         queryKey: ["products"],
       });
 
-      setDeletingProductId(null);
+      setDeletingCardId(null);
 
-      alert("Produto excluído com sucesso.");
+      alert("Carta excluída com sucesso.");
     },
 
     onError: (error) => {
       console.error(
-        "Erro ao excluir produto:",
+        "Erro ao excluir carta:",
         error,
       );
 
-      setDeletingProductId(null);
+      setDeletingCardId(null);
 
       alert(
-        "Não foi possível excluir o produto.",
+        "Não foi possível excluir a carta.",
       );
     },
 
     onSettled: () => {
-      setDeletingProductId(null);
+      setDeletingCardId(null);
     },
   });
 
@@ -148,19 +150,19 @@ export function ProductsAdminPage() {
     setPage(0);
   }
 
-  function handleDeleteProduct(
+  function handleDeleteCard(
     id: number,
     name: string,
   ) {
     const confirmed = window.confirm(
-      `Deseja realmente excluir o produto "${name}"? Essa ação não pode ser desfeita.`,
+      `Deseja realmente excluir a carta "${name}"? Essa ação não pode ser desfeita.`,
     );
 
     if (!confirmed) {
       return;
     }
 
-    setDeletingProductId(id);
+    setDeletingCardId(id);
     deleteMutation.mutate(id);
   }
 
@@ -173,42 +175,31 @@ export function ProductsAdminPage() {
     });
   }
 
-  const products = query.data?.content ?? [];
+  const cards =
+    cardsQuery.data?.content ?? [];
 
   return (
     <section className="space-y-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">
-            Produtos
+            Cartas Pokémon
           </h1>
 
           <p className="mt-2 text-sm text-slate-400">
-            Boosters, decks, acessórios, jogos e outros
-            produtos gerais.
+            Gerencie somente as cartas cadastradas no
+            estoque da loja.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Link to="/admin/cartas">
-            <Button
-              variant="secondary"
-              icon={<Layers size={17} />}
-              className="w-full sm:w-auto"
-            >
-              Gerenciar cartas
-            </Button>
-          </Link>
-
-          <Link to="/admin/produtos/novo">
-            <Button
-              icon={<Plus size={17} />}
-              className="w-full sm:w-auto"
-            >
-              Novo produto
-            </Button>
-          </Link>
-        </div>
+        <Link to="/admin/cartas/nova">
+          <Button
+            icon={<PlusCircle size={17} />}
+            className="w-full sm:w-auto"
+          >
+            Nova carta Pokémon
+          </Button>
+        </Link>
       </div>
 
       <Panel className="p-5">
@@ -222,7 +213,7 @@ export function ProductsAdminPage() {
               onChange={(event) =>
                 setSearch(event.target.value)
               }
-              placeholder="Buscar produto pelo nome..."
+              placeholder="Buscar carta pelo nome..."
               className="h-11 w-full rounded-md border border-line bg-ink/70 px-4 pr-11 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/20"
             />
 
@@ -235,7 +226,7 @@ export function ProductsAdminPage() {
           <Button
             type="submit"
             icon={<Search size={17} />}
-            disabled={query.isFetching}
+            disabled={cardsQuery.isFetching}
           >
             Buscar
           </Button>
@@ -262,54 +253,53 @@ export function ProductsAdminPage() {
         ) : null}
       </Panel>
 
-      {!cardCategory &&
-      !categoriesQuery.isLoading ? (
-        <p className="rounded-md border border-yellow-400/30 bg-yellow-400/10 p-3 text-sm text-yellow-200">
+      {!categoriesQuery.isLoading &&
+      !cardCategory ? (
+        <p className="rounded-md border border-yellow-400/30 bg-yellow-400/10 p-4 text-sm text-yellow-200">
           A categoria Carta ou Cartas não foi encontrada.
-          Enquanto ela não existir, não será possível
-          separar os dois catálogos.
+          Crie essa categoria antes de cadastrar cartas.
         </p>
       ) : null}
 
       <Panel className="overflow-hidden">
         {categoriesQuery.isLoading ||
-        query.isLoading ? (
+        cardsQuery.isLoading ? (
           <div className="p-6 text-sm text-slate-400">
-            Carregando produtos...
+            Carregando cartas...
           </div>
         ) : null}
 
         {categoriesQuery.isError ||
-        query.isError ? (
+        cardsQuery.isError ? (
           <div className="p-6">
             <p className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-              Não foi possível carregar os produtos.
+              Não foi possível carregar as cartas.
             </p>
           </div>
         ) : null}
 
-        {!query.isLoading &&
-        !query.isError &&
-        products.length === 0 ? (
+        {cardCategory &&
+        !cardsQuery.isLoading &&
+        !cardsQuery.isError &&
+        cards.length === 0 ? (
           <div className="p-8 text-center">
             <p className="font-semibold text-white">
-              Nenhum produto encontrado
+              Nenhuma carta encontrada
             </p>
 
             <p className="mt-1 text-sm text-slate-400">
-              Ajuste a pesquisa ou cadastre um novo
-              produto.
+              Ajuste a busca ou cadastre uma nova carta.
             </p>
           </div>
         ) : null}
 
-        {products.length > 0 ? (
+        {cards.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-left text-sm">
               <thead className="border-b border-line bg-white/5 text-slate-300">
                 <tr>
                   <th className="px-4 py-3">
-                    Produto
+                    Carta
                   </th>
 
                   <th className="px-4 py-3">
@@ -331,34 +321,34 @@ export function ProductsAdminPage() {
               </thead>
 
               <tbody>
-                {products.map((product) => {
+                {cards.map((card) => {
                   const stockQuantity =
-                    product.stockQuantity ?? 0;
+                    card.stockQuantity ?? 0;
 
                   const isOutOfStock =
                     stockQuantity === 0;
 
                   const isDeleting =
                     deleteMutation.isPending &&
-                    deletingProductId === product.id;
+                    deletingCardId === card.id;
 
                   return (
                     <tr
-                      key={product.id}
+                      key={card.id}
                       className="border-b border-line last:border-b-0"
                     >
                       <td className="px-4 py-3 font-medium text-white">
-                        {product.name}
+                        {card.name}
                       </td>
 
                       <td className="px-4 py-3 font-semibold text-gold">
-                        {formatCurrency(product.price)}
+                        {formatCurrency(card.price)}
                       </td>
 
                       <td className="px-4 py-3">
                         {isOutOfStock ? (
                           <span className="rounded-full border border-red-400/30 bg-red-400/10 px-2 py-1 text-xs font-semibold text-red-200">
-                            Esgotado
+                            Esgotada
                           </span>
                         ) : (
                           <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-xs font-semibold text-emerald-200">
@@ -368,16 +358,16 @@ export function ProductsAdminPage() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <div className="flex size-12 items-center justify-center overflow-hidden rounded bg-white p-1">
-                          {product.imgUrl ? (
+                        <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded bg-white p-1">
+                          {card.imgUrl ? (
                             <img
-                              src={product.imgUrl}
-                              alt={product.name}
+                              src={card.imgUrl}
+                              alt={card.name}
                               loading="lazy"
                               className="max-h-full max-w-full object-contain"
                             />
                           ) : (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-[10px] text-slate-500">
                               Sem imagem
                             </span>
                           )}
@@ -387,7 +377,7 @@ export function ProductsAdminPage() {
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           <Link
-                            to={`/admin/produtos/${product.id}`}
+                            to={`/admin/produtos/${card.id}`}
                           >
                             <Button
                               variant="secondary"
@@ -407,9 +397,9 @@ export function ProductsAdminPage() {
                               deleteMutation.isPending
                             }
                             onClick={() =>
-                              handleDeleteProduct(
-                                product.id,
-                                product.name,
+                              handleDeleteCard(
+                                card.id,
+                                card.name,
                               )
                             }
                           >
@@ -428,10 +418,12 @@ export function ProductsAdminPage() {
         ) : null}
       </Panel>
 
-      {query.data ? (
+      {cardsQuery.data ? (
         <Pagination
-          page={query.data.number}
-          totalPages={query.data.totalPages}
+          page={cardsQuery.data.number}
+          totalPages={
+            cardsQuery.data.totalPages
+          }
           onChange={handlePageChange}
         />
       ) : null}

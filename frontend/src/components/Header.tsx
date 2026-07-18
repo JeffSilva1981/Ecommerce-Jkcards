@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   LogOut,
@@ -15,35 +16,54 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
+import { getCategories } from "../api/categoriesApi";
+import jkcardsLogo from "../assets/jkcards-logo.png";
 import { useAuthStore } from "../stores/authStore";
 import { useCartStore } from "../stores/cartStore";
 import { Button } from "./Button";
-import jkcardsLogo from "../assets/jkcards-logo.png";
-
-const categoryFilters = [
-  { label: "Todos", value: "" },
-  { label: "Selados", value: "Selado" },
-  { label: "Acessórios", value: "Acessório" },
-  { label: "Jogos", value: "Jogo" },
-  { label: "Cartas", value: "Carta" },
-];
 
 export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const isAdmin = useAuthStore((state) => state.isAdmin());
-  const totalItems = useCartStore((state) => state.totalItems());
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [search, setSearch] = useState(searchParams.get("name") ?? "");
 
-  const canSeeOrders = user && !isAdmin;
+  const totalItems = useCartStore(
+    (state) => state.totalItems(),
+  );
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [search, setSearch] = useState(
+    searchParams.get("name") ?? "",
+  );
+
+  const activeCategoryId =
+    searchParams.get("categoryId");
+
+  const categoriesQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
+
+  const canSeeProfile = Boolean(user && !isAdmin);
+  const canSeeOrders = Boolean(user && !isAdmin);
   const canSeeCart = !isAdmin;
+
   const canSeeLogin =
-    !user && location.pathname !== "/login" && location.pathname !== "/cadastro";
-  const hasMobileMenu = Boolean(isAdmin || canSeeOrders || user || canSeeLogin);
+    !user &&
+    location.pathname !== "/login" &&
+    location.pathname !== "/cadastro";
+
+  const hasMobileMenu = Boolean(
+    isAdmin ||
+      canSeeProfile ||
+      canSeeOrders ||
+      user ||
+      canSeeLogin,
+  );
 
   function scrollToTop() {
     window.scrollTo(0, 0);
@@ -62,28 +82,47 @@ export function Header() {
     scrollToTop();
   }
 
-  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSearchSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     const value = search.trim();
 
     setMobileOpen(false);
-    navigate(value ? `/produtos?name=${encodeURIComponent(value)}` : "/produtos");
+
+    navigate(
+      value
+        ? `/produtos?name=${encodeURIComponent(value)}`
+        : "/produtos",
+    );
+
     scrollToTop();
   }
 
-  function handleCategoryClick(value: string) {
-    setSearch(value);
+  function handleCategoryClick(
+    id?: number,
+    name?: string,
+  ) {
+    setSearch("");
     setMobileOpen(false);
-    navigate(value ? `/produtos?name=${encodeURIComponent(value)}` : "/produtos");
+
+    navigate(
+      id
+        ? `/produtos?categoryId=${id}&categoryName=${encodeURIComponent(
+            name ?? "",
+          )}`
+        : "/produtos",
+    );
+
     scrollToTop();
   }
 
   return (
     <>
       <div className="border-b border-yellow-400/30 bg-gold px-4 py-2 text-center text-xs font-black uppercase tracking-wide text-ink sm:text-sm">
-        Aceitamos Pix e cartão de crédito • Envio para todo Brasil • Compra
-        segura
+        Aceitamos Pix e cartão de crédito • Envio para
+        todo Brasil • Compra segura
       </div>
 
       <header className="sticky top-0 z-40 border-b border-line/80 bg-ink/95 backdrop-blur-md">
@@ -108,7 +147,9 @@ export function Header() {
               <div className="relative">
                 <input
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
                   placeholder="Buscar Pokémon TCG, booster, deck, sleeve..."
                   className="h-11 w-full rounded-md border border-line bg-white px-4 pr-12 text-sm text-ink outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/30"
                 />
@@ -128,9 +169,19 @@ export function Header() {
                 <Link
                   to="/admin"
                   className="hidden rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:inline-flex"
-                  title="Painel admin"
+                  title="Painel administrativo"
                 >
                   <LayoutDashboard size={18} />
+                </Link>
+              ) : null}
+
+              {canSeeProfile ? (
+                <Link
+                  to="/perfil"
+                  className="rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
+                  title="Meu perfil"
+                >
+                  <UserRound size={18} />
                 </Link>
               ) : null}
 
@@ -167,13 +218,21 @@ export function Header() {
                   onClick={handleLogout}
                   className="hidden sm:inline-flex"
                 >
-                  <span className="hidden sm:inline">Sair</span>
+                  <span className="hidden sm:inline">
+                    Sair
+                  </span>
                 </Button>
               ) : null}
 
               {canSeeLogin ? (
-                <Link to="/login" className="hidden sm:block">
-                  <Button variant="secondary" icon={<UserRound size={17} />}>
+                <Link
+                  to="/login"
+                  className="hidden sm:block"
+                >
+                  <Button
+                    variant="secondary"
+                    icon={<UserRound size={17} />}
+                  >
                     Entrar
                   </Button>
                 </Link>
@@ -183,20 +242,35 @@ export function Header() {
                 <button
                   type="button"
                   className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:hidden"
-                  onClick={() => setMobileOpen((value) => !value)}
-                  aria-label="Abrir menu"
+                  onClick={() =>
+                    setMobileOpen((value) => !value)
+                  }
+                  aria-label={
+                    mobileOpen
+                      ? "Fechar menu"
+                      : "Abrir menu"
+                  }
                 >
-                  {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+                  {mobileOpen ? (
+                    <X size={18} />
+                  ) : (
+                    <Menu size={18} />
+                  )}
                 </button>
               ) : null}
             </div>
           </div>
 
-          <form onSubmit={handleSearchSubmit} className="md:hidden">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="md:hidden"
+          >
             <div className="relative">
               <input
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
                 placeholder="Buscar produto..."
                 className="h-11 w-full rounded-md border border-line bg-white px-4 pr-12 text-sm text-ink outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/30"
               />
@@ -212,21 +286,32 @@ export function Header() {
           </form>
 
           <nav className="flex gap-2 overflow-x-auto pb-1">
-            {categoryFilters.map((category) => {
-              const isActive = search === category.value;
+            {[
+              { id: undefined, name: "Todos" },
+              ...(categoriesQuery.data ?? []),
+            ].map((category) => {
+              const isActive = category.id
+                ? activeCategoryId ===
+                  String(category.id)
+                : !activeCategoryId && !search;
 
               return (
                 <button
-                  key={category.label}
+                  key={category.id ?? "all"}
                   type="button"
-                  onClick={() => handleCategoryClick(category.value)}
+                  onClick={() =>
+                    handleCategoryClick(
+                      category.id,
+                      category.name,
+                    )
+                  }
                   className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
                     isActive
                       ? "border-skybrand bg-skybrand text-ink"
                       : "border-line bg-white/5 text-slate-300 hover:border-skybrand/60 hover:text-white"
                   }`}
                 >
-                  {category.label}
+                  {category.name}
                 </button>
               );
             })}
@@ -235,14 +320,26 @@ export function Header() {
 
         {mobileOpen ? (
           <div className="border-t border-line bg-ink/95 backdrop-blur-md md:hidden">
-            <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6">
+            <div className="mx-auto max-w-7xl space-y-2 px-4 py-4 sm:px-6">
               {isAdmin ? (
                 <Link
                   to="/admin"
                   onClick={() => setMobileOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
-                  Painel admin
+                  <LayoutDashboard size={17} />
+                  Painel administrativo
+                </Link>
+              ) : null}
+
+              {canSeeProfile ? (
+                <Link
+                  to="/perfil"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                >
+                  <UserRound size={17} />
+                  Meu perfil
                 </Link>
               ) : null}
 
@@ -250,8 +347,9 @@ export function Header() {
                 <Link
                   to="/pedidos"
                   onClick={() => setMobileOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
+                  <Package size={17} />
                   Meus pedidos
                 </Link>
               ) : null}
@@ -260,17 +358,20 @@ export function Header() {
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
+                  <UserRound size={17} />
                   Entrar
                 </Link>
               ) : null}
 
               {user ? (
                 <button
+                  type="button"
                   onClick={handleLogout}
-                  className="block w-full rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-white/5"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-white/5"
                 >
+                  <LogOut size={17} />
                   Sair
                 </button>
               ) : null}

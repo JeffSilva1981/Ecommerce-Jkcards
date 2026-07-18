@@ -55,7 +55,7 @@ public class ProductServiceTests {
     public void findAllShouldReturnPageOfProductsWhenNameIsNull(){
         Mockito.when(repository.findAll(pageable)).thenReturn(page);
 
-        var result = service.findAll(null, pageable);
+        var result = service.findAll(null, null, pageable);
 
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(1, result.getTotalElements());
@@ -69,7 +69,7 @@ public class ProductServiceTests {
         String name = " ";
         Mockito.when(repository.findAll(pageable)).thenReturn(page);
 
-        var result = service.findAll(name, pageable);
+        var result = service.findAll(name, null, pageable);
 
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(1, result.getTotalElements());
@@ -157,7 +157,7 @@ public class ProductServiceTests {
 
         Mockito.when(repository.searchByName(name, pageable)).thenReturn(page);
 
-        var result = service.findAll(name, pageable);
+        var result = service.findAll(name, null, pageable);
 
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(1, result.getTotalElements());

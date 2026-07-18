@@ -119,29 +119,39 @@ public class UserService implements UserDetailsService {
         return new UserDto(user);
     }
 
-    @Transactional(propagation = Propagation.SUPPORTS)
+    @Transactional
     public void delete(Long id) {
-
         User user = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
 
         User authenticatedUser = authenticated();
 
         if (authenticatedUser.getId().equals(id)) {
-            throw new DataBaseException("You cannot delete your own user");
+            throw new DataBaseException(
+                    "You cannot delete your own user"
+            );
         }
 
-        boolean isAdmin = user.getRoles().stream()
-                .anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = user.getRoles()
+                .stream()
+                .anyMatch(role ->
+                        role.getAuthority().equals("ROLE_ADMIN")
+                );
 
         if (isAdmin) {
-            throw new DataBaseException("Admin users cannot be deleted");
+            throw new DataBaseException(
+                    "Admin users cannot be deleted"
+            );
         }
 
         try {
             repository.delete(user);
+            repository.flush();
         } catch (DataIntegrityViolationException e) {
-            throw new DataBaseException("Integrity violation - user is related to other entities");
+            throw new DataBaseException(
+                    "Integrity violation - user is related to other entities"
+            );
         }
     }
 

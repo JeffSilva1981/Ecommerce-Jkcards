@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { getCategories } from "../../api/categoriesApi";
 import { getProducts } from "../../api/productsApi";
 import homeBanner from "../../assets/home-banner-desktop.png";
 import { EmptyState } from "../../components/EmptyState";
@@ -8,35 +9,124 @@ import { Pagination } from "../../components/Pagination";
 import { ProductCard } from "../../components/ProductCard";
 import { useCartStore } from "../../stores/cartStore";
 
+function normalizeCategoryName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 export function ProductsPage() {
   const [searchParams] = useSearchParams();
-  const name = searchParams.get("name") ?? "";
+
+  const name = searchParams.get("name")?.trim() ?? "";
+  const categoryIdParam = searchParams.get("categoryId");
+  const parsedCategoryId = categoryIdParam
+    ? Number(categoryIdParam)
+    : undefined;
+
+  const categoryId =
+    parsedCategoryId !== undefined && Number.isFinite(parsedCategoryId)
+      ? parsedCategoryId
+      : undefined;
+
+  const categoryName = searchParams.get("categoryName") ?? "";
+
   const [page, setPage] = useState(0);
+
   const addItem = useCartStore((state) => state.addItem);
 
-  const query = useQuery({
-    queryKey: ["products", name, page],
-    queryFn: () => getProducts({ name, page, size: 8 }),
+  const categoriesQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
   });
 
-  const title = useMemo(
-    () => (name ? `Resultados para "${name}"` : "Produtos em destaque"),
-    [name],
-  );
+  const cardCategory = useMemo(() => {
+    return categoriesQuery.data?.find((category) => {
+      const normalizedName = normalizeCategoryName(category.name);
+
+      return normalizedName === "carta" || normalizedName === "cartas";
+    });
+  }, [categoriesQuery.data]);
+
+  const excludeCategoryId =
+    categoryId === undefined ? cardCategory?.id : undefined;
+
+  const query = useQuery({
+    queryKey: [
+      "store-products",
+      name,
+      categoryId,
+      excludeCategoryId,
+      page,
+      true,
+    ],
+    queryFn: () =>
+      getProducts({
+        name,
+        categoryId,
+        excludeCategoryId,
+        inStock: true,
+        page,
+        size: 8,
+      }),
+    enabled: categoriesQuery.isSuccess,
+  });
+
+  const title = useMemo(() => {
+    if (name && categoryName) {
+      return `Resultados para "${name}" em ${categoryName}`;
+    }
+
+    if (name) {
+      return `Resultados para "${name}"`;
+    }
+
+    if (categoryName) {
+      return `Produtos: ${categoryName}`;
+    }
+
+    return "Produtos em destaque";
+  }, [categoryName, name]);
 
   useEffect(() => {
     setPage(0);
-  }, [name]);
+  }, [categoryId, name]);
 
   function scrollToTop() {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function handlePageChange(nextPage: number) {
+    if (nextPage < 0) {
+      return;
+    }
+
+    if (
+      query.data &&
+      query.data.totalPages > 0 &&
+      nextPage >= query.data.totalPages
+    ) {
+      return;
+    }
+
     setPage(nextPage);
     scrollToTop();
+  }
+
+  if (categoriesQuery.isError) {
+    return (
+      <section className="space-y-8">
+        <EmptyState
+          title="Não foi possível carregar as categorias"
+          description="Atualize a página e tente novamente."
+        />
+      </section>
+    );
   }
 
   return (
@@ -53,9 +143,13 @@ export function ProductsPage() {
         <h2 className="text-3xl font-black tracking-tight text-white md:text-4xl">
           {title}
         </h2>
+
+        <p className="mt-2 text-sm text-slate-400">
+          Somente itens disponíveis em estoque são exibidos.
+        </p>
       </div>
 
-      {query.isLoading ? (
+      {categoriesQuery.isLoading || query.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
@@ -66,11 +160,22 @@ export function ProductsPage() {
         </div>
       ) : null}
 
+      {query.isError ? (
+        <EmptyState
+          title="Não foi possível carregar os produtos"
+          description="Atualize a página e tente novamente."
+        />
+      ) : null}
+
       {query.data && query.data.content.length > 0 ? (
         <>
           <div className="grid animate-fade-in-up gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {query.data.content.map((product) => (
-              <ProductCard key={product.id} product={product} onAdd={addItem} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAdd={addItem}
+              />
             ))}
           </div>
 
@@ -84,8 +189,8 @@ export function ProductsPage() {
 
       {query.data && query.data.content.length === 0 ? (
         <EmptyState
-          title="Nenhum produto encontrado"
-          description="Tente ajustar a busca ou voltar para a vitrine completa."
+          title="Nenhum produto disponível"
+          description="Não encontramos produtos em estoque para os filtros selecionados."
         />
       ) : null}
     </section>

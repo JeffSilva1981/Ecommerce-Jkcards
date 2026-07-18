@@ -23,6 +23,12 @@ export function CheckoutPage() {
       }),
     onSuccess: (order) => {
       clear();
+
+      if (order.payment?.checkoutUrl) {
+        window.location.assign(order.payment.checkoutUrl);
+        return;
+      }
+
       navigate(`/pedidos/${order.id}`);
     },
   });

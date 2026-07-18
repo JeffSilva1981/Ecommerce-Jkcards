@@ -6,6 +6,7 @@ import { Button } from "../../components/Button";
 import { EmptyState } from "../../components/EmptyState";
 import { Panel } from "../../components/Panel";
 import { StatusBadge } from "../../components/StatusBadge";
+import { useAuthStore } from "../../stores/authStore";
 import { formatCurrency } from "../../utils/currency";
 import { formatDate } from "../../utils/dates";
 
@@ -14,6 +15,7 @@ const whatsappNumber = "5515988233584";
 export function OrderDetailsPage() {
   const { id } = useParams();
   const orderId = Number(id);
+  const isAdmin = useAuthStore((state) => state.isAdmin());
 
   const query = useQuery({
     queryKey: ["order", orderId],
@@ -22,21 +24,26 @@ export function OrderDetailsPage() {
   });
 
   if (query.isLoading) {
-    return <div className="h-72 animate-pulse rounded-lg bg-white/5" />;
+    return (
+      <div className="h-72 animate-pulse rounded-lg bg-white/5" />
+    );
   }
 
   if (!query.data) {
     return (
       <EmptyState
-        title="Pedido nao encontrado"
-        description="Confira o numero do pedido."
+        title="Pedido não encontrado"
+        description="Confira o número do pedido."
       />
     );
   }
 
   const order = query.data;
+
   const canPay =
-    order.status === "WAITING_PAYMENT" && Boolean(order.payment?.checkoutUrl);
+    !isAdmin &&
+    order.status === "WAITING_PAYMENT" &&
+    Boolean(order.payment?.checkoutUrl);
 
   function handlePayment() {
     if (order.payment?.checkoutUrl) {
@@ -47,9 +54,13 @@ export function OrderDetailsPage() {
   function handleWhatsappOrder() {
     const itemsText = order.items
       .map((item) => {
-        const subtotal = item.subTotal ?? item.price * item.quantity;
+        const subtotal =
+          item.subTotal ?? item.price * item.quantity;
 
-        return `- ${item.quantity}x ${item.name} - ${formatCurrency(subtotal)}`;
+        return (
+          `- ${item.quantity}x ${item.name} - ` +
+          formatCurrency(subtotal)
+        );
       })
       .join("\n");
 
@@ -58,17 +69,23 @@ export function OrderDetailsPage() {
         `Cliente: ${order.client.name}\n` +
         `Status: ${order.status}\n\n` +
         `Itens:\n${itemsText}\n\n` +
-        `Total: ${formatCurrency(order.total)}`
+        `Total: ${formatCurrency(order.total)}`,
     );
 
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+    window.open(
+      `https://wa.me/${whatsappNumber}?text=${message}`,
+      "_blank",
+    );
   }
 
   return (
     <section className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Pedido #{order.id}</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Pedido #{order.id}
+          </h1>
+
           <p className="mt-1 text-sm text-slate-400">
             {formatDate(order.moment)}
           </p>
@@ -84,12 +101,17 @@ export function OrderDetailsPage() {
               <h2 className="text-lg font-bold text-white">
                 Pagamento pendente
               </h2>
+
               <p className="mt-1 text-sm text-slate-400">
-                Clique no botao abaixo para finalizar o pagamento com Mercado Pago.
+                Clique no botão abaixo para finalizar o pagamento
+                com Mercado Pago.
               </p>
             </div>
 
-            <Button icon={<CreditCard size={17} />} onClick={handlePayment}>
+            <Button
+              icon={<CreditCard size={17} />}
+              onClick={handlePayment}
+            >
               Pagar com Mercado Pago
             </Button>
           </div>
@@ -98,15 +120,19 @@ export function OrderDetailsPage() {
 
       <Panel className="p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-lg font-bold text-white">Itens</h2>
+          <h2 className="text-lg font-bold text-white">
+            Itens
+          </h2>
 
-          <Button
-            variant="secondary"
-            icon={<MessageCircle size={17} />}
-            onClick={handleWhatsappOrder}
-          >
-            Enviar pedido pelo WhatsApp
-          </Button>
+          {!isAdmin ? (
+            <Button
+              variant="secondary"
+              icon={<MessageCircle size={17} />}
+              onClick={handleWhatsappOrder}
+            >
+              Enviar pedido pelo WhatsApp
+            </Button>
+          ) : null}
         </div>
 
         <div className="mt-4 space-y-4">
@@ -125,15 +151,22 @@ export function OrderDetailsPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="font-semibold text-white">{item.name}</p>
+                  <p className="font-semibold text-white">
+                    {item.name}
+                  </p>
+
                   <p className="text-sm text-slate-400">
-                    {item.quantity} x {formatCurrency(item.price)}
+                    {item.quantity} x{" "}
+                    {formatCurrency(item.price)}
                   </p>
                 </div>
               </div>
 
               <p className="shrink-0 font-bold text-gold">
-                {formatCurrency(item.subTotal ?? item.price * item.quantity)}
+                {formatCurrency(
+                  item.subTotal ??
+                    item.price * item.quantity,
+                )}
               </p>
             </div>
           ))}
@@ -146,8 +179,13 @@ export function OrderDetailsPage() {
       </Panel>
 
       <Panel className="p-5">
-        <h2 className="text-lg font-bold text-white">Cliente</h2>
-        <p className="mt-2 text-slate-300">{order.client.name}</p>
+        <h2 className="text-lg font-bold text-white">
+          Cliente
+        </h2>
+
+        <p className="mt-2 text-slate-300">
+          {order.client.name}
+        </p>
       </Panel>
     </section>
   );
