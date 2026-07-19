@@ -33,6 +33,15 @@ type CardCondition =
   | "HP"
   | "D";
 
+type CardType =
+  | "Normal"
+  | "Reverse"
+  | "Foil"
+  | "Full Art"
+  | "Secreta"
+  | "Ultra Rara"
+  | "Promo";
+
 function normalizeCategoryName(name: string) {
   return name
     .normalize("NFD")
@@ -44,6 +53,7 @@ function normalizeCategoryName(name: string) {
 function createCardDescription(
   card: SelectedPokemonCard,
   condition: CardCondition,
+  cardType: CardType,
 ) {
   const details = [
     `Carta Pokémon: ${card.name}`,
@@ -53,6 +63,7 @@ function createCardDescription(
       ? `Raridade: ${card.rarity}`
       : null,
     `Condição: ${condition}`,
+    `Tipo: ${cardType}`,
     card.illustrator
       ? `Ilustrador: ${card.illustrator}`
       : null,
@@ -65,35 +76,52 @@ function createCardDescription(
   return details.filter(Boolean).join("\n");
 }
 
-function replaceConditionInDescription(
+function replaceDescriptionField(
   description: string,
-  condition: CardCondition,
+  fieldName: string,
+  value: string,
 ) {
-  const conditionLine = `Condição: ${condition}`;
-  const lines = description.split("\n");
+  const fieldLine = `${fieldName}: ${value}`;
+  const lines = description
+    .split("\n")
+    .map((line) => line.trimEnd());
 
-  const conditionIndex = lines.findIndex((line) =>
-    line.trim().toLowerCase().startsWith("condição:"),
+  const normalizedFieldName = normalizeCategoryName(
+    `${fieldName}:`,
   );
 
-  if (conditionIndex >= 0) {
-    lines[conditionIndex] = conditionLine;
+  const fieldIndex = lines.findIndex((line) =>
+    normalizeCategoryName(line).startsWith(
+      normalizedFieldName,
+    ),
+  );
+
+  if (fieldIndex >= 0) {
+    lines[fieldIndex] = fieldLine;
     return lines.join("\n");
   }
 
   const catalogIdIndex = lines.findIndex((line) =>
-    line
-      .trim()
-      .toLowerCase()
-      .startsWith("id do catálogo:"),
+    normalizeCategoryName(line).startsWith(
+      "id do catalogo:",
+    ),
   );
 
   if (catalogIdIndex >= 0) {
-    lines.splice(catalogIdIndex, 0, conditionLine);
+    lines.splice(
+      catalogIdIndex,
+      0,
+      fieldLine,
+    );
+
     return lines.join("\n");
   }
 
-  return `${description.trim()}\n${conditionLine}`.trim();
+  if (!description.trim()) {
+    return fieldLine;
+  }
+
+  return `${description.trim()}\n${fieldLine}`;
 }
 
 export function CardFormPage() {
@@ -105,6 +133,9 @@ export function CardFormPage() {
 
   const [condition, setCondition] =
     useState<CardCondition>("NM");
+
+  const [cardType, setCardType] =
+    useState<CardType>("Normal");
 
   const [cardCategoryError, setCardCategoryError] =
     useState<string | null>(null);
@@ -171,17 +202,27 @@ export function CardFormPage() {
       }),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["admin-products"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["admin-products"],
+        }),
 
-      await queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
+        queryClient.invalidateQueries({
+          queryKey: ["admin-cards"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["products"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["store-products"],
+        }),
+      ]);
 
       alert("Carta cadastrada com sucesso.");
 
-      navigate("/admin/produtos");
+      navigate("/admin/cartas");
     },
 
     onError: (error) => {
@@ -209,7 +250,11 @@ export function CardFormPage() {
 
     form.setValue(
       "description",
-      createCardDescription(card, condition),
+      createCardDescription(
+        card,
+        condition,
+        cardType,
+      ),
       {
         shouldValidate: true,
         shouldDirty: true,
@@ -246,9 +291,35 @@ export function CardFormPage() {
 
     form.setValue(
       "description",
-      replaceConditionInDescription(
+      replaceDescriptionField(
         currentDescription,
+        "Condição",
         newCondition,
+      ),
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      },
+    );
+  }
+
+  function handleCardTypeChange(
+    event: ChangeEvent<HTMLSelectElement>,
+  ) {
+    const newCardType =
+      event.target.value as CardType;
+
+    setCardType(newCardType);
+
+    const currentDescription =
+      form.getValues("description");
+
+    form.setValue(
+      "description",
+      replaceDescriptionField(
+        currentDescription,
+        "Tipo",
+        newCardType,
       ),
       {
         shouldValidate: true,
@@ -274,8 +345,23 @@ export function CardFormPage() {
       return;
     }
 
+    const descriptionWithCondition =
+      replaceDescriptionField(
+        values.description,
+        "Condição",
+        condition,
+      );
+
+    const completeDescription =
+      replaceDescriptionField(
+        descriptionWithCondition,
+        "Tipo",
+        cardType,
+      );
+
     mutation.mutate({
       ...values,
+      description: completeDescription,
       categoryId: cardCategory.id,
     });
   }
@@ -318,8 +404,8 @@ export function CardFormPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-400">
-              Informe a condição, o preço, o estoque e
-              as observações da carta.
+              Informe a condição, o tipo, o preço, o
+              estoque e as observações da carta.
             </p>
           </div>
 
@@ -355,7 +441,7 @@ export function CardFormPage() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <Select
                 label="Condição"
                 value={condition}
@@ -382,6 +468,42 @@ export function CardFormPage() {
                 </option>
               </Select>
 
+              <Select
+                label="Tipo da carta"
+                value={cardType}
+                onChange={handleCardTypeChange}
+              >
+                <option value="Normal">
+                  Normal
+                </option>
+
+                <option value="Reverse">
+                  Reverse
+                </option>
+
+                <option value="Foil">
+                  Foil
+                </option>
+
+                <option value="Full Art">
+                  Full Art
+                </option>
+
+                <option value="Secreta">
+                  Secreta
+                </option>
+
+                <option value="Ultra Rara">
+                  Ultra Rara
+                </option>
+
+                <option value="Promo">
+                  Promo
+                </option>
+              </Select>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
               <Input
                 label="Preço"
                 type="number"
