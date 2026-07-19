@@ -42,8 +42,13 @@ type CardType =
   | "Ultra Rara"
   | "Promo";
 
-function normalizeCategoryName(name: string) {
-  return name
+type CardLanguage =
+  | "Português"
+  | "Inglês"
+  | "Japonês";
+
+function normalizeText(value: string) {
+  return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
@@ -54,6 +59,7 @@ function createCardDescription(
   card: SelectedPokemonCard,
   condition: CardCondition,
   cardType: CardType,
+  language: CardLanguage,
 ) {
   const details = [
     `Carta Pokémon: ${card.name}`,
@@ -64,6 +70,7 @@ function createCardDescription(
       : null,
     `Condição: ${condition}`,
     `Tipo: ${cardType}`,
+    `Idioma: ${language}`,
     card.illustrator
       ? `Ilustrador: ${card.illustrator}`
       : null,
@@ -82,16 +89,17 @@ function replaceDescriptionField(
   value: string,
 ) {
   const fieldLine = `${fieldName}: ${value}`;
+
   const lines = description
     .split("\n")
     .map((line) => line.trimEnd());
 
-  const normalizedFieldName = normalizeCategoryName(
+  const normalizedFieldName = normalizeText(
     `${fieldName}:`,
   );
 
   const fieldIndex = lines.findIndex((line) =>
-    normalizeCategoryName(line).startsWith(
+    normalizeText(line).startsWith(
       normalizedFieldName,
     ),
   );
@@ -102,7 +110,7 @@ function replaceDescriptionField(
   }
 
   const catalogIdIndex = lines.findIndex((line) =>
-    normalizeCategoryName(line).startsWith(
+    normalizeText(line).startsWith(
       "id do catalogo:",
     ),
   );
@@ -137,6 +145,9 @@ export function CardFormPage() {
   const [cardType, setCardType] =
     useState<CardType>("Normal");
 
+  const [language, setLanguage] =
+    useState<CardLanguage>("Português");
+
   const [cardCategoryError, setCardCategoryError] =
     useState<string | null>(null);
 
@@ -160,7 +171,7 @@ export function CardFormPage() {
 
   const cardCategory =
     categoriesQuery.data?.find((category) => {
-      const normalizedName = normalizeCategoryName(
+      const normalizedName = normalizeText(
         category.name,
       );
 
@@ -254,6 +265,7 @@ export function CardFormPage() {
         card,
         condition,
         cardType,
+        language,
       ),
       {
         shouldValidate: true,
@@ -328,6 +340,31 @@ export function CardFormPage() {
     );
   }
 
+  function handleLanguageChange(
+    event: ChangeEvent<HTMLSelectElement>,
+  ) {
+    const newLanguage =
+      event.target.value as CardLanguage;
+
+    setLanguage(newLanguage);
+
+    const currentDescription =
+      form.getValues("description");
+
+    form.setValue(
+      "description",
+      replaceDescriptionField(
+        currentDescription,
+        "Idioma",
+        newLanguage,
+      ),
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      },
+    );
+  }
+
   function handleSubmit(values: ProductSchema) {
     setCardCategoryError(null);
 
@@ -352,11 +389,18 @@ export function CardFormPage() {
         condition,
       );
 
-    const completeDescription =
+    const descriptionWithType =
       replaceDescriptionField(
         descriptionWithCondition,
         "Tipo",
         cardType,
+      );
+
+    const completeDescription =
+      replaceDescriptionField(
+        descriptionWithType,
+        "Idioma",
+        language,
       );
 
     mutation.mutate({
@@ -404,8 +448,8 @@ export function CardFormPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-400">
-              Informe a condição, o tipo, o preço, o
-              estoque e as observações da carta.
+              Informe a condição, o tipo, o idioma, o
+              preço, o estoque e as observações da carta.
             </p>
           </div>
 
@@ -441,7 +485,7 @@ export function CardFormPage() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <Select
                 label="Condição"
                 value={condition}
@@ -501,6 +545,24 @@ export function CardFormPage() {
                   Promo
                 </option>
               </Select>
+
+              <Select
+                label="Idioma"
+                value={language}
+                onChange={handleLanguageChange}
+              >
+                <option value="Português">
+                  Português
+                </option>
+
+                <option value="Inglês">
+                  Inglês
+                </option>
+
+                <option value="Japonês">
+                  Japonês
+                </option>
+              </Select>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -527,7 +589,7 @@ export function CardFormPage() {
 
             <Textarea
               label="Descrição e observações"
-              rows={12}
+              rows={13}
               error={descriptionError}
               {...form.register("description")}
             />
