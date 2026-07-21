@@ -5,16 +5,18 @@ import {
 } from "react-router-dom";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { StoreLayout } from "../layouts/StoreLayout";
+import { CardFormPage } from "../pages/admin/CardFormPage";
 import { CardsAdminPage } from "../pages/admin/CardsAdminPage";
 import { CategoriesAdminPage } from "../pages/admin/CategoriesAdminPage";
-import { CardFormPage } from "../pages/admin/CardFormPage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { OrdersAdminPage } from "../pages/admin/OrdersAdminPage";
 import { ProductFormPage } from "../pages/admin/ProductFormPage";
 import { ProductsAdminPage } from "../pages/admin/ProductsAdminPage";
 import { UsersAdminPage } from "../pages/admin/UsersAdminPage";
+import { ForgotPasswordPage } from "../pages/auth/ForgotPasswordPage";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
+import { ResetPasswordPage } from "../pages/auth/ResetPasswordPage";
 import { CartPage } from "../pages/store/CartPage";
 import { CheckoutPage } from "../pages/store/CheckoutPage";
 import { HomePage } from "../pages/store/HomePage";
@@ -58,6 +60,16 @@ export function AppRoutes() {
         <Route
           path="cadastro"
           element={<RegisterPage />}
+        />
+
+        <Route
+          path="esqueci-senha"
+          element={<ForgotPasswordPage />}
+        />
+
+        <Route
+          path="redefinir-senha"
+          element={<ResetPasswordPage />}
         />
 
         <Route element={<ProtectedRoute />}>

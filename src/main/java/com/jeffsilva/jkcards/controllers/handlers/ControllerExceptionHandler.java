@@ -2,10 +2,7 @@ package com.jeffsilva.jkcards.controllers.handlers;
 
 import com.jeffsilva.jkcards.dtos.CustomError;
 import com.jeffsilva.jkcards.dtos.ValidationError;
-import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
-import com.jeffsilva.jkcards.services.exceptions.FileUploadException;
-import com.jeffsilva.jkcards.services.exceptions.ForbiddenException;
-import com.jeffsilva.jkcards.services.exceptions.ResourceNotFoundException;
+import com.jeffsilva.jkcards.services.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +56,14 @@ public class ControllerExceptionHandler {
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomError error = new CustomError(Instant.now(), status.value(), "File upload error: " + e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<CustomError> invalidPasswordResetToken(InvalidPasswordResetTokenException e, HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError error = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(error);
     }
 }

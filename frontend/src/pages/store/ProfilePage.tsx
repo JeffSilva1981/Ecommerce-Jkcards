@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock3,
   Hash,
+  KeyRound,
   LogOut,
   Mail,
   Package,
@@ -41,9 +42,7 @@ export function ProfilePage() {
   );
 
   const paidOrders = orders.filter((order) =>
-    ["PAID", "SHIPPED", "DELIVERED"].includes(
-      order.status,
-    ),
+    ["PAID", "SHIPPED", "DELIVERED"].includes(order.status),
   );
 
   const deliveredOrders = orders.filter(
@@ -209,8 +208,7 @@ export function ProfilePage() {
 
       {ordersQuery.isError ? (
         <div className="rounded-md border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">
-          Não foi possível carregar o resumo dos seus
-          pedidos.
+          Não foi possível carregar o resumo dos seus pedidos.
         </div>
       ) : null}
 
@@ -269,17 +267,14 @@ export function ProfilePage() {
           </div>
 
           <p className="mt-5 rounded-md border border-line bg-white/5 p-3 text-xs text-slate-400">
-            A edição dos dados pessoais será disponibilizada
-            em uma próxima atualização.
+            A edição dos dados pessoais será disponibilizada em
+            uma próxima atualização.
           </p>
         </Panel>
 
         <Panel className="p-5 md:p-6">
           <div className="flex items-center gap-3">
-            <ShoppingBag
-              className="text-gold"
-              size={21}
-            />
+            <ShoppingBag className="text-gold" size={21} />
 
             <div>
               <h2 className="text-xl font-bold text-white">
@@ -331,10 +326,7 @@ export function ProfilePage() {
                 Você ainda não realizou nenhum pedido.
               </p>
 
-              <Link
-                to="/produtos"
-                className="mt-4 block"
-              >
+              <Link to="/produtos" className="mt-4 block">
                 <Button className="w-full">
                   Conhecer produtos
                 </Button>
@@ -353,7 +345,7 @@ export function ProfilePage() {
           Acesse rapidamente as principais áreas da sua conta.
         </p>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <QuickLink
             to="/pedidos"
             icon={<Package size={20} />}
@@ -389,6 +381,13 @@ export function ProfilePage() {
                 : "Nenhum pagamento pendente"
             }
           />
+
+          <QuickLink
+            to="/esqueci-senha"
+            icon={<KeyRound size={20} />}
+            title="Alterar senha"
+            description="Receber um link seguro por e-mail"
+          />
         </div>
       </Panel>
     </section>
@@ -410,6 +409,7 @@ function ProfileField({
     <div className="rounded-lg border border-line bg-white/5 p-4">
       <div className="flex items-center gap-2 text-slate-400">
         {icon}
+
         <span className="text-xs font-semibold uppercase tracking-wide">
           {label}
         </span>
