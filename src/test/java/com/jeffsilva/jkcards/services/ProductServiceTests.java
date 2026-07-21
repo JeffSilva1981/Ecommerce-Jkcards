@@ -22,7 +22,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.List;
 import java.util.Optional;
 
-
 @ExtendWith(SpringExtension.class)
 public class ProductServiceTests {
 
@@ -32,75 +31,129 @@ public class ProductServiceTests {
     @Mock
     private ProductRepository repository;
 
-    private long existingId, nonExistingId, dependentId;
+    private long existingId;
+    private long nonExistingId;
+    private long dependentId;
+
     private PageImpl<Product> page;
     private Product product;
     private Pageable pageable;
     private ProductDto productDto;
 
     @BeforeEach
-    void setUp() throws Exception {
-
+    void setUp() {
         existingId = 1L;
         nonExistingId = 1000L;
         dependentId = 2L;
 
         product = Factory.createProduct();
+
         page = new PageImpl<>(List.of(product));
         pageable = Pageable.unpaged();
         productDto = Factory.createProductDto();
     }
 
     @Test
-    public void findAllShouldReturnPageOfProductsWhenNameIsNull(){
-        Mockito.when(repository.findAll(pageable)).thenReturn(page);
+    public void findAllShouldReturnPageOfProductsWhenNameIsNull() {
+        Mockito.when(
+                repository.search("", null, null, false, pageable)).thenReturn(page);
 
         var result = service.findAll(null, null, pageable);
 
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(1, result.getTotalElements());
         Assertions.assertEquals(product.getName(), result.getContent().get(0).getName());
-        Mockito.verify(repository, Mockito.times(1)).findAll(pageable);
-        Mockito.verify(repository, Mockito.never()).searchByName(Mockito.anyString(), Mockito.any());
+
+        Mockito.verify(repository, Mockito.times(1)).search("", null, null, false, pageable);
     }
 
     @Test
-    public void findAllShouldReturnPageOfProductsWhenNameIsBlank(){
+    public void findAllShouldReturnPageOfProductsWhenNameIsBlank() {
         String name = " ";
-        Mockito.when(repository.findAll(pageable)).thenReturn(page);
+        Mockito.when(repository.search("", null, null, false, pageable)).thenReturn(page);
 
         var result = service.findAll(name, null, pageable);
 
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(1, result.getTotalElements());
         Assertions.assertEquals(product.getName(), result.getContent().get(0).getName());
-        Mockito.verify(repository, Mockito.times(1)).findAll(pageable);
-        Mockito.verify(repository, Mockito.never()).searchByName(Mockito.anyString(), Mockito.any());
+
+        Mockito.verify(repository, Mockito.times(1)).search("", null, null, false, pageable);
     }
 
     @Test
-    public void findByIdShouldReturnProductDtoWhenExistsId(){
+    public void findAllShouldReturnPageOfProductsWhenNameIsNotBlank() {
+        String name = "booster";
 
-        Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(product));
+        Mockito.when(repository.search(name, null, null, false, pageable)).thenReturn(page);
 
-        var result = service.findById(existingId);
+        var result = service.findAll(name, null, pageable);
+
+        Assertions.assertFalse(result.isEmpty());
+
+        Assertions.assertEquals(1, result.getTotalElements());
+
+        Assertions.assertEquals(product.getName(), result.getContent().get(0).getName());
+
+        Mockito.verify(repository, Mockito.times(1)).search(name, null, null, false, pageable);
+    }
+
+    @Test
+    public void findAllShouldForwardCategoryExclusionAndStockFilters() {
+        String name = "carta";
+        Long categoryId = 6L;
+        Long excludeCategoryId = 3L;
+        boolean inStock = true;
+
+        Mockito.when(repository.search(name, categoryId, excludeCategoryId, inStock, pageable)).thenReturn(page);
+
+        var result = service.findAll(name, categoryId, excludeCategoryId, inStock, pageable);
+
+        Assertions.assertFalse(result.isEmpty());
+        Assertions.assertEquals(1, result.getTotalElements());
+
+        Mockito.verify(repository, Mockito.times(1)).search(name, categoryId, excludeCategoryId, inStock, pageable);
+    }
+
+    @Test
+    public void findByIdShouldReturnProductDtoWhenExistingId() {
+        Mockito.when(
+                repository.findById(existingId)
+        ).thenReturn(
+                Optional.of(product)
+        );
+
+        var result =
+                service.findById(existingId);
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(product.getName(), result.getName());
-        Assertions.assertEquals(product.getDescription(), result.getDescription());
-        Assertions.assertEquals(product.getPrice(), result.getPrice());
 
-        Mockito.verify(repository, Mockito.times(1)).findById(existingId);
+        Assertions.assertEquals(
+                product.getName(),
+                result.getName()
+        );
+
+        Assertions.assertEquals(
+                product.getDescription(),
+                result.getDescription()
+        );
+
+        Assertions.assertEquals(
+                product.getPrice(),
+                result.getPrice()
+        );
+
+        Mockito.verify(
+                repository,
+                Mockito.times(1)
+        ).findById(existingId);
     }
 
     @Test
-    public void findByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId(){
-
+    public void findByIdShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
         Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(ResourceNotFoundException.class, ()-> {
-            service.findById(nonExistingId);
-        });
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> service.findById(nonExistingId));
 
         Mockito.verify(repository, Mockito.times(1)).findById(nonExistingId);
     }
@@ -124,6 +177,7 @@ public class ProductServiceTests {
     @Test
     public void updateShouldUpdateProductWhenExistingId() {
         Mockito.when(repository.findById(existingId)).thenReturn(Optional.of(product));
+
         Mockito.when(repository.save(ArgumentMatchers.any())).thenReturn(product);
 
         var result = service.update(existingId, productDto);
@@ -136,38 +190,22 @@ public class ProductServiceTests {
         Assertions.assertEquals(productDto.getCategories().size(), result.getCategories().size());
 
         Mockito.verify(repository, Mockito.times(1)).findById(existingId);
+
         Mockito.verify(repository, Mockito.times(1)).save(ArgumentMatchers.any());
     }
 
     @Test
-    public void updateShouldThrowResourceNotFoundExceptionWhenNonExistingId(){
+    public void updateShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
         Mockito.when(repository.findById(nonExistingId)).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(ResourceNotFoundException.class, ()-> {
-            service.update(nonExistingId, productDto);
-        });
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> service.update(nonExistingId, productDto));
 
         Mockito.verify(repository, Mockito.times(1)).findById(nonExistingId);
         Mockito.verify(repository, Mockito.never()).save(ArgumentMatchers.any());
     }
 
     @Test
-    public void findAllShouldReturnPageOfProductsWhenNameIsNotBlank(){
-        String name = "booster";
-
-        Mockito.when(repository.searchByName(name, pageable)).thenReturn(page);
-
-        var result = service.findAll(name, null, pageable);
-
-        Assertions.assertFalse(result.isEmpty());
-        Assertions.assertEquals(1, result.getTotalElements());
-        Assertions.assertEquals(product.getName(), result.getContent().get(0).getName());
-        Mockito.verify(repository, Mockito.times(1)).searchByName(name, pageable);
-        Mockito.verify(repository, Mockito.never()).findAll(pageable);
-    }
-
-    @Test
-    public void deleteShouldDoNothingWhenExistingId(){
+    public void deleteShouldDoNothingWhenExistingId() {
         Mockito.when(repository.existsById(existingId)).thenReturn(true);
         Mockito.doNothing().when(repository).deleteById(existingId);
 
@@ -178,25 +216,21 @@ public class ProductServiceTests {
     }
 
     @Test
-    public void deleteShouldThrowResourceNotFoundExceptionWhenNonExistingId(){
+    public void deleteShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
         Mockito.when(repository.existsById(nonExistingId)).thenReturn(false);
 
-        Assertions.assertThrows(ResourceNotFoundException.class, ()-> {
-            service.delete(nonExistingId);
-        });
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> service.delete(nonExistingId));
 
         Mockito.verify(repository, Mockito.times(1)).existsById(nonExistingId);
         Mockito.verify(repository, Mockito.never()).deleteById(nonExistingId);
     }
 
     @Test
-    public void deleteShouldThrowDataBaseExceptionWhenDependentId(){
+    public void deleteShouldThrowDataBaseExceptionWhenDependentId() {
         Mockito.when(repository.existsById(dependentId)).thenReturn(true);
         Mockito.doThrow(DataIntegrityViolationException.class).when(repository).deleteById(dependentId);
 
-        Assertions.assertThrows(DataBaseException.class, () -> {
-            service.delete(dependentId);
-        });
+        Assertions.assertThrows(DataBaseException.class, () -> service.delete(dependentId));
 
         Mockito.verify(repository, Mockito.times(1)).existsById(dependentId);
         Mockito.verify(repository, Mockito.times(1)).deleteById(dependentId);
