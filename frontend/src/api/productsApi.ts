@@ -1,4 +1,7 @@
-import { apiClient } from "./apiClient";
+import {
+  apiClient,
+  publicApiClient,
+} from "./apiClient";
 import type { Page } from "../types/page";
 import type {
   Product,
@@ -18,7 +21,7 @@ export type ProductListParams = {
 export async function getProducts(
   params: ProductListParams = {},
 ) {
-  const response = await apiClient.get<
+  const response = await publicApiClient.get<
     Page<ProductSummary>
   >("/products", {
     params,
@@ -26,7 +29,8 @@ export async function getProducts(
 
   return {
     content: response.data?.content ?? [],
-    totalPages: response.data?.totalPages ?? 1,
+    totalPages:
+      response.data?.totalPages ?? 1,
     totalElements:
       response.data?.totalElements ?? 0,
     size:
@@ -41,9 +45,10 @@ export async function getProducts(
 export async function getProductById(
   id: number,
 ) {
-  const response = await apiClient.get<Product>(
-    `/products/${id}`,
-  );
+  const response =
+    await publicApiClient.get<Product>(
+      `/products/${id}`,
+    );
 
   return response.data;
 }
@@ -69,7 +74,9 @@ export async function saveProduct(
   return response.data;
 }
 
-export async function deleteProduct(id: number) {
+export async function deleteProduct(
+  id: number,
+) {
   await apiClient.delete(`/products/${id}`);
 }
 

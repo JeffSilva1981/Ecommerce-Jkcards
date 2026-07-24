@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#05070A",
+        ink: "#000000",
         panel: "#0E141C",
         line: "#1F2A37",
         skybrand: "#38BDF8",
@@ -14,10 +14,14 @@ export default {
         goldsoft: "#FDE68A",
       },
       boxShadow: {
-        glow: "0 18px 60px -20px rgba(56, 189, 248, 0.45)",
-        "glow-soft": "0 12px 40px -16px rgba(56, 189, 248, 0.30)",
-        "glow-gold": "0 18px 60px -20px rgba(250, 204, 21, 0.40)",
-        inset: "inset 0 1px 0 0 rgba(255,255,255,0.04)",
+        glow:
+          "0 18px 60px -20px rgba(56, 189, 248, 0.45)",
+        "glow-soft":
+          "0 12px 40px -16px rgba(56, 189, 248, 0.30)",
+        "glow-gold":
+          "0 18px 60px -20px rgba(250, 204, 21, 0.40)",
+        inset:
+          "inset 0 1px 0 0 rgba(255,255,255,0.04)",
       },
       backgroundImage: {
         "brand-gradient":
@@ -40,12 +44,19 @@ export default {
       },
       keyframes: {
         "fade-in-up": {
-          "0%": { opacity: "0", transform: "translateY(8px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+          "0%": {
+            opacity: "0",
+            transform: "translateY(8px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
         },
       },
       animation: {
-        "fade-in-up": "fade-in-up 0.5s ease-out both",
+        "fade-in-up":
+          "fade-in-up 0.5s ease-out both",
       },
     },
   },

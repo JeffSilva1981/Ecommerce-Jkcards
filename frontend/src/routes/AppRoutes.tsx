@@ -1,5 +1,4 @@
 import {
-  Navigate,
   Route,
   Routes,
 } from "react-router-dom";
@@ -17,10 +16,20 @@ import { ForgotPasswordPage } from "../pages/auth/ForgotPasswordPage";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
 import { ResetPasswordPage } from "../pages/auth/ResetPasswordPage";
+import { AboutPage } from "../pages/institutional/AboutPage";
+import { ContactPage } from "../pages/institutional/ContactPage";
+import { FaqPage } from "../pages/institutional/FaqPage";
+import { PaymentMethodsPage } from "../pages/institutional/PaymentMethodsPage";
+import { PrivacyPolicyPage } from "../pages/institutional/PrivacyPolicyPage";
+import { ReturnsPolicyPage } from "../pages/institutional/ReturnsPolicyPage";
+import { SalesPolicyPage } from "../pages/institutional/SalesPolicyPage";
+import { ShippingPage } from "../pages/institutional/ShippingPage";
+import { TermsOfUsePage } from "../pages/institutional/TermsOfUsePage";
 import { CartPage } from "../pages/store/CartPage";
 import { CheckoutPage } from "../pages/store/CheckoutPage";
 import { HomePage } from "../pages/store/HomePage";
 import { MyOrdersPage } from "../pages/store/MyOrdersPage";
+import { NotFoundPage } from "../pages/store/NotFoundPage";
 import { OrderDetailsPage } from "../pages/store/OrderDetailsPage";
 import { ProductDetailsPage } from "../pages/store/ProductDetailsPage";
 import { ProductsPage } from "../pages/store/ProductsPage";
@@ -72,6 +81,51 @@ export function AppRoutes() {
           element={<ResetPasswordPage />}
         />
 
+        <Route
+          path="sobre"
+          element={<AboutPage />}
+        />
+
+        <Route
+          path="politica-de-vendas"
+          element={<SalesPolicyPage />}
+        />
+
+        <Route
+          path="trocas-e-devolucoes"
+          element={<ReturnsPolicyPage />}
+        />
+
+        <Route
+          path="privacidade"
+          element={<PrivacyPolicyPage />}
+        />
+
+        <Route
+          path="termos-de-uso"
+          element={<TermsOfUsePage />}
+        />
+
+        <Route
+          path="envios"
+          element={<ShippingPage />}
+        />
+
+        <Route
+          path="pagamentos"
+          element={<PaymentMethodsPage />}
+        />
+
+        <Route
+          path="duvidas-frequentes"
+          element={<FaqPage />}
+        />
+
+        <Route
+          path="contato"
+          element={<ContactPage />}
+        />
+
         <Route element={<ProtectedRoute />}>
           <Route
             path="perfil"
@@ -93,6 +147,11 @@ export function AppRoutes() {
             element={<OrderDetailsPage />}
           />
         </Route>
+
+        <Route
+          path="*"
+          element={<NotFoundPage />}
+        />
       </Route>
 
       <Route element={<AdminRoute />}>
@@ -141,11 +200,6 @@ export function AppRoutes() {
           />
         </Route>
       </Route>
-
-      <Route
-        path="*"
-        element={<Navigate to="/" replace />}
-      />
     </Routes>
   );
 }

@@ -1,9 +1,14 @@
-import { apiClient } from "./apiClient";
+import {
+  apiClient,
+  publicApiClient,
+} from "./apiClient";
 import type { Category } from "../types/category";
 
 export async function getCategories() {
   const response =
-    await apiClient.get<Category[]>("/categories");
+    await publicApiClient.get<Category[]>(
+      "/categories",
+    );
 
   return response.data;
 }
@@ -21,7 +26,9 @@ export async function createCategory(data: {
 
 export async function updateCategory(
   id: number,
-  data: { name: string },
+  data: {
+    name: string;
+  },
 ) {
   const response = await apiClient.put<Category>(
     `/categories/${id}`,
@@ -31,6 +38,8 @@ export async function updateCategory(
   return response.data;
 }
 
-export async function deleteCategory(id: number) {
+export async function deleteCategory(
+  id: number,
+) {
   await apiClient.delete(`/categories/${id}`);
 }

@@ -9,7 +9,12 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import {
+  useState,
+} from "react";
+import type {
+  FormEvent,
+} from "react";
 import {
   Link,
   useLocation,
@@ -29,13 +34,17 @@ export function Header() {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const isAdmin = useAuthStore((state) => state.isAdmin());
-
-  const totalItems = useCartStore(
-    (state) => state.totalItems(),
+  const isAdmin = useAuthStore((state) =>
+    state.isAdmin(),
   );
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const totalItems = useCartStore((state) =>
+    state.totalItems(),
+  );
+
+  const [mobileOpen, setMobileOpen] =
+    useState(false);
+
   const [search, setSearch] = useState(
     searchParams.get("name") ?? "",
   );
@@ -121,8 +130,8 @@ export function Header() {
   return (
     <>
       <div className="border-b border-yellow-400/30 bg-gold px-4 py-2 text-center text-xs font-black uppercase tracking-wide text-ink sm:text-sm">
-        Aceitamos Pix e cartão de crédito • Envio para
-        todo Brasil • Compra segura
+        Aceitamos Pix e cartão de crédito &bull; Envio para
+        todo Brasil &bull; Compra segura
       </div>
 
       <header className="sticky top-0 z-40 border-b border-line/80 bg-ink/95 backdrop-blur-md">
@@ -243,7 +252,9 @@ export function Header() {
                   type="button"
                   className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:hidden"
                   onClick={() =>
-                    setMobileOpen((value) => !value)
+                    setMobileOpen(
+                      (value) => !value,
+                    )
                   }
                   aria-label={
                     mobileOpen
@@ -287,7 +298,10 @@ export function Header() {
 
           <nav className="flex gap-2 overflow-x-auto pb-1">
             {[
-              { id: undefined, name: "Todos" },
+              {
+                id: undefined,
+                name: "Todos",
+              },
               ...(categoriesQuery.data ?? []),
             ].map((category) => {
               const isActive = category.id
@@ -324,7 +338,9 @@ export function Header() {
               {isAdmin ? (
                 <Link
                   to="/admin"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
                   <LayoutDashboard size={17} />
@@ -335,7 +351,9 @@ export function Header() {
               {canSeeProfile ? (
                 <Link
                   to="/perfil"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
                   <UserRound size={17} />
@@ -346,7 +364,9 @@ export function Header() {
               {canSeeOrders ? (
                 <Link
                   to="/pedidos"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
                   <Package size={17} />
@@ -357,7 +377,9 @@ export function Header() {
               {canSeeLogin ? (
                 <Link
                   to="/login"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
                 >
                   <UserRound size={17} />

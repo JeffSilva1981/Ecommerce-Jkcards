@@ -2,7 +2,10 @@ import type {
   LoginCredentials,
   User,
 } from "../types/user";
-import { apiClient } from "./apiClient";
+import {
+  apiClient,
+  publicApiClient,
+} from "./apiClient";
 
 type TokenResponse = {
   access_token: string;
@@ -40,7 +43,7 @@ export async function login(
   );
 
   const token =
-    await apiClient.post<TokenResponse>(
+    await publicApiClient.post<TokenResponse>(
       "/oauth2/token",
       body,
       {
@@ -71,15 +74,16 @@ export async function login(
 export async function registerUser(
   payload: RegisterPayload,
 ) {
-  const response = await apiClient.post(
-    "/auth/register",
-    {
-      name: payload.name,
-      email: payload.email,
-      password: payload.password,
-      phone: payload.phone,
-    },
-  );
+  const response =
+    await publicApiClient.post(
+      "/auth/register",
+      {
+        name: payload.name,
+        email: payload.email,
+        password: payload.password,
+        phone: payload.phone,
+      },
+    );
 
   return response.data;
 }
@@ -88,7 +92,7 @@ export async function requestPasswordReset(
   email: string,
 ) {
   const response =
-    await apiClient.post<PasswordResetResponse>(
+    await publicApiClient.post<PasswordResetResponse>(
       "/auth/forgot-password",
       {
         email,
@@ -102,7 +106,7 @@ export async function resetPassword(
   payload: ResetPasswordPayload,
 ) {
   const response =
-    await apiClient.post<PasswordResetResponse>(
+    await publicApiClient.post<PasswordResetResponse>(
       "/auth/reset-password",
       {
         token: payload.token,
