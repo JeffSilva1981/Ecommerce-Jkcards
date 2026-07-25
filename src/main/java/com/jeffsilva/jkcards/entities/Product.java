@@ -1,9 +1,17 @@
 package com.jeffsilva.jkcards.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,34 +22,56 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
     private Double price;
     private String imgUrl;
     private Integer stockQuantity = 0;
+    private Double weight;
+    private Double width;
+    private Double height;
+    private Double length;
 
     @ManyToMany
-    @JoinTable(name = "tb_product_category",
+    @JoinTable(
+            name = "tb_product_category",
             joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id"))
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
     private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "id.product")
     private Set<OrderItem> items = new HashSet<>();
 
     public Product() {
-
     }
 
-    public Product(Long id, String name, String description, Double price, String imgUrl, Integer stockQuantity) {
+    public Product(
+            Long id,
+            String name,
+            String description,
+            Double price,
+            String imgUrl,
+            Integer stockQuantity,
+            Double weight,
+            Double width,
+            Double height,
+            Double length
+    ) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.imgUrl = imgUrl;
         this.stockQuantity = stockQuantity;
+        this.weight = weight;
+        this.width = width;
+        this.height = height;
+        this.length = length;
     }
 
     public Long getId() {
@@ -84,10 +114,6 @@ public class Product {
         this.imgUrl = imgUrl;
     }
 
-    public Set<Category> getCategories() {
-        return categories;
-    }
-
     public Integer getStockQuantity() {
         return stockQuantity;
     }
@@ -96,20 +122,55 @@ public class Product {
         this.stockQuantity = stockQuantity;
     }
 
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public Double getWidth() {
+        return width;
+    }
+
+    public void setWidth(Double width) {
+        this.width = width;
+    }
+
+    public Double getHeight() {
+        return height;
+    }
+
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    public Double getLength() {
+        return length;
+    }
+
+    public void setLength(Double length) {
+        this.length = length;
+    }
+
+    public Set<Category> getCategories() {
+        return categories;
+    }
+
     public Set<OrderItem> getItems() {
         return items;
     }
 
-    public List<Order> getOrders() {
-        return items.stream().map(x -> x.getOrder()).toList();
-    }
-
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         Product product = (Product) o;
         return Objects.equals(id, product.id);

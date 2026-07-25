@@ -66,4 +66,20 @@ public class ControllerExceptionHandler {
         CustomError error = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(error);
     }
+
+    @ExceptionHandler(ShippingException.class)
+    public ResponseEntity<CustomError> shipping(ShippingException e, HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
+        CustomError error = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(ShippingProviderException.class)
+    public ResponseEntity<CustomError> shippingProvider(ShippingProviderException e, HttpServletRequest request){
+
+        HttpStatus status = HttpStatus.BAD_GATEWAY;
+        CustomError error = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(error);
+    }
 }

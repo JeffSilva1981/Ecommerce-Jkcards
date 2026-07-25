@@ -1,9 +1,9 @@
 package com.jeffsilva.jkcards.services;
 
-import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
 import com.jeffsilva.jkcards.entities.Payment;
+import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
@@ -30,7 +30,6 @@ public class MercadoPagoService {
     private String frontendUrl;
 
     public Payment createPaymentPreference(Order order) {
-
         validateAccessToken();
 
         try {
@@ -48,6 +47,8 @@ public class MercadoPagoService {
 
                 items.add(itemRequest);
             }
+
+            addShippingItem(order, items);
 
             String orderDetailsUrl = frontendUrl + "/pedidos/" + order.getId();
 
@@ -73,32 +74,49 @@ public class MercadoPagoService {
             payment.setPaymentStatus("PENDING");
 
             return payment;
-        }
-        catch (MPApiException e) {
+        } catch (MPApiException e) {
             throw new DataBaseException("Mercado Pago API error: " + e.getMessage());
-        }
-        catch (MPException e) {
+        } catch (MPException e) {
             throw new DataBaseException("Mercado Pago error: " + e.getMessage());
         }
     }
 
     public com.mercadopago.resources.payment.Payment findPaymentById(Long mercadoPagoPaymentId) {
-
         validateAccessToken();
 
         try {
             MercadoPagoConfig.setAccessToken(accessToken);
 
             PaymentClient client = new PaymentClient();
-
             return client.get(mercadoPagoPaymentId);
-        }
-        catch (MPApiException e) {
+        } catch (MPApiException e) {
             throw new DataBaseException("Mercado Pago API error: " + e.getMessage());
-        }
-        catch (MPException e) {
+        } catch (MPException e) {
             throw new DataBaseException("Mercado Pago error: " + e.getMessage());
         }
+    }
+
+    private void addShippingItem(Order order, List<PreferenceItemRequest> items) {
+        if (order.getShippingPrice() == null || order.getShippingPrice() <= 0) {
+            throw new DataBaseException("The order does not have a valid shipping price.");
+        }
+
+        String serviceName = order.getShippingServiceName() == null
+                ? "Shipping"
+                : order.getShippingServiceName();
+
+        String carrier = order.getShippingCarrier() == null
+                ? ""
+                : " - " + order.getShippingCarrier();
+
+        PreferenceItemRequest shippingItem = PreferenceItemRequest.builder()
+                .id("shipping-" + order.getShippingServiceId())
+                .title("Shipping: " + serviceName + carrier)
+                .quantity(1)
+                .unitPrice(BigDecimal.valueOf(order.getShippingPrice()))
+                .build();
+
+        items.add(shippingItem);
     }
 
     private void validateAccessToken() {

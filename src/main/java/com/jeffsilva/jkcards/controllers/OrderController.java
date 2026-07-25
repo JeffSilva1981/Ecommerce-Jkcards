@@ -1,5 +1,6 @@
 package com.jeffsilva.jkcards.controllers;
 
+import com.jeffsilva.jkcards.dtos.OrderCreateDto;
 import com.jeffsilva.jkcards.dtos.OrderDto;
 import com.jeffsilva.jkcards.dtos.OrderStatusDto;
 import com.jeffsilva.jkcards.services.OrderService;
@@ -28,41 +29,50 @@ public class OrderController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
-    public ResponseEntity<Page<OrderDto>> findAll(@RequestParam(value = "client",
-            required = false) Long client, Pageable pageable){
+    public ResponseEntity<Page<OrderDto>> findAll(
+            @RequestParam(value = "client", required = false) Long client,
+            Pageable pageable) {
+
         Page<OrderDto> result = service.findAll(client, pageable);
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_OPERATOR')")
+    @PreAuthorize("hasRole('ROLE_OPERATOR')")
     @GetMapping("/my")
     public ResponseEntity<Page<OrderDto>> findMyOrders(Pageable pageable) {
         Page<OrderDto> result = service.findMyOrders(pageable);
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_OPERATOR')")
+    @PreAuthorize("hasRole('ROLE_OPERATOR')")
     @PostMapping
-    public ResponseEntity<OrderDto> created(@Valid @RequestBody OrderDto dto) {
+    public ResponseEntity<OrderDto> created(@Valid @RequestBody OrderCreateDto dto) {
         OrderDto result = service.insert(dto);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(result.getId()).toUri();
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(result.getId())
+                .toUri();
+
         return ResponseEntity.created(uri).body(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/{id}/status")
-    public ResponseEntity<OrderDto> updateStatus(@PathVariable Long id,@RequestBody OrderStatusDto dto){
-        OrderDto update = service.updateStatus(id, dto);
-        return ResponseEntity.ok(update);
+    public ResponseEntity<OrderDto> updateStatus(
+            @PathVariable Long id,
+            @RequestBody OrderStatusDto dto) {
+
+        OrderDto result = service.updateStatus(id, dto);
+        return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
-
 }

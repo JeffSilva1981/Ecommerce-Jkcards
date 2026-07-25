@@ -1,5 +1,7 @@
 package com.jeffsilva.jkcards.dtos;
 
+import com.jeffsilva.jkcards.dtos.shipping.OrderShippingDto;
+import com.jeffsilva.jkcards.dtos.shipping.ShippingAddressDto;
 import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
 import com.jeffsilva.jkcards.entities.enums.OrderStatus;
@@ -16,15 +18,25 @@ public class OrderDto {
     private OrderStatus status;
     private ClientDto client;
     private PaymentDto payment;
+    private ShippingAddressDto shippingAddress;
+    private OrderShippingDto shipping;
 
-    @NotEmpty(message = "The order must belong to at least one item.")
-    private List<OrderItemDto> items = new ArrayList<>();
+    @NotEmpty(
+            message = "The order must belong to at least one item."
+    )
+    private List<OrderItemDto> items =
+            new ArrayList<>();
 
     public OrderDto() {
-
     }
 
-    public OrderDto(Long id, Instant moment, OrderStatus status, ClientDto client, PaymentDto payment) {
+    public OrderDto(
+            Long id,
+            Instant moment,
+            OrderStatus status,
+            ClientDto client,
+            PaymentDto payment
+    ) {
         this.id = id;
         this.moment = moment;
         this.status = status;
@@ -37,11 +49,25 @@ public class OrderDto {
         moment = entity.getMoment();
         status = entity.getStatus();
         client = new ClientDto(entity.getClient());
-        payment = (entity.getPayment() == null) ? null : new PaymentDto(entity.getPayment());
+
+        payment = entity.getPayment() == null
+                ? null
+                : new PaymentDto(entity.getPayment());
+
+        shippingAddress =
+                entity.getShippingAddress() == null
+                        ? null
+                        : new ShippingAddressDto(
+                        entity.getShippingAddress()
+                );
+
+        shipping =
+                entity.getShippingServiceId() == null
+                        ? null
+                        : new OrderShippingDto(entity);
 
         for (OrderItem item : entity.getItems()) {
-            OrderItemDto orderItemDto = new OrderItemDto(item);
-            items.add(orderItemDto);
+            items.add(new OrderItemDto(item));
         }
     }
 
@@ -65,16 +91,35 @@ public class OrderDto {
         return payment;
     }
 
+    public ShippingAddressDto getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public OrderShippingDto getShipping() {
+        return shipping;
+    }
+
     public List<OrderItemDto> getItems() {
         return items;
     }
 
-    public Double getTotal() {
-        Double sum = 0.0;
+    public Double getProductsTotal() {
+        double sum = 0.0;
 
         for (OrderItemDto item : items) {
             sum += item.getSubTotal();
         }
+
         return sum;
+    }
+
+    public Double getTotal() {
+        double shippingValue =
+                shipping == null
+                        || shipping.getPrice() == null
+                        ? 0.0
+                        : shipping.getPrice();
+
+        return getProductsTotal() + shippingValue;
     }
 }
