@@ -272,9 +272,7 @@ export function OrderDetailsPage() {
               </div>
 
               <p className="mt-3 text-sm text-slate-400">
-                Após a confirmação do pagamento,
-                aguarde nosso contato antes de
-                comparecer ao local.
+                Após a confirmação do pagamento, envie-nos uma mensagem no WhatsApp para agendar a retirada.
               </p>
             </div>
           </div>
