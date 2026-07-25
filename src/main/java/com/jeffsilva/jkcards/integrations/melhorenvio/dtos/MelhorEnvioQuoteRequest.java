@@ -1,13 +1,13 @@
 package com.jeffsilva.jkcards.integrations.melhorenvio.dtos;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MelhorEnvioQuoteRequest {
 
     private MelhorEnvioPostalCodeRequest from;
     private MelhorEnvioPostalCodeRequest to;
-    private List<MelhorEnvioProductRequest> products = new ArrayList<>();
+    private String services = "1,2,3,4";
+    private List<MelhorEnvioProductRequest> products;
     private MelhorEnvioOptionsRequest options;
 
     public MelhorEnvioQuoteRequest() {
@@ -31,6 +31,10 @@ public class MelhorEnvioQuoteRequest {
 
     public MelhorEnvioPostalCodeRequest getTo() {
         return to;
+    }
+
+    public String getServices() {
+        return services;
     }
 
     public List<MelhorEnvioProductRequest> getProducts() {
