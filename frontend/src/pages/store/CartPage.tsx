@@ -1,8 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import {
   Calculator,
+  MapPin,
   Minus,
   Plus,
+  Store,
   Trash2,
   Truck,
 } from "lucide-react";
@@ -48,9 +50,8 @@ function createCartSignature(
     .sort((first, second) =>
       first.productId - second.productId
     )
-    .map(
-      (item) =>
-        `${item.productId}:${item.quantity}`
+    .map((item) =>
+      `${item.productId}:${item.quantity}`
     )
     .join("|");
 }
@@ -66,7 +67,9 @@ export function CartPage() {
   } = useCartStore();
 
   const {
+    deliveryMethod,
     selectedShipping,
+    selectDeliveryMethod,
     selectShipping,
     clearShipping,
   } = useShippingStore();
@@ -92,10 +95,12 @@ export function CartPage() {
   );
 
   const validSelectedShipping =
-    selectedShipping?.cartSignature ===
-    cartSignature
+    deliveryMethod === "SHIPPING" &&
+    selectedShipping?.cartSignature === cartSignature
       ? selectedShipping
       : null;
+
+  const isPickup = deliveryMethod === "PICKUP";
 
   useEffect(() => {
     if (
@@ -173,7 +178,7 @@ export function CartPage() {
 
     if (normalizedPostalCode.length !== 8) {
       setPostalCodeError(
-        "Informe um CEP com 8 numeros."
+        "Informe um CEP com 8 números."
       );
       return;
     }
@@ -182,6 +187,7 @@ export function CartPage() {
       return;
     }
 
+    selectDeliveryMethod("SHIPPING");
     setPostalCodeError(null);
     clearShipping();
     quoteMutation.mutate();
@@ -216,6 +222,9 @@ export function CartPage() {
   const orderPreviewTotal =
     productsTotal +
     (validSelectedShipping?.price ?? 0);
+
+  const canCheckout =
+    isPickup || validSelectedShipping !== null;
 
   return (
     <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -292,143 +301,246 @@ export function CartPage() {
         ))}
 
         <Panel className="p-5">
-          <div className="flex items-start gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
-              <Truck size={20} />
-            </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">
+              Como você deseja receber?
+            </h2>
 
-            <div>
-              <h2 className="text-xl font-bold text-white">
-                Calcular frete
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-400">
-                Informe o CEP de entrega para consultar
-                as transportadoras e os prazos.
-              </p>
-            </div>
+            <p className="mt-1 text-sm text-slate-400">
+              Escolha entre entrega no endereço ou retirada pessoalmente.
+            </p>
           </div>
 
-          <form
-            className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end"
-            onSubmit={handleCalculateShipping}
-          >
-            <div className="flex-1">
-              <Input
-                label="CEP de entrega"
-                value={postalCode}
-                onChange={handlePostalCodeChange}
-                inputMode="numeric"
-                autoComplete="postal-code"
-                placeholder="00000-000"
-                maxLength={9}
-                error={postalCodeError ?? undefined}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              icon={<Calculator size={17} />}
-              disabled={quoteMutation.isPending}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() =>
+                selectDeliveryMethod("SHIPPING")
+              }
+              className={`rounded-lg border p-4 text-left transition ${
+                deliveryMethod === "SHIPPING"
+                  ? "border-skybrand bg-skybrand/10"
+                  : "border-line bg-white/5 hover:border-skybrand/60 hover:bg-white/10"
+              }`}
             >
-              {quoteMutation.isPending
-                ? "Calculando..."
-                : "Calcular"}
-            </Button>
-          </form>
+              <div className="flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
+                  <Truck size={20} />
+                </div>
 
-          {quoteMutation.isError ? (
-            <p className="mt-4 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-              Não foi possível calcular o frete. Confira
-              o CEP e tente novamente.
-            </p>
-          ) : null}
+                <div>
+                  <p className="font-semibold text-white">
+                    Receber no endereço
+                  </p>
 
-          {!quoteMutation.isPending &&
-          quoteMutation.isSuccess &&
-          quotes.length === 0 ? (
-            <p className="mt-4 rounded-md border border-yellow-400/30 bg-yellow-400/10 p-3 text-sm text-yellow-200">
-              Nenhuma opção de entrega foi encontrada
-              para esse CEP.
-            </p>
-          ) : null}
+                  <p className="mt-1 text-sm text-slate-400">
+                    Consulte transportadoras, valores e prazos pelo CEP.
+                  </p>
+                </div>
+              </div>
+            </button>
 
-          {quotes.length > 0 ? (
-            <div className="mt-5 space-y-3">
-              <p className="text-sm font-semibold text-slate-200">
-                Escolha uma opção de entrega:
-              </p>
+            <button
+              type="button"
+              onClick={() =>
+                selectDeliveryMethod("PICKUP")
+              }
+              className={`rounded-lg border p-4 text-left transition ${
+                deliveryMethod === "PICKUP"
+                  ? "border-skybrand bg-skybrand/10"
+                  : "border-line bg-white/5 hover:border-skybrand/60 hover:bg-white/10"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-400/10 text-emerald-300">
+                  <Store size={20} />
+                </div>
 
-              {quotes.map((quote) => {
-                const selected =
-                  validSelectedShipping?.serviceId ===
-                    quote.serviceId &&
-                  validSelectedShipping
-                    .destinationPostalCode ===
-                    normalizePostalCode(postalCode);
+                <div>
+                  <p className="font-semibold text-white">
+                    Retirar na loja
+                  </p>
 
-                return (
-                  <button
-                    key={`${quote.serviceId}-${quote.serviceName}`}
-                    type="button"
-                    onClick={() =>
-                      handleSelectShipping(quote)
-                    }
-                    className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${
-                      selected
-                        ? "border-skybrand bg-skybrand/10"
-                        : "border-line bg-white/5 hover:border-skybrand/60 hover:bg-white/10"
-                    }`}
-                  >
-                    {quote.carrierPicture ? (
-                      <div className="flex size-12 shrink-0 items-center justify-center rounded-md bg-white p-2">
-                        <img
-                          src={quote.carrierPicture}
-                          alt={quote.carrier}
-                          className="max-h-full max-w-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="grid size-12 shrink-0 place-items-center rounded-md bg-skybrand/10 text-skysoft">
-                        <Truck size={20} />
-                      </div>
-                    )}
-
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-white">
-                        {quote.carrier}
-                      </p>
-
-                      <p className="text-sm text-slate-400">
-                        {quote.serviceName}
-                      </p>
-
-                      <p className="mt-1 text-xs text-slate-500">
-                        Entrega estimada em{" "}
-                        {quote.deliveryDays}{" "}
-                        {quote.deliveryDays === 1
-                          ? "dia útil"
-                          : "dias úteis"}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="font-bold text-gold">
-                        {formatCurrency(quote.price)}
-                      </p>
-
-                      <span className="mt-1 block text-xs text-slate-400">
-                        {selected
-                          ? "Selecionado"
-                          : "Selecionar"}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+                  <p className="mt-1 text-sm text-slate-400">
+                    Retirada gratuita em Sorocaba/SP.
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
         </Panel>
+
+        {deliveryMethod === "SHIPPING" ? (
+          <Panel className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
+                <Truck size={20} />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Calcular frete
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  Informe o CEP de entrega para consultar
+                  as transportadoras e os prazos.
+                </p>
+              </div>
+            </div>
+
+            <form
+              className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end"
+              onSubmit={handleCalculateShipping}
+            >
+              <div className="flex-1">
+                <Input
+                  label="CEP de entrega"
+                  value={postalCode}
+                  onChange={handlePostalCodeChange}
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  placeholder="00000-000"
+                  maxLength={9}
+                  error={postalCodeError ?? undefined}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                icon={<Calculator size={17} />}
+                disabled={quoteMutation.isPending}
+              >
+                {quoteMutation.isPending
+                  ? "Calculando..."
+                  : "Calcular"}
+              </Button>
+            </form>
+
+            {quoteMutation.isError ? (
+              <p className="mt-4 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
+                Não foi possível calcular o frete. Confira
+                o CEP e tente novamente.
+              </p>
+            ) : null}
+
+            {!quoteMutation.isPending &&
+            quoteMutation.isSuccess &&
+            quotes.length === 0 ? (
+              <p className="mt-4 rounded-md border border-yellow-400/30 bg-yellow-400/10 p-3 text-sm text-yellow-200">
+                Nenhuma opção de entrega foi encontrada
+                para esse CEP.
+              </p>
+            ) : null}
+
+            {quotes.length > 0 ? (
+              <div className="mt-5 space-y-3">
+                <p className="text-sm font-semibold text-slate-200">
+                  Escolha uma opção de entrega:
+                </p>
+
+                {quotes.map((quote) => {
+                  const selected =
+                    validSelectedShipping?.serviceId ===
+                      quote.serviceId &&
+                    validSelectedShipping
+                      .destinationPostalCode ===
+                      normalizePostalCode(postalCode);
+
+                  return (
+                    <button
+                      key={`${quote.serviceId}-${quote.serviceName}`}
+                      type="button"
+                      onClick={() =>
+                        handleSelectShipping(quote)
+                      }
+                      className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${
+                        selected
+                          ? "border-skybrand bg-skybrand/10"
+                          : "border-line bg-white/5 hover:border-skybrand/60 hover:bg-white/10"
+                      }`}
+                    >
+                      {quote.carrierPicture ? (
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-md bg-white p-2">
+                          <img
+                            src={quote.carrierPicture}
+                            alt={quote.carrier}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="grid size-12 shrink-0 place-items-center rounded-md bg-skybrand/10 text-skysoft">
+                          <Truck size={20} />
+                        </div>
+                      )}
+
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-white">
+                          {quote.carrier}
+                        </p>
+
+                        <p className="text-sm text-slate-400">
+                          {quote.serviceName}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          Entrega estimada em{" "}
+                          {quote.deliveryDays}{" "}
+                          {quote.deliveryDays === 1
+                            ? "dia útil"
+                            : "dias úteis"}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-bold text-gold">
+                          {formatCurrency(quote.price)}
+                        </p>
+
+                        <span className="mt-1 block text-xs text-slate-400">
+                          {selected
+                            ? "Selecionado"
+                            : "Selecionar"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </Panel>
+        ) : (
+          <Panel className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-400/10 text-emerald-300">
+                <MapPin size={20} />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Local de retirada
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-300">
+                  JKCards
+                </p>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  Rua Camargo Fleury, nº 75
+                </p>
+
+                <p className="text-sm text-slate-400">
+                  Sorocaba/SP
+                </p>
+
+                <p className="mt-3 text-xs text-slate-500">
+                  Após a confirmação do pagamento, aguarde
+                  nosso contato antes de comparecer ao local.
+                </p>
+              </div>
+            </div>
+          </Panel>
+        )}
       </div>
 
       <Panel className="h-fit p-5">
@@ -450,16 +562,32 @@ export function CartPage() {
           </div>
 
           <div className="flex justify-between">
-            <span>Frete</span>
+            <span>
+              {isPickup ? "Retirada" : "Frete"}
+            </span>
 
             <span>
-              {validSelectedShipping
-                ? formatCurrency(
-                    validSelectedShipping.price
-                  )
-                : "A calcular"}
+              {isPickup
+                ? "Grátis"
+                : validSelectedShipping
+                  ? formatCurrency(
+                      validSelectedShipping.price
+                    )
+                  : "A calcular"}
             </span>
           </div>
+
+          {isPickup ? (
+            <div className="rounded-md border border-emerald-400/30 bg-emerald-400/10 p-3 text-xs">
+              <p className="font-semibold text-emerald-200">
+                Retirada na loja
+              </p>
+
+              <p className="mt-1 text-slate-400">
+                Rua Camargo Fleury, nº 75 · Sorocaba/SP
+              </p>
+            </div>
+          ) : null}
 
           {validSelectedShipping ? (
             <div className="rounded-md border border-line bg-white/5 p-3 text-xs">
@@ -485,7 +613,7 @@ export function CartPage() {
           </div>
         </div>
 
-        {validSelectedShipping ? (
+        {canCheckout ? (
           <Link to="/checkout" className="mt-5 block">
             <Button className="w-full">
               Finalizar pedido

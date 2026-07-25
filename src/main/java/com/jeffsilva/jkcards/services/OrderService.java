@@ -14,12 +14,14 @@ import com.jeffsilva.jkcards.entities.Payment;
 import com.jeffsilva.jkcards.entities.Product;
 import com.jeffsilva.jkcards.entities.ShippingAddress;
 import com.jeffsilva.jkcards.entities.User;
+import com.jeffsilva.jkcards.entities.enums.DeliveryMethod;
 import com.jeffsilva.jkcards.entities.enums.OrderStatus;
 import com.jeffsilva.jkcards.repositories.OrderItemRepository;
 import com.jeffsilva.jkcards.repositories.OrderRepository;
 import com.jeffsilva.jkcards.repositories.ProductRepository;
 import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.services.exceptions.ResourceNotFoundException;
+import com.jeffsilva.jkcards.services.exceptions.ShippingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -90,19 +92,17 @@ public class OrderService {
     public OrderDto insert(OrderCreateDto dto) {
         Map<Long, Integer> consolidatedItems = consolidateItems(dto.getItems());
 
-        ShippingQuoteRequestDto quoteRequest = createShippingQuoteRequest(dto, consolidatedItems);
-        ShippingQuoteDto selectedQuote = shippingService.validateSelectedQuote(quoteRequest, dto.getShipping().getServiceId());
-
         Order order = new Order();
         order.setMoment(Instant.now());
         order.setStatus(OrderStatus.WAITING_PAYMENT);
-        User user = service.authenticated();
-        order.setClient(user);
-        copyShippingAddress(dto.getShippingAddress(), order);
-        copyShippingQuote(selectedQuote, order);
+        order.setClient(service.authenticated());
+
+        configureDelivery(dto, consolidatedItems, order);
         addOrderItems(consolidatedItems, order);
+
         order = repository.save(order);
         orderItemRepository.saveAll(order.getItems());
+
         Payment payment = mercadoPagoService.createPaymentPreference(order);
         order.setPayment(payment);
         order = repository.save(order);
@@ -132,11 +132,50 @@ public class OrderService {
             }
 
             orderItemRepository.deleteAll(order.getItems());
-
             repository.delete(order);
         } catch (DataIntegrityViolationException e) {
             throw new DataBaseException("Integrity violation");
         }
+    }
+
+    private void configureDelivery(OrderCreateDto dto, Map<Long, Integer> consolidatedItems, Order order) {
+        if (dto.getShipping() == null || dto.getShipping().getMethod() == null) {
+            throw new ShippingException("A delivery method must be selected.");
+        }
+
+        DeliveryMethod method = dto.getShipping().getMethod();
+        order.setDeliveryMethod(method);
+
+        if (method == DeliveryMethod.PICKUP) {
+            configurePickup(order);
+            return;
+        }
+
+        if (dto.getShippingAddress() == null) {
+            throw new ShippingException("The shipping address is required.");
+        }
+
+        if (dto.getShipping().getServiceId() == null) {
+            throw new ShippingException("A shipping service must be selected.");
+        }
+
+        ShippingQuoteRequestDto quoteRequest = createShippingQuoteRequest(dto, consolidatedItems);
+        ShippingQuoteDto selectedQuote = shippingService.validateSelectedQuote(
+                quoteRequest,
+                dto.getShipping().getServiceId()
+        );
+
+        copyShippingAddress(dto.getShippingAddress(), order);
+        copyShippingQuote(selectedQuote, order);
+    }
+
+    private void configurePickup(Order order) {
+        order.setShippingAddress(null);
+        order.setShippingServiceId(null);
+        order.setShippingServiceName("Retirada na loja");
+        order.setShippingCarrier("JKCards");
+        order.setShippingPrice(0.0);
+        order.setShippingDeliveryDays(null);
     }
 
     private Map<Long, Integer> consolidateItems(List<OrderCreateItemDto> items) {
@@ -144,11 +183,7 @@ public class OrderService {
 
         for (OrderCreateItemDto item : items) {
             try {
-                consolidatedItems.merge(
-                        item.getProductId(),
-                        item.getQuantity(),
-                        Math::addExact
-                );
+                consolidatedItems.merge(item.getProductId(), item.getQuantity(), Math::addExact);
             } catch (ArithmeticException e) {
                 throw new DataBaseException("The product quantity is too large.");
             }
@@ -167,42 +202,29 @@ public class OrderService {
         return new ShippingQuoteRequestDto(dto.getShippingAddress().getPostalCode(), quoteItems);
     }
 
-    private void addOrderItems(
-            Map<Long, Integer> consolidatedItems, Order order) {
-
+    private void addOrderItems(Map<Long, Integer> consolidatedItems, Order order) {
         for (Map.Entry<Long, Integer> entry : consolidatedItems.entrySet()) {
             Long productId = entry.getKey();
             Integer requestedQuantity = entry.getValue();
 
-            Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
             Integer currentStock = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
 
             if (requestedQuantity <= 0) {
-                throw new DataBaseException(
-                        "Invalid quantity for product: "
-                                + product.getName()
-                );
+                throw new DataBaseException("Invalid quantity for product: " + product.getName());
             }
 
             if (currentStock < requestedQuantity) {
-                throw new DataBaseException(
-                        "Insufficient stock for product: "
-                                + product.getName()
-                );
+                throw new DataBaseException("Insufficient stock for product: " + product.getName());
             }
 
-            if (product.getPrice() == null
-                    || product.getPrice() <= 0) {
-                throw new DataBaseException(
-                        "Invalid price for product: "
-                                + product.getName()
-                );
+            if (product.getPrice() == null || product.getPrice() <= 0) {
+                throw new DataBaseException("Invalid price for product: " + product.getName());
             }
 
-            product.setStockQuantity(
-                    currentStock - requestedQuantity
-            );
+            product.setStockQuantity(currentStock - requestedQuantity);
 
             OrderItem item = new OrderItem(
                     order,
@@ -215,28 +237,18 @@ public class OrderService {
         }
     }
 
-    private void copyShippingAddress(
-            ShippingAddressDto source,
-            Order order
-    ) {
-        ShippingAddress address =
-                new ShippingAddress(
-                        source.getRecipientName().trim(),
-                        source.getRecipientPhone().trim(),
-                        normalizePostalCode(
-                                source.getPostalCode()
-                        ),
-                        source.getStreet().trim(),
-                        source.getNumber().trim(),
-                        normalizeOptionalText(
-                                source.getComplement()
-                        ),
-                        source.getNeighborhood().trim(),
-                        source.getCity().trim(),
-                        source.getState()
-                                .trim()
-                                .toUpperCase()
-                );
+    private void copyShippingAddress(ShippingAddressDto source, Order order) {
+        ShippingAddress address = new ShippingAddress(
+                source.getRecipientName().trim(),
+                source.getRecipientPhone().trim(),
+                normalizePostalCode(source.getPostalCode()),
+                source.getStreet().trim(),
+                source.getNumber().trim(),
+                normalizeOptionalText(source.getComplement()),
+                source.getNeighborhood().trim(),
+                source.getCity().trim(),
+                source.getState().trim().toUpperCase()
+        );
 
         order.setShippingAddress(address);
     }
@@ -257,6 +269,7 @@ public class OrderService {
         if (value == null || value.isBlank()) {
             return null;
         }
+
         return value.trim();
     }
 }

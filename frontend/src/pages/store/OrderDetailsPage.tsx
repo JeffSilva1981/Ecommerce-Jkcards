@@ -1,5 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard, MapPin, MessageCircle, Truck } from "lucide-react";
+import {
+  CreditCard,
+  MapPin,
+  MessageCircle,
+  Store,
+  Truck,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 import { getOrderById } from "../../api/ordersApi";
 import { Button } from "../../components/Button";
@@ -25,7 +31,9 @@ function formatPostalCode(value: string) {
 export function OrderDetailsPage() {
   const { id } = useParams();
   const orderId = Number(id);
-  const isAdmin = useAuthStore((state) => state.isAdmin());
+  const isAdmin = useAuthStore((state) =>
+    state.isAdmin()
+  );
 
   const query = useQuery({
     queryKey: ["order", orderId],
@@ -34,7 +42,9 @@ export function OrderDetailsPage() {
   });
 
   if (query.isLoading) {
-    return <div className="h-72 animate-pulse rounded-lg bg-white/5" />;
+    return (
+      <div className="h-72 animate-pulse rounded-lg bg-white/5" />
+    );
   }
 
   if (!query.data) {
@@ -47,15 +57,28 @@ export function OrderDetailsPage() {
   }
 
   const order = query.data;
+  const isPickup =
+    order.shipping?.method === "PICKUP";
 
-  const calculatedProductsTotal = order.items.reduce(
-    (total, item) => total + (item.subTotal ?? item.price * item.quantity),
-    0
-  );
+  const calculatedProductsTotal =
+    order.items.reduce(
+      (total, item) =>
+        total +
+        (item.subTotal ??
+          item.price * item.quantity),
+      0
+    );
 
-  const productsTotal = order.productsTotal ?? calculatedProductsTotal;
-  const shippingPrice = order.shipping?.price ?? 0;
-  const orderTotal = order.total ?? productsTotal + shippingPrice;
+  const productsTotal =
+    order.productsTotal ??
+    calculatedProductsTotal;
+
+  const shippingPrice =
+    order.shipping?.price ?? 0;
+
+  const orderTotal =
+    order.total ??
+    productsTotal + shippingPrice;
 
   const canPay =
     !isAdmin &&
@@ -64,29 +87,34 @@ export function OrderDetailsPage() {
 
   function handlePayment() {
     if (order.payment?.checkoutUrl) {
-      window.location.href = order.payment.checkoutUrl;
+      window.location.href =
+        order.payment.checkoutUrl;
     }
   }
 
   function handleWhatsappOrder() {
     const itemsText = order.items
       .map((item) => {
-        const subtotal = item.subTotal ?? item.price * item.quantity;
+        const subtotal =
+          item.subTotal ??
+          item.price * item.quantity;
 
         return `- ${item.quantity}x ${item.name} - ${formatCurrency(subtotal)}`;
       })
       .join("\n");
 
-    const shippingText = order.shipping
-      ? `\nFrete: ${order.shipping.carrier} - ${order.shipping.serviceName} - ${formatCurrency(order.shipping.price)}`
-      : "";
+    const deliveryText = isPickup
+      ? "\nEntrega: Retirada na loja - Rua Camargo Fleury, nº 75 - Sorocaba/SP"
+      : order.shipping
+        ? `\nFrete: ${order.shipping.carrier} - ${order.shipping.serviceName} - ${formatCurrency(order.shipping.price)}`
+        : "";
 
     const message = encodeURIComponent(
       `Olá! Gostaria de falar sobre meu pedido #${order.id}.\n\n` +
         `Cliente: ${order.client.name}\n` +
         `Status: ${order.status}\n\n` +
         `Itens:\n${itemsText}\n` +
-        shippingText +
+        deliveryText +
         `\n\nTotal: ${formatCurrency(orderTotal)}`
     );
 
@@ -122,7 +150,8 @@ export function OrderDetailsPage() {
               </h2>
 
               <p className="mt-1 text-sm text-slate-400">
-                Clique no botão abaixo para finalizar o pagamento com Mercado Pago.
+                Clique no botão abaixo para finalizar
+                o pagamento com Mercado Pago.
               </p>
             </div>
 
@@ -174,14 +203,16 @@ export function OrderDetailsPage() {
                   </p>
 
                   <p className="text-sm text-slate-400">
-                    {item.quantity} x {formatCurrency(item.price)}
+                    {item.quantity} x{" "}
+                    {formatCurrency(item.price)}
                   </p>
                 </div>
               </div>
 
               <p className="shrink-0 font-bold text-gold">
                 {formatCurrency(
-                  item.subTotal ?? item.price * item.quantity
+                  item.subTotal ??
+                    item.price * item.quantity
                 )}
               </p>
             </div>
@@ -191,26 +222,64 @@ export function OrderDetailsPage() {
         <div className="mt-6 space-y-3 border-t border-line pt-4">
           <div className="flex items-center justify-between text-sm text-slate-300">
             <span>Produtos</span>
-            <span>{formatCurrency(productsTotal)}</span>
+            <span>
+              {formatCurrency(productsTotal)}
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-sm text-slate-300">
-            <span>Frete</span>
             <span>
-              {order.shipping
-                ? formatCurrency(shippingPrice)
-                : "Não informado"}
+              {isPickup ? "Retirada" : "Frete"}
+            </span>
+
+            <span>
+              {isPickup
+                ? "Grátis"
+                : order.shipping
+                  ? formatCurrency(shippingPrice)
+                  : "Não informado"}
             </span>
           </div>
 
           <div className="flex items-center justify-between border-t border-line pt-3 text-xl font-bold text-white">
             <span>Total</span>
-            <span>{formatCurrency(orderTotal)}</span>
+            <span>
+              {formatCurrency(orderTotal)}
+            </span>
           </div>
         </div>
       </Panel>
 
-      {order.shipping ? (
+      {isPickup ? (
+        <Panel className="p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-400/10 text-emerald-300">
+              <Store size={20} />
+            </div>
+
+            <div>
+              <h2 className="text-lg font-bold text-white">
+                Retirada na loja
+              </h2>
+
+              <div className="mt-3 space-y-1 text-sm text-slate-300">
+                <p className="font-semibold text-white">
+                  JKCards
+                </p>
+
+                <p>Rua Camargo Fleury, nº 75</p>
+                <p>Sorocaba/SP</p>
+              </div>
+
+              <p className="mt-3 text-sm text-slate-400">
+                Após a confirmação do pagamento,
+                aguarde nosso contato antes de
+                comparecer ao local.
+              </p>
+            </div>
+          </div>
+        </Panel>
+      ) : order.shipping ? (
         <Panel className="p-5">
           <div className="flex items-start gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
@@ -230,10 +299,13 @@ export function OrderDetailsPage() {
                 {order.shipping.serviceName}
               </p>
 
-              {order.shipping.deliveryDays != null ? (
+              {order.shipping.deliveryDays !=
+              null ? (
                 <p className="mt-2 text-sm text-slate-400">
-                  Prazo estimado: {order.shipping.deliveryDays}{" "}
-                  {order.shipping.deliveryDays === 1
+                  Prazo estimado:{" "}
+                  {order.shipping.deliveryDays}{" "}
+                  {order.shipping.deliveryDays ===
+                  1
                     ? "dia útil"
                     : "dias úteis"}
                 </p>
@@ -243,7 +315,7 @@ export function OrderDetailsPage() {
         </Panel>
       ) : null}
 
-      {order.shippingAddress ? (
+      {!isPickup && order.shippingAddress ? (
         <Panel className="p-5">
           <div className="flex items-start gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
@@ -257,21 +329,40 @@ export function OrderDetailsPage() {
 
               <div className="mt-3 space-y-1 text-sm text-slate-300">
                 <p className="font-semibold text-white">
-                  {order.shippingAddress.recipientName}
+                  {
+                    order.shippingAddress
+                      .recipientName
+                  }
                 </p>
 
-                <p>{order.shippingAddress.recipientPhone}</p>
+                <p>
+                  {
+                    order.shippingAddress
+                      .recipientPhone
+                  }
+                </p>
 
                 <p>
                   {order.shippingAddress.street},{" "}
                   {order.shippingAddress.number}
                 </p>
 
-                {order.shippingAddress.complement ? (
-                  <p>{order.shippingAddress.complement}</p>
+                {order.shippingAddress
+                  .complement ? (
+                  <p>
+                    {
+                      order.shippingAddress
+                        .complement
+                    }
+                  </p>
                 ) : null}
 
-                <p>{order.shippingAddress.neighborhood}</p>
+                <p>
+                  {
+                    order.shippingAddress
+                      .neighborhood
+                  }
+                </p>
 
                 <p>
                   {order.shippingAddress.city}/
@@ -279,7 +370,11 @@ export function OrderDetailsPage() {
                 </p>
 
                 <p>
-                  CEP: {formatPostalCode(order.shippingAddress.postalCode)}
+                  CEP:{" "}
+                  {formatPostalCode(
+                    order.shippingAddress
+                      .postalCode
+                  )}
                 </p>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { DeliveryMethod } from "../types/order";
 import type { ShippingQuote } from "../types/shipping";
 
 export type SelectedShipping = ShippingQuote & {
@@ -8,7 +9,9 @@ export type SelectedShipping = ShippingQuote & {
 };
 
 type ShippingState = {
+  deliveryMethod: DeliveryMethod;
   selectedShipping: SelectedShipping | null;
+  selectDeliveryMethod: (method: DeliveryMethod) => void;
   selectShipping: (
     quote: ShippingQuote,
     destinationPostalCode: string,
@@ -21,7 +24,16 @@ export const useShippingStore =
   create<ShippingState>()(
     persist(
       (set) => ({
+        deliveryMethod: "SHIPPING",
         selectedShipping: null,
+
+        selectDeliveryMethod: (method) =>
+          set((state) => ({
+            deliveryMethod: method,
+            selectedShipping: method === "PICKUP"
+              ? null
+              : state.selectedShipping,
+          })),
 
         selectShipping: (
           quote,
@@ -29,6 +41,7 @@ export const useShippingStore =
           cartSignature
         ) =>
           set({
+            deliveryMethod: "SHIPPING",
             selectedShipping: {
               ...quote,
               destinationPostalCode,

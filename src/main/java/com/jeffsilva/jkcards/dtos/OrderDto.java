@@ -21,22 +21,13 @@ public class OrderDto {
     private ShippingAddressDto shippingAddress;
     private OrderShippingDto shipping;
 
-    @NotEmpty(
-            message = "The order must belong to at least one item."
-    )
-    private List<OrderItemDto> items =
-            new ArrayList<>();
+    @NotEmpty(message = "The order must belong to at least one item.")
+    private List<OrderItemDto> items = new ArrayList<>();
 
     public OrderDto() {
     }
 
-    public OrderDto(
-            Long id,
-            Instant moment,
-            OrderStatus status,
-            ClientDto client,
-            PaymentDto payment
-    ) {
+    public OrderDto(Long id, Instant moment, OrderStatus status, ClientDto client, PaymentDto payment) {
         this.id = id;
         this.moment = moment;
         this.status = status;
@@ -49,22 +40,12 @@ public class OrderDto {
         moment = entity.getMoment();
         status = entity.getStatus();
         client = new ClientDto(entity.getClient());
+        payment = entity.getPayment() == null ? null : new PaymentDto(entity.getPayment());
+        shippingAddress = entity.getShippingAddress() == null ? null : new ShippingAddressDto(entity.getShippingAddress());
 
-        payment = entity.getPayment() == null
+        shipping = entity.getDeliveryMethod() == null && entity.getShippingServiceId() == null
                 ? null
-                : new PaymentDto(entity.getPayment());
-
-        shippingAddress =
-                entity.getShippingAddress() == null
-                        ? null
-                        : new ShippingAddressDto(
-                        entity.getShippingAddress()
-                );
-
-        shipping =
-                entity.getShippingServiceId() == null
-                        ? null
-                        : new OrderShippingDto(entity);
+                : new OrderShippingDto(entity);
 
         for (OrderItem item : entity.getItems()) {
             items.add(new OrderItemDto(item));
@@ -114,11 +95,9 @@ public class OrderDto {
     }
 
     public Double getTotal() {
-        double shippingValue =
-                shipping == null
-                        || shipping.getPrice() == null
-                        ? 0.0
-                        : shipping.getPrice();
+        double shippingValue = shipping == null || shipping.getPrice() == null
+                ? 0.0
+                : shipping.getPrice();
 
         return getProductsTotal() + shippingValue;
     }

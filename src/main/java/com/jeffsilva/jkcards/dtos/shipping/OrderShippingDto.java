@@ -1,9 +1,11 @@
 package com.jeffsilva.jkcards.dtos.shipping;
 
 import com.jeffsilva.jkcards.entities.Order;
+import com.jeffsilva.jkcards.entities.enums.DeliveryMethod;
 
 public class OrderShippingDto {
 
+    private DeliveryMethod method;
     private Long serviceId;
     private String serviceName;
     private String carrier;
@@ -13,13 +15,8 @@ public class OrderShippingDto {
     public OrderShippingDto() {
     }
 
-    public OrderShippingDto(
-            Long serviceId,
-            String serviceName,
-            String carrier,
-            Double price,
-            Integer deliveryDays
-    ) {
+    public OrderShippingDto(DeliveryMethod method, Long serviceId, String serviceName, String carrier, Double price, Integer deliveryDays) {
+        this.method = method;
         this.serviceId = serviceId;
         this.serviceName = serviceName;
         this.carrier = carrier;
@@ -28,12 +25,20 @@ public class OrderShippingDto {
     }
 
     public OrderShippingDto(Order entity) {
+        method = entity.getDeliveryMethod();
         serviceId = entity.getShippingServiceId();
         serviceName = entity.getShippingServiceName();
         carrier = entity.getShippingCarrier();
         price = entity.getShippingPrice();
-        deliveryDays =
-                entity.getShippingDeliveryDays();
+        deliveryDays = entity.getShippingDeliveryDays();
+    }
+
+    public DeliveryMethod getMethod() {
+        return method;
+    }
+
+    public void setMethod(DeliveryMethod method) {
+        this.method = method;
     }
 
     public Long getServiceId() {
@@ -48,9 +53,7 @@ public class OrderShippingDto {
         return serviceName;
     }
 
-    public void setServiceName(
-            String serviceName
-    ) {
+    public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
     }
 
@@ -74,9 +77,7 @@ public class OrderShippingDto {
         return deliveryDays;
     }
 
-    public void setDeliveryDays(
-            Integer deliveryDays
-    ) {
+    public void setDeliveryDays(Integer deliveryDays) {
         this.deliveryDays = deliveryDays;
     }
 }

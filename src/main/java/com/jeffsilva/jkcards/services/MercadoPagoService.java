@@ -3,6 +3,7 @@ package com.jeffsilva.jkcards.services;
 import com.jeffsilva.jkcards.entities.Order;
 import com.jeffsilva.jkcards.entities.OrderItem;
 import com.jeffsilva.jkcards.entities.Payment;
+import com.jeffsilva.jkcards.entities.enums.DeliveryMethod;
 import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.payment.PaymentClient;
@@ -97,6 +98,10 @@ public class MercadoPagoService {
     }
 
     private void addShippingItem(Order order, List<PreferenceItemRequest> items) {
+        if (order.getDeliveryMethod() == DeliveryMethod.PICKUP) {
+            return;
+        }
+
         if (order.getShippingPrice() == null || order.getShippingPrice() <= 0) {
             throw new DataBaseException("The order does not have a valid shipping price.");
         }

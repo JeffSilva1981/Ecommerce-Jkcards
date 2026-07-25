@@ -5,6 +5,8 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELED";
 
+export type DeliveryMethod = "SHIPPING" | "PICKUP";
+
 export type OrderItem = {
   productId: number;
   name: string;
@@ -34,7 +36,8 @@ export type ShippingAddress = {
 };
 
 export type OrderShipping = {
-  serviceId: number;
+  method?: DeliveryMethod | null;
+  serviceId?: number | null;
   serviceName: string;
   carrier: string;
   price: number;
@@ -62,8 +65,9 @@ export type CreateOrderPayload = {
     productId: number;
     quantity: number;
   }>;
-  shippingAddress: ShippingAddress;
+  shippingAddress?: ShippingAddress;
   shipping: {
-    serviceId: number;
+    method: DeliveryMethod;
+    serviceId?: number | null;
   };
 };

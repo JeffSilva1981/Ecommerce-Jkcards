@@ -1,19 +1,8 @@
 package com.jeffsilva.jkcards.entities;
 
+import com.jeffsilva.jkcards.entities.enums.DeliveryMethod;
 import com.jeffsilva.jkcards.entities.enums.OrderStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -29,9 +18,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(
-            columnDefinition = "TIMESTAMP WITHOUT TIME ZONE"
-    )
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private Instant moment;
 
     @Enumerated(EnumType.STRING)
@@ -42,14 +29,15 @@ public class Order {
     @JoinColumn(name = "client_id")
     private User client;
 
-    @OneToOne(
-            mappedBy = "order",
-            cascade = jakarta.persistence.CascadeType.ALL
-    )
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
     @OneToMany(mappedBy = "id.order")
     private Set<OrderItem> items = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_method")
+    private DeliveryMethod deliveryMethod;
 
     @Embedded
     private ShippingAddress shippingAddress;
@@ -77,8 +65,8 @@ public class Order {
             Instant moment,
             OrderStatus status,
             User client,
-            Payment payment
-    ) {
+            Payment payment) {
+
         this.id = id;
         this.moment = moment;
         this.status = status;
@@ -130,13 +118,19 @@ public class Order {
         return items;
     }
 
+    public DeliveryMethod getDeliveryMethod() {
+        return deliveryMethod;
+    }
+
+    public void setDeliveryMethod(DeliveryMethod deliveryMethod) {
+        this.deliveryMethod = deliveryMethod;
+    }
+
     public ShippingAddress getShippingAddress() {
         return shippingAddress;
     }
 
-    public void setShippingAddress(
-            ShippingAddress shippingAddress
-    ) {
+    public void setShippingAddress(ShippingAddress shippingAddress) {
         this.shippingAddress = shippingAddress;
     }
 
@@ -144,9 +138,7 @@ public class Order {
         return shippingServiceId;
     }
 
-    public void setShippingServiceId(
-            Long shippingServiceId
-    ) {
+    public void setShippingServiceId(Long shippingServiceId) {
         this.shippingServiceId = shippingServiceId;
     }
 
@@ -154,20 +146,15 @@ public class Order {
         return shippingServiceName;
     }
 
-    public void setShippingServiceName(
-            String shippingServiceName
-    ) {
-        this.shippingServiceName =
-                shippingServiceName;
+    public void setShippingServiceName(String shippingServiceName) {
+        this.shippingServiceName = shippingServiceName;
     }
 
     public String getShippingCarrier() {
         return shippingCarrier;
     }
 
-    public void setShippingCarrier(
-            String shippingCarrier
-    ) {
+    public void setShippingCarrier(String shippingCarrier) {
         this.shippingCarrier = shippingCarrier;
     }
 
@@ -175,9 +162,7 @@ public class Order {
         return shippingPrice;
     }
 
-    public void setShippingPrice(
-            Double shippingPrice
-    ) {
+    public void setShippingPrice(Double shippingPrice) {
         this.shippingPrice = shippingPrice;
     }
 
@@ -185,11 +170,8 @@ public class Order {
         return shippingDeliveryDays;
     }
 
-    public void setShippingDeliveryDays(
-            Integer shippingDeliveryDays
-    ) {
-        this.shippingDeliveryDays =
-                shippingDeliveryDays;
+    public void setShippingDeliveryDays(Integer shippingDeliveryDays) {
+        this.shippingDeliveryDays = shippingDeliveryDays;
     }
 
     public List<Product> getProducts() {

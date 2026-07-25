@@ -12,32 +12,20 @@ import java.util.List;
 public class OrderCreateDto {
 
     @Valid
-    @NotEmpty(
-            message = "The order must contain at least one item."
-    )
-    private List<OrderCreateItemDto> items =
-            new ArrayList<>();
+    @NotEmpty(message = "The order must contain at least one item.")
+    private List<OrderCreateItemDto> items = new ArrayList<>();
 
     @Valid
-    @NotNull(
-            message = "The shipping address is required."
-    )
     private ShippingAddressDto shippingAddress;
 
     @Valid
-    @NotNull(
-            message = "The shipping option is required."
-    )
+    @NotNull(message = "The delivery option is required.")
     private ShippingSelectionDto shipping;
 
     public OrderCreateDto() {
     }
 
-    public OrderCreateDto(
-            List<OrderCreateItemDto> items,
-            ShippingAddressDto shippingAddress,
-            ShippingSelectionDto shipping
-    ) {
+    public OrderCreateDto(List<OrderCreateItemDto> items, ShippingAddressDto shippingAddress, ShippingSelectionDto shipping) {
         this.items = items;
         this.shippingAddress = shippingAddress;
         this.shipping = shipping;
@@ -47,9 +35,7 @@ public class OrderCreateDto {
         return items;
     }
 
-    public void setItems(
-            List<OrderCreateItemDto> items
-    ) {
+    public void setItems(List<OrderCreateItemDto> items) {
         this.items = items;
     }
 
@@ -57,9 +43,7 @@ public class OrderCreateDto {
         return shippingAddress;
     }
 
-    public void setShippingAddress(
-            ShippingAddressDto shippingAddress
-    ) {
+    public void setShippingAddress(ShippingAddressDto shippingAddress) {
         this.shippingAddress = shippingAddress;
     }
 
@@ -67,9 +51,7 @@ public class OrderCreateDto {
         return shipping;
     }
 
-    public void setShipping(
-            ShippingSelectionDto shipping
-    ) {
+    public void setShipping(ShippingSelectionDto shipping) {
         this.shipping = shipping;
     }
 }
