@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard, MessageCircle } from "lucide-react";
+import { CreditCard, MapPin, MessageCircle, Truck } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { getOrderById } from "../../api/ordersApi";
 import { Button } from "../../components/Button";
@@ -11,6 +11,16 @@ import { formatCurrency } from "../../utils/currency";
 import { formatDate } from "../../utils/dates";
 
 const whatsappNumber = "5515988233584";
+
+function formatPostalCode(value: string) {
+  const postalCode = value.replace(/\D/g, "");
+
+  if (postalCode.length !== 8) {
+    return value;
+  }
+
+  return `${postalCode.slice(0, 5)}-${postalCode.slice(5)}`;
+}
 
 export function OrderDetailsPage() {
   const { id } = useParams();
@@ -24,9 +34,7 @@ export function OrderDetailsPage() {
   });
 
   if (query.isLoading) {
-    return (
-      <div className="h-72 animate-pulse rounded-lg bg-white/5" />
-    );
+    return <div className="h-72 animate-pulse rounded-lg bg-white/5" />;
   }
 
   if (!query.data) {
@@ -39,6 +47,15 @@ export function OrderDetailsPage() {
   }
 
   const order = query.data;
+
+  const calculatedProductsTotal = order.items.reduce(
+    (total, item) => total + (item.subTotal ?? item.price * item.quantity),
+    0
+  );
+
+  const productsTotal = order.productsTotal ?? calculatedProductsTotal;
+  const shippingPrice = order.shipping?.price ?? 0;
+  const orderTotal = order.total ?? productsTotal + shippingPrice;
 
   const canPay =
     !isAdmin &&
@@ -54,27 +71,29 @@ export function OrderDetailsPage() {
   function handleWhatsappOrder() {
     const itemsText = order.items
       .map((item) => {
-        const subtotal =
-          item.subTotal ?? item.price * item.quantity;
+        const subtotal = item.subTotal ?? item.price * item.quantity;
 
-        return (
-          `- ${item.quantity}x ${item.name} - ` +
-          formatCurrency(subtotal)
-        );
+        return `- ${item.quantity}x ${item.name} - ${formatCurrency(subtotal)}`;
       })
       .join("\n");
+
+    const shippingText = order.shipping
+      ? `\nFrete: ${order.shipping.carrier} - ${order.shipping.serviceName} - ${formatCurrency(order.shipping.price)}`
+      : "";
 
     const message = encodeURIComponent(
       `Olá! Gostaria de falar sobre meu pedido #${order.id}.\n\n` +
         `Cliente: ${order.client.name}\n` +
         `Status: ${order.status}\n\n` +
-        `Itens:\n${itemsText}\n\n` +
-        `Total: ${formatCurrency(order.total)}`,
+        `Itens:\n${itemsText}\n` +
+        shippingText +
+        `\n\nTotal: ${formatCurrency(orderTotal)}`
     );
 
     window.open(
       `https://wa.me/${whatsappNumber}?text=${message}`,
       "_blank",
+      "noopener,noreferrer"
     );
   }
 
@@ -103,8 +122,7 @@ export function OrderDetailsPage() {
               </h2>
 
               <p className="mt-1 text-sm text-slate-400">
-                Clique no botão abaixo para finalizar o pagamento
-                com Mercado Pago.
+                Clique no botão abaixo para finalizar o pagamento com Mercado Pago.
               </p>
             </div>
 
@@ -156,27 +174,118 @@ export function OrderDetailsPage() {
                   </p>
 
                   <p className="text-sm text-slate-400">
-                    {item.quantity} x{" "}
-                    {formatCurrency(item.price)}
+                    {item.quantity} x {formatCurrency(item.price)}
                   </p>
                 </div>
               </div>
 
               <p className="shrink-0 font-bold text-gold">
                 {formatCurrency(
-                  item.subTotal ??
-                    item.price * item.quantity,
+                  item.subTotal ?? item.price * item.quantity
                 )}
               </p>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 flex items-center justify-between text-xl font-bold text-white">
-          <span>Total</span>
-          <span>{formatCurrency(order.total)}</span>
+        <div className="mt-6 space-y-3 border-t border-line pt-4">
+          <div className="flex items-center justify-between text-sm text-slate-300">
+            <span>Produtos</span>
+            <span>{formatCurrency(productsTotal)}</span>
+          </div>
+
+          <div className="flex items-center justify-between text-sm text-slate-300">
+            <span>Frete</span>
+            <span>
+              {order.shipping
+                ? formatCurrency(shippingPrice)
+                : "Não informado"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-line pt-3 text-xl font-bold text-white">
+            <span>Total</span>
+            <span>{formatCurrency(orderTotal)}</span>
+          </div>
         </div>
       </Panel>
+
+      {order.shipping ? (
+        <Panel className="p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
+              <Truck size={20} />
+            </div>
+
+            <div>
+              <h2 className="text-lg font-bold text-white">
+                Entrega
+              </h2>
+
+              <p className="mt-2 font-semibold text-slate-200">
+                {order.shipping.carrier}
+              </p>
+
+              <p className="text-sm text-slate-400">
+                {order.shipping.serviceName}
+              </p>
+
+              {order.shipping.deliveryDays != null ? (
+                <p className="mt-2 text-sm text-slate-400">
+                  Prazo estimado: {order.shipping.deliveryDays}{" "}
+                  {order.shipping.deliveryDays === 1
+                    ? "dia útil"
+                    : "dias úteis"}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </Panel>
+      ) : null}
+
+      {order.shippingAddress ? (
+        <Panel className="p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
+              <MapPin size={20} />
+            </div>
+
+            <div>
+              <h2 className="text-lg font-bold text-white">
+                Endereço de entrega
+              </h2>
+
+              <div className="mt-3 space-y-1 text-sm text-slate-300">
+                <p className="font-semibold text-white">
+                  {order.shippingAddress.recipientName}
+                </p>
+
+                <p>{order.shippingAddress.recipientPhone}</p>
+
+                <p>
+                  {order.shippingAddress.street},{" "}
+                  {order.shippingAddress.number}
+                </p>
+
+                {order.shippingAddress.complement ? (
+                  <p>{order.shippingAddress.complement}</p>
+                ) : null}
+
+                <p>{order.shippingAddress.neighborhood}</p>
+
+                <p>
+                  {order.shippingAddress.city}/
+                  {order.shippingAddress.state}
+                </p>
+
+                <p>
+                  CEP: {formatPostalCode(order.shippingAddress.postalCode)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Panel>
+      ) : null}
 
       <Panel className="p-5">
         <h2 className="text-lg font-bold text-white">

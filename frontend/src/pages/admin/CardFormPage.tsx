@@ -4,9 +4,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Save } from "lucide-react";
+import { Package, Save } from "lucide-react";
 import {
-  ChangeEvent,
+  type ChangeEvent,
   useEffect,
   useState,
 } from "react";
@@ -47,6 +47,13 @@ type CardLanguage =
   | "Inglês"
   | "Japonês";
 
+const DEFAULT_CARD_PACKAGE = {
+  weight: 0.05,
+  width: 11,
+  height: 2,
+  length: 16,
+};
+
 function normalizeText(value: string) {
   return value
     .normalize("NFD")
@@ -59,7 +66,7 @@ function createCardDescription(
   card: SelectedPokemonCard,
   condition: CardCondition,
   cardType: CardType,
-  language: CardLanguage,
+  language: CardLanguage
 ) {
   const details = [
     `Carta Pokémon: ${card.name}`,
@@ -86,7 +93,7 @@ function createCardDescription(
 function replaceDescriptionField(
   description: string,
   fieldName: string,
-  value: string,
+  value: string
 ) {
   const fieldLine = `${fieldName}: ${value}`;
 
@@ -95,13 +102,13 @@ function replaceDescriptionField(
     .map((line) => line.trimEnd());
 
   const normalizedFieldName = normalizeText(
-    `${fieldName}:`,
+    `${fieldName}:`
   );
 
   const fieldIndex = lines.findIndex((line) =>
     normalizeText(line).startsWith(
-      normalizedFieldName,
-    ),
+      normalizedFieldName
+    )
   );
 
   if (fieldIndex >= 0) {
@@ -111,15 +118,15 @@ function replaceDescriptionField(
 
   const catalogIdIndex = lines.findIndex((line) =>
     normalizeText(line).startsWith(
-      "id do catalogo:",
-    ),
+      "id do catalogo:"
+    )
   );
 
   if (catalogIdIndex >= 0) {
     lines.splice(
       catalogIdIndex,
       0,
-      fieldLine,
+      fieldLine
     );
 
     return lines.join("\n");
@@ -161,6 +168,10 @@ export function CardFormPage() {
       stockQuantity: 0,
       imgUrl: "",
       categoryId: 0,
+      weight: DEFAULT_CARD_PACKAGE.weight,
+      width: DEFAULT_CARD_PACKAGE.width,
+      height: DEFAULT_CARD_PACKAGE.height,
+      length: DEFAULT_CARD_PACKAGE.length,
     },
   });
 
@@ -172,7 +183,7 @@ export function CardFormPage() {
   const cardCategory =
     categoriesQuery.data?.find((category) => {
       const normalizedName = normalizeText(
-        category.name,
+        category.name
       );
 
       return (
@@ -191,7 +202,7 @@ export function CardFormPage() {
       cardCategory.id,
       {
         shouldValidate: true,
-      },
+      }
     );
 
     setCardCategoryError(null);
@@ -205,6 +216,10 @@ export function CardFormPage() {
         price: values.price,
         stockQuantity: values.stockQuantity,
         imgUrl: values.imgUrl,
+        weight: values.weight,
+        width: values.width,
+        height: values.height,
+        length: values.length,
         categories: [
           {
             id: values.categoryId,
@@ -239,17 +254,17 @@ export function CardFormPage() {
     onError: (error) => {
       console.error(
         "Erro ao cadastrar carta:",
-        error,
+        error
       );
 
       alert(
-        "Não foi possível cadastrar a carta.",
+        "Não foi possível cadastrar a carta."
       );
     },
   });
 
   function handleCardSelected(
-    card: SelectedPokemonCard,
+    card: SelectedPokemonCard
   ) {
     setSelectedCard(card);
     setCardCategoryError(null);
@@ -265,12 +280,12 @@ export function CardFormPage() {
         card,
         condition,
         cardType,
-        language,
+        language
       ),
       {
         shouldValidate: true,
         shouldDirty: true,
-      },
+      }
     );
 
     form.setValue("imgUrl", card.imageUrl, {
@@ -285,13 +300,13 @@ export function CardFormPage() {
         {
           shouldValidate: true,
           shouldDirty: true,
-        },
+        }
       );
     }
   }
 
   function handleConditionChange(
-    event: ChangeEvent<HTMLSelectElement>,
+    event: ChangeEvent<HTMLSelectElement>
   ) {
     const newCondition =
       event.target.value as CardCondition;
@@ -306,17 +321,17 @@ export function CardFormPage() {
       replaceDescriptionField(
         currentDescription,
         "Condição",
-        newCondition,
+        newCondition
       ),
       {
         shouldValidate: true,
         shouldDirty: true,
-      },
+      }
     );
   }
 
   function handleCardTypeChange(
-    event: ChangeEvent<HTMLSelectElement>,
+    event: ChangeEvent<HTMLSelectElement>
   ) {
     const newCardType =
       event.target.value as CardType;
@@ -331,17 +346,17 @@ export function CardFormPage() {
       replaceDescriptionField(
         currentDescription,
         "Tipo",
-        newCardType,
+        newCardType
       ),
       {
         shouldValidate: true,
         shouldDirty: true,
-      },
+      }
     );
   }
 
   function handleLanguageChange(
-    event: ChangeEvent<HTMLSelectElement>,
+    event: ChangeEvent<HTMLSelectElement>
   ) {
     const newLanguage =
       event.target.value as CardLanguage;
@@ -356,12 +371,12 @@ export function CardFormPage() {
       replaceDescriptionField(
         currentDescription,
         "Idioma",
-        newLanguage,
+        newLanguage
       ),
       {
         shouldValidate: true,
         shouldDirty: true,
-      },
+      }
     );
   }
 
@@ -370,14 +385,14 @@ export function CardFormPage() {
 
     if (!selectedCard) {
       alert(
-        "Pesquise e selecione uma carta antes de salvar.",
+        "Pesquise e selecione uma carta antes de salvar."
       );
       return;
     }
 
     if (!cardCategory) {
       setCardCategoryError(
-        'Crie uma categoria chamada "Cartas" antes de cadastrar cartas.',
+        'Crie uma categoria chamada "Cartas" antes de cadastrar cartas.'
       );
       return;
     }
@@ -386,21 +401,21 @@ export function CardFormPage() {
       replaceDescriptionField(
         values.description,
         "Condição",
-        condition,
+        condition
       );
 
     const descriptionWithType =
       replaceDescriptionField(
         descriptionWithCondition,
         "Tipo",
-        cardType,
+        cardType
       );
 
     const completeDescription =
       replaceDescriptionField(
         descriptionWithType,
         "Idioma",
-        language,
+        language
       );
 
     mutation.mutate({
@@ -460,9 +475,9 @@ export function CardFormPage() {
               (errors) => {
                 console.error(
                   "Dados inválidos:",
-                  errors,
+                  errors
                 );
-              },
+              }
             )}
           >
             <div className="grid gap-4 md:grid-cols-2">
@@ -585,6 +600,80 @@ export function CardFormPage() {
                 error={stockError}
                 {...form.register("stockQuantity")}
               />
+            </div>
+
+            <div className="rounded-lg border border-line bg-ink/40 p-4">
+              <div className="mb-4 flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
+                  <Package size={20} />
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-white">
+                    Embalagem da carta
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-400">
+                    As medidas iniciais consideram uma carta
+                    protegida e embalada para envio.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Input
+                  label="Peso (kg)"
+                  type="number"
+                  min="0.01"
+                  max="30"
+                  step="0.01"
+                  error={
+                    form.formState.errors.weight?.message
+                  }
+                  {...form.register("weight")}
+                />
+
+                <Input
+                  label="Largura (cm)"
+                  type="number"
+                  min="1"
+                  max="200"
+                  step="0.1"
+                  error={
+                    form.formState.errors.width?.message
+                  }
+                  {...form.register("width")}
+                />
+
+                <Input
+                  label="Altura (cm)"
+                  type="number"
+                  min="1"
+                  max="200"
+                  step="0.1"
+                  error={
+                    form.formState.errors.height?.message
+                  }
+                  {...form.register("height")}
+                />
+
+                <Input
+                  label="Comprimento (cm)"
+                  type="number"
+                  min="1"
+                  max="200"
+                  step="0.1"
+                  error={
+                    form.formState.errors.length?.message
+                  }
+                  {...form.register("length")}
+                />
+              </div>
+
+              <p className="mt-3 text-xs text-slate-500">
+                Ajuste os valores quando utilizar uma
+                embalagem diferente ou proteção adicional.
+              </p>
             </div>
 
             <Textarea

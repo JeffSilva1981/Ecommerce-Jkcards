@@ -7,6 +7,10 @@ export type Product = {
   price: number;
   imgUrl?: string;
   stockQuantity: number;
+  weight?: number | null;
+  width?: number | null;
+  height?: number | null;
+  length?: number | null;
   categories: Category[];
 };
 
@@ -21,5 +25,9 @@ export type ProductFormData = {
   price: number;
   imgUrl?: string;
   stockQuantity: number;
+  weight?: number;
+  width?: number;
+  height?: number;
+  length?: number;
   categories: Array<Pick<Category, "id">>;
 };

@@ -1,5 +1,6 @@
-import { apiClient } from "./apiClient";
 import type { CreateOrderPayload, Order, OrderStatus } from "../types/order";
+import type { Page } from "../types/page";
+import { apiClient } from "./apiClient";
 
 export async function createOrder(payload: CreateOrderPayload) {
   const response = await apiClient.post<Order>("/orders", payload);
@@ -12,21 +13,12 @@ export async function getOrderById(id: number) {
 }
 
 export async function getMyOrders() {
-  try {
-    const response = await apiClient.get("/orders/my");
-
-    console.log("STATUS:", response.status);
-    console.log("DATA:", response.data);
-
-    return response.data.content;
-  } catch (error) {
-    console.error("ERRO GET MY ORDERS:", error);
-    throw error;
-  }
+  const response = await apiClient.get<Page<Order>>("/orders/my");
+  return response.data?.content ?? [];
 }
 
 export async function getAdminOrders() {
-  const response = await apiClient.get<Order[]>("/orders");
+  const response = await apiClient.get<Page<Order>>("/orders");
   return response.data;
 }
 

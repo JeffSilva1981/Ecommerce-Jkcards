@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save } from "lucide-react";
+import { Package, Save } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,11 +15,16 @@ import { Input } from "../../components/Input";
 import { Panel } from "../../components/Panel";
 import { Select } from "../../components/Select";
 import { Textarea } from "../../components/Textarea";
-import { productSchema, type ProductSchema } from "../../schemas/productSchema";
+import {
+  productSchema,
+  type ProductSchema,
+} from "../../schemas/productSchema";
 
 export function ProductFormPage() {
   const { id } = useParams();
-  const productId = id === "novo" || !id ? undefined : Number(id);
+  const productId =
+    id === "novo" || !id ? undefined : Number(id);
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -33,6 +38,10 @@ export function ProductFormPage() {
       stockQuantity: 0,
       imgUrl: "",
       categoryId: 1,
+      weight: 0,
+      width: 0,
+      height: 0,
+      length: 0,
     },
   });
 
@@ -55,9 +64,15 @@ export function ProductFormPage() {
         name: productQuery.data.name,
         description: productQuery.data.description,
         price: productQuery.data.price,
-        stockQuantity: productQuery.data.stockQuantity ?? 0,
+        stockQuantity:
+          productQuery.data.stockQuantity ?? 0,
         imgUrl: productQuery.data.imgUrl ?? "",
-        categoryId: productQuery.data.categories[0]?.id ?? 1,
+        categoryId:
+          productQuery.data.categories[0]?.id ?? 1,
+        weight: productQuery.data.weight ?? 0,
+        width: productQuery.data.width ?? 0,
+        height: productQuery.data.height ?? 0,
+        length: productQuery.data.length ?? 0,
       });
     }
   }, [form, productQuery.data]);
@@ -67,14 +82,20 @@ export function ProductFormPage() {
   ) => {
     const file = event.target.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     try {
       setUploadingImage(true);
 
-      const uploadedImageUrl = await uploadProductImage(file);
+      const uploadedImageUrl =
+        await uploadProductImage(file);
 
-      form.setValue("imgUrl", uploadedImageUrl);
+      form.setValue("imgUrl", uploadedImageUrl, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     } catch (error) {
       console.error("Erro ao enviar imagem", error);
       alert("Erro ao enviar imagem.");
@@ -92,10 +113,15 @@ export function ProductFormPage() {
           price: values.price,
           stockQuantity: values.stockQuantity,
           imgUrl: values.imgUrl,
+          weight: values.weight,
+          width: values.width,
+          height: values.height,
+          length: values.length,
           categories: [{ id: values.categoryId }],
         },
         productId
       ),
+
     onSuccess: () => {
       alert(
         productId
@@ -103,10 +129,17 @@ export function ProductFormPage() {
           : "Produto cadastrado com sucesso."
       );
 
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-products"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+      });
+
       navigate("/admin/produtos");
     },
+
     onError: () => {
       alert("Nao foi possivel salvar o produto.");
     },
@@ -116,17 +149,23 @@ export function ProductFormPage() {
     <section className="mx-auto max-w-3xl space-y-5">
       <div>
         <h1 className="text-3xl font-bold text-white">
-          {productId ? "Editar produto" : "Novo produto"}
+          {productId
+            ? "Editar produto"
+            : "Novo produto"}
         </h1>
+
         <p className="mt-2 text-sm text-slate-400">
-          Cadastre as informacoes principais do produto.
+          Cadastre as informacoes principais e as
+          medidas do pacote para o calculo do frete.
         </p>
       </div>
 
       <Panel className="p-5">
         <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
+          className="space-y-5"
+          onSubmit={form.handleSubmit((values) =>
+            mutation.mutate(values)
+          )}
         >
           <Input
             label="Nome"
@@ -136,7 +175,9 @@ export function ProductFormPage() {
 
           <Textarea
             label="Descricao"
-            error={form.formState.errors.description?.message}
+            error={
+              form.formState.errors.description?.message
+            }
             {...form.register("description")}
           />
 
@@ -144,6 +185,7 @@ export function ProductFormPage() {
             <Input
               label="Preco"
               type="number"
+              min="0.01"
               step="0.01"
               error={form.formState.errors.price?.message}
               {...form.register("price")}
@@ -154,21 +196,106 @@ export function ProductFormPage() {
               type="number"
               min="0"
               step="1"
-              error={form.formState.errors.stockQuantity?.message}
+              error={
+                form.formState.errors.stockQuantity?.message
+              }
               {...form.register("stockQuantity")}
             />
 
             <Select
               label="Categoria"
-              error={form.formState.errors.categoryId?.message}
+              error={
+                form.formState.errors.categoryId?.message
+              }
               {...form.register("categoryId")}
             >
               {categoriesQuery.data?.map((category) => (
-                <option key={category.id} value={category.id}>
+                <option
+                  key={category.id}
+                  value={category.id}
+                >
                   {category.name}
                 </option>
               ))}
             </Select>
+          </div>
+
+          <div className="rounded-lg border border-line bg-ink/40 p-4">
+            <div className="mb-4 flex items-start gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
+                <Package size={20} />
+              </div>
+
+              <div>
+                <h2 className="font-semibold text-white">
+                  Pacote para envio
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  Informe o peso e as medidas do produto
+                  ja embalado para envio.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Input
+                label="Peso (kg)"
+                type="number"
+                min="0.01"
+                max="30"
+                step="0.01"
+                placeholder="Ex.: 0.50"
+                error={
+                  form.formState.errors.weight?.message
+                }
+                {...form.register("weight")}
+              />
+
+              <Input
+                label="Largura (cm)"
+                type="number"
+                min="1"
+                max="200"
+                step="0.1"
+                placeholder="Ex.: 20"
+                error={
+                  form.formState.errors.width?.message
+                }
+                {...form.register("width")}
+              />
+
+              <Input
+                label="Altura (cm)"
+                type="number"
+                min="1"
+                max="200"
+                step="0.1"
+                placeholder="Ex.: 10"
+                error={
+                  form.formState.errors.height?.message
+                }
+                {...form.register("height")}
+              />
+
+              <Input
+                label="Comprimento (cm)"
+                type="number"
+                min="1"
+                max="200"
+                step="0.1"
+                placeholder="Ex.: 30"
+                error={
+                  form.formState.errors.length?.message
+                }
+                {...form.register("length")}
+              />
+            </div>
+
+            <p className="mt-3 text-xs text-slate-500">
+              Considere caixa, envelope, plastico bolha,
+              protecao e demais materiais da embalagem.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -193,13 +320,18 @@ export function ProductFormPage() {
               />
             </label>
 
-            {uploadingImage && (
-              <p className="text-sm text-slate-400">Enviando imagem...</p>
-            )}
+            {uploadingImage ? (
+              <p className="text-sm text-slate-400">
+                Enviando imagem...
+              </p>
+            ) : null}
 
-            <input type="hidden" {...form.register("imgUrl")} />
+            <input
+              type="hidden"
+              {...form.register("imgUrl")}
+            />
 
-            {imageUrl && (
+            {imageUrl ? (
               <div className="mt-3 flex h-56 w-56 items-center justify-center rounded-lg border border-line bg-white p-3">
                 <img
                   src={imageUrl}
@@ -207,7 +339,7 @@ export function ProductFormPage() {
                   className="max-h-full max-w-full object-contain"
                 />
               </div>
-            )}
+            ) : null}
           </div>
 
           {mutation.error ? (
@@ -219,9 +351,13 @@ export function ProductFormPage() {
           <Button
             type="submit"
             icon={<Save size={17} />}
-            disabled={mutation.isPending || uploadingImage}
+            disabled={
+              mutation.isPending || uploadingImage
+            }
           >
-            {mutation.isPending ? "Salvando..." : "Salvar produto"}
+            {mutation.isPending
+              ? "Salvando..."
+              : "Salvar produto"}
           </Button>
         </form>
       </Panel>

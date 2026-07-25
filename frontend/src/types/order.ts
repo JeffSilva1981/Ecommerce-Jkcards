@@ -21,6 +21,26 @@ export type Payment = {
   paymentStatus?: string;
 };
 
+export type ShippingAddress = {
+  recipientName: string;
+  recipientPhone: string;
+  postalCode: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+};
+
+export type OrderShipping = {
+  serviceId: number;
+  serviceName: string;
+  carrier: string;
+  price: number;
+  deliveryDays?: number | null;
+};
+
 export type Order = {
   id: number;
   moment: string;
@@ -30,7 +50,10 @@ export type Order = {
     name: string;
   };
   payment?: Payment | null;
+  shippingAddress?: ShippingAddress | null;
+  shipping?: OrderShipping | null;
   items: OrderItem[];
+  productsTotal?: number;
   total: number;
 };
 
@@ -38,6 +61,9 @@ export type CreateOrderPayload = {
   items: Array<{
     productId: number;
     quantity: number;
-    price: number;
   }>;
+  shippingAddress: ShippingAddress;
+  shipping: {
+    serviceId: number;
+  };
 };
