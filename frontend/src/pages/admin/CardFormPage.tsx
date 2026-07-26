@@ -1,15 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { Package, Save } from "lucide-react";
-import {
-  type ChangeEvent,
-  useEffect,
-  useState,
-} from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Save } from "lucide-react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { getCategories } from "../../api/categoriesApi";
@@ -20,32 +12,12 @@ import { Panel } from "../../components/Panel";
 import { PokemonCardSelector } from "../../components/PokemonCardSelector";
 import { Select } from "../../components/Select";
 import { Textarea } from "../../components/Textarea";
-import {
-  productSchema,
-  type ProductSchema,
-} from "../../schemas/productSchema";
+import { productSchema, type ProductSchema } from "../../schemas/productSchema";
 import type { SelectedPokemonCard } from "../../types/pokemonCard";
 
-type CardCondition =
-  | "NM"
-  | "SP"
-  | "MP"
-  | "HP"
-  | "D";
-
-type CardType =
-  | "Normal"
-  | "Reverse"
-  | "Foil"
-  | "Full Art"
-  | "Secreta"
-  | "Ultra Rara"
-  | "Promo";
-
-type CardLanguage =
-  | "Português"
-  | "Inglês"
-  | "Japonês";
+type CardCondition = "NM" | "SP" | "MP" | "HP" | "D";
+type CardType = "Normal" | "Reverse" | "Foil" | "Full Art" | "Secreta" | "Ultra Rara" | "Promo";
+type CardLanguage = "Português" | "Inglês" | "Japonês";
 
 const DEFAULT_CARD_PACKAGE = {
   weight: 0.05,
@@ -55,112 +27,63 @@ const DEFAULT_CARD_PACKAGE = {
 };
 
 function normalizeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 }
 
 function createCardDescription(
   card: SelectedPokemonCard,
   condition: CardCondition,
   cardType: CardType,
-  language: CardLanguage
+  language: CardLanguage,
 ) {
-  const details = [
+  return [
     `Carta Pokémon: ${card.name}`,
     `Coleção: ${card.setName}`,
     `Número: ${card.localId}`,
-    card.rarity
-      ? `Raridade: ${card.rarity}`
-      : null,
+    card.rarity ? `Raridade: ${card.rarity}` : null,
     `Condição: ${condition}`,
     `Tipo: ${cardType}`,
     `Idioma: ${language}`,
-    card.illustrator
-      ? `Ilustrador: ${card.illustrator}`
-      : null,
-    card.description
-      ? `Descrição original: ${card.description}`
-      : null,
+    card.illustrator ? `Ilustrador: ${card.illustrator}` : null,
+    card.description ? `Descrição original: ${card.description}` : null,
     `ID do catálogo: ${card.externalId}`,
-  ];
-
-  return details.filter(Boolean).join("\n");
+  ].filter(Boolean).join("\n");
 }
 
-function replaceDescriptionField(
-  description: string,
-  fieldName: string,
-  value: string
-) {
+function replaceDescriptionField(description: string, fieldName: string, value: string) {
   const fieldLine = `${fieldName}: ${value}`;
-
-  const lines = description
-    .split("\n")
-    .map((line) => line.trimEnd());
-
-  const normalizedFieldName = normalizeText(
-    `${fieldName}:`
-  );
-
-  const fieldIndex = lines.findIndex((line) =>
-    normalizeText(line).startsWith(
-      normalizedFieldName
-    )
-  );
+  const lines = description.split("\n").map((line) => line.trimEnd());
+  const field = normalizeText(`${fieldName}:`);
+  const fieldIndex = lines.findIndex((line) => normalizeText(line).startsWith(field));
 
   if (fieldIndex >= 0) {
     lines[fieldIndex] = fieldLine;
     return lines.join("\n");
   }
 
-  const catalogIdIndex = lines.findIndex((line) =>
-    normalizeText(line).startsWith(
-      "id do catalogo:"
-    )
+  const catalogIndex = lines.findIndex((line) =>
+    normalizeText(line).startsWith("id do catalogo:"),
   );
 
-  if (catalogIdIndex >= 0) {
-    lines.splice(
-      catalogIdIndex,
-      0,
-      fieldLine
-    );
-
+  if (catalogIndex >= 0) {
+    lines.splice(catalogIndex, 0, fieldLine);
     return lines.join("\n");
   }
 
-  if (!description.trim()) {
-    return fieldLine;
-  }
-
-  return `${description.trim()}\n${fieldLine}`;
+  return description.trim() ? `${description.trim()}\n${fieldLine}` : fieldLine;
 }
 
 export function CardFormPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const [selectedCard, setSelectedCard] =
-    useState<SelectedPokemonCard | null>(null);
-
-  const [condition, setCondition] =
-    useState<CardCondition>("NM");
-
-  const [cardType, setCardType] =
-    useState<CardType>("Normal");
-
-  const [language, setLanguage] =
-    useState<CardLanguage>("Português");
-
-  const [cardCategoryError, setCardCategoryError] =
-    useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<SelectedPokemonCard | null>(null);
+  const [condition, setCondition] = useState<CardCondition>("NM");
+  const [cardType, setCardType] = useState<CardType>("Normal");
+  const [language, setLanguage] = useState<CardLanguage>("Português");
+  const [cardCategoryError, setCardCategoryError] = useState<string | null>(null);
 
   const form = useForm<ProductSchema>({
     resolver: zodResolver(productSchema),
-
     defaultValues: {
       name: "",
       description: "",
@@ -168,10 +91,7 @@ export function CardFormPage() {
       stockQuantity: 0,
       imgUrl: "",
       categoryId: 0,
-      weight: DEFAULT_CARD_PACKAGE.weight,
-      width: DEFAULT_CARD_PACKAGE.width,
-      height: DEFAULT_CARD_PACKAGE.height,
-      length: DEFAULT_CARD_PACKAGE.length,
+      ...DEFAULT_CARD_PACKAGE,
     },
   });
 
@@ -180,31 +100,14 @@ export function CardFormPage() {
     queryFn: getCategories,
   });
 
-  const cardCategory =
-    categoriesQuery.data?.find((category) => {
-      const normalizedName = normalizeText(
-        category.name
-      );
-
-      return (
-        normalizedName === "carta" ||
-        normalizedName === "cartas"
-      );
-    }) ?? null;
+  const cardCategory = categoriesQuery.data?.find((category) => {
+    const name = normalizeText(category.name);
+    return name === "carta" || name === "cartas";
+  }) ?? null;
 
   useEffect(() => {
-    if (!cardCategory) {
-      return;
-    }
-
-    form.setValue(
-      "categoryId",
-      cardCategory.id,
-      {
-        shouldValidate: true,
-      }
-    );
-
+    if (!cardCategory) return;
+    form.setValue("categoryId", cardCategory.id, { shouldValidate: true });
     setCardCategoryError(null);
   }, [cardCategory, form]);
 
@@ -220,363 +123,158 @@ export function CardFormPage() {
         width: values.width,
         height: values.height,
         length: values.length,
-        categories: [
-          {
-            id: values.categoryId,
-          },
-        ],
+        categories: [{ id: values.categoryId }],
       }),
-
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["admin-products"],
-        }),
-
-        queryClient.invalidateQueries({
-          queryKey: ["admin-cards"],
-        }),
-
-        queryClient.invalidateQueries({
-          queryKey: ["products"],
-        }),
-
-        queryClient.invalidateQueries({
-          queryKey: ["store-products"],
-        }),
+        queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-cards"] }),
+        queryClient.invalidateQueries({ queryKey: ["products"] }),
+        queryClient.invalidateQueries({ queryKey: ["store-products"] }),
       ]);
-
       alert("Carta cadastrada com sucesso.");
-
       navigate("/admin/cartas");
     },
-
     onError: (error) => {
-      console.error(
-        "Erro ao cadastrar carta:",
-        error
-      );
-
-      alert(
-        "Não foi possível cadastrar a carta."
-      );
+      console.error("Erro ao cadastrar carta:", error);
+      alert("Não foi possível cadastrar a carta.");
     },
   });
 
-  function handleCardSelected(
-    card: SelectedPokemonCard
-  ) {
+  function handleCardSelected(card: SelectedPokemonCard) {
     setSelectedCard(card);
     setCardCategoryError(null);
-
-    form.setValue("name", card.name, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-
+    form.setValue("name", card.name, { shouldValidate: true, shouldDirty: true });
     form.setValue(
       "description",
-      createCardDescription(
-        card,
-        condition,
-        cardType,
-        language
-      ),
-      {
-        shouldValidate: true,
-        shouldDirty: true,
-      }
+      createCardDescription(card, condition, cardType, language),
+      { shouldValidate: true, shouldDirty: true },
     );
-
-    form.setValue("imgUrl", card.imageUrl, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
+    form.setValue("imgUrl", card.imageUrl, { shouldValidate: true, shouldDirty: true });
 
     if (cardCategory) {
-      form.setValue(
-        "categoryId",
-        cardCategory.id,
-        {
-          shouldValidate: true,
-          shouldDirty: true,
-        }
-      );
+      form.setValue("categoryId", cardCategory.id, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   }
 
-  function handleConditionChange(
-    event: ChangeEvent<HTMLSelectElement>
-  ) {
-    const newCondition =
-      event.target.value as CardCondition;
-
-    setCondition(newCondition);
-
-    const currentDescription =
-      form.getValues("description");
-
+  function updateDescriptionField(field: string, value: string) {
     form.setValue(
       "description",
-      replaceDescriptionField(
-        currentDescription,
-        "Condição",
-        newCondition
-      ),
-      {
-        shouldValidate: true,
-        shouldDirty: true,
-      }
+      replaceDescriptionField(form.getValues("description"), field, value),
+      { shouldValidate: true, shouldDirty: true },
     );
   }
 
-  function handleCardTypeChange(
-    event: ChangeEvent<HTMLSelectElement>
-  ) {
-    const newCardType =
-      event.target.value as CardType;
-
-    setCardType(newCardType);
-
-    const currentDescription =
-      form.getValues("description");
-
-    form.setValue(
-      "description",
-      replaceDescriptionField(
-        currentDescription,
-        "Tipo",
-        newCardType
-      ),
-      {
-        shouldValidate: true,
-        shouldDirty: true,
-      }
-    );
+  function handleConditionChange(event: ChangeEvent<HTMLSelectElement>) {
+    const value = event.target.value as CardCondition;
+    setCondition(value);
+    updateDescriptionField("Condição", value);
   }
 
-  function handleLanguageChange(
-    event: ChangeEvent<HTMLSelectElement>
-  ) {
-    const newLanguage =
-      event.target.value as CardLanguage;
+  function handleCardTypeChange(event: ChangeEvent<HTMLSelectElement>) {
+    const value = event.target.value as CardType;
+    setCardType(value);
+    updateDescriptionField("Tipo", value);
+  }
 
-    setLanguage(newLanguage);
-
-    const currentDescription =
-      form.getValues("description");
-
-    form.setValue(
-      "description",
-      replaceDescriptionField(
-        currentDescription,
-        "Idioma",
-        newLanguage
-      ),
-      {
-        shouldValidate: true,
-        shouldDirty: true,
-      }
-    );
+  function handleLanguageChange(event: ChangeEvent<HTMLSelectElement>) {
+    const value = event.target.value as CardLanguage;
+    setLanguage(value);
+    updateDescriptionField("Idioma", value);
   }
 
   function handleSubmit(values: ProductSchema) {
     setCardCategoryError(null);
 
     if (!selectedCard) {
-      alert(
-        "Pesquise e selecione uma carta antes de salvar."
-      );
+      alert("Pesquise e selecione uma carta antes de salvar.");
       return;
     }
 
     if (!cardCategory) {
-      setCardCategoryError(
-        'Crie uma categoria chamada "Cartas" antes de cadastrar cartas.'
-      );
+      setCardCategoryError('Crie uma categoria chamada "Cartas" antes de cadastrar cartas.');
       return;
     }
 
-    const descriptionWithCondition =
-      replaceDescriptionField(
-        values.description,
-        "Condição",
-        condition
-      );
-
-    const descriptionWithType =
-      replaceDescriptionField(
-        descriptionWithCondition,
-        "Tipo",
-        cardType
-      );
-
-    const completeDescription =
-      replaceDescriptionField(
-        descriptionWithType,
-        "Idioma",
-        language
-      );
+    let description = replaceDescriptionField(values.description, "Condição", condition);
+    description = replaceDescriptionField(description, "Tipo", cardType);
+    description = replaceDescriptionField(description, "Idioma", language);
 
     mutation.mutate({
       ...values,
-      description: completeDescription,
+      description,
       categoryId: cardCategory.id,
+      ...DEFAULT_CARD_PACKAGE,
     });
   }
-
-  const priceError =
-    form.formState.errors.price?.message;
-
-  const stockError =
-    form.formState.errors.stockQuantity?.message;
-
-  const descriptionError =
-    form.formState.errors.description?.message;
 
   return (
     <section className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">
-          Nova carta Pokémon
-        </h1>
-
+        <h1 className="text-3xl font-bold text-white">Nova carta Pokémon</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Pesquise no catálogo, selecione a carta e
-          informe os dados comerciais.
+          Pesquise no catálogo, selecione a carta e informe os dados comerciais.
         </p>
       </div>
 
-      <PokemonCardSelector
-        selectedCard={selectedCard}
-        onSelect={handleCardSelected}
-      />
+      <PokemonCardSelector selectedCard={selectedCard} onSelect={handleCardSelected} />
 
       {selectedCard ? (
-        <Panel
-          id="card-sale-data"
-          className="scroll-mt-28 p-5"
-        >
+        <Panel id="card-sale-data" className="scroll-mt-28 p-5">
           <div>
-            <h2 className="text-xl font-bold text-white">
-              Dados para venda
-            </h2>
-
+            <h2 className="text-xl font-bold text-white">Dados para venda</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Informe a condição, o tipo, o idioma, o
-              preço, o estoque e as observações da carta.
+              Informe a condição, o tipo, o idioma, o preço, o estoque e as observações.
             </p>
           </div>
 
           <form
             className="mt-5 space-y-5"
-            onSubmit={form.handleSubmit(
-              handleSubmit,
-              (errors) => {
-                console.error(
-                  "Dados inválidos:",
-                  errors
-                );
-              }
+            onSubmit={form.handleSubmit(handleSubmit, (errors) =>
+              console.error("Dados inválidos:", errors),
             )}
           >
             <div className="grid gap-4 md:grid-cols-2">
               <Input
                 label="Nome"
                 readOnly
-                error={
-                  form.formState.errors.name?.message
-                }
+                error={form.formState.errors.name?.message}
                 {...form.register("name")}
               />
 
               <Input
                 label="Categoria"
-                value={
-                  cardCategory?.name ??
-                  "Categoria Cartas não encontrada"
-                }
+                value={cardCategory?.name ?? "Categoria Cartas não encontrada"}
                 readOnly
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <Select
-                label="Condição"
-                value={condition}
-                onChange={handleConditionChange}
-              >
-                <option value="NM">
-                  NM — Near Mint
-                </option>
-
-                <option value="SP">
-                  SP — Slightly Played
-                </option>
-
-                <option value="MP">
-                  MP — Moderately Played
-                </option>
-
-                <option value="HP">
-                  HP — Heavily Played
-                </option>
-
-                <option value="D">
-                  D — Damaged
-                </option>
+              <Select label="Condição" value={condition} onChange={handleConditionChange}>
+                <option value="NM">NM — Near Mint</option>
+                <option value="SP">SP — Slightly Played</option>
+                <option value="MP">MP — Moderately Played</option>
+                <option value="HP">HP — Heavily Played</option>
+                <option value="D">D — Damaged</option>
               </Select>
 
-              <Select
-                label="Tipo da carta"
-                value={cardType}
-                onChange={handleCardTypeChange}
-              >
-                <option value="Normal">
-                  Normal
-                </option>
-
-                <option value="Reverse">
-                  Reverse
-                </option>
-
-                <option value="Foil">
-                  Foil
-                </option>
-
-                <option value="Full Art">
-                  Full Art
-                </option>
-
-                <option value="Secreta">
-                  Secreta
-                </option>
-
-                <option value="Ultra Rara">
-                  Ultra Rara
-                </option>
-
-                <option value="Promo">
-                  Promo
-                </option>
+              <Select label="Tipo da carta" value={cardType} onChange={handleCardTypeChange}>
+                <option value="Normal">Normal</option>
+                <option value="Reverse">Reverse</option>
+                <option value="Foil">Foil</option>
+                <option value="Full Art">Full Art</option>
+                <option value="Secreta">Secreta</option>
+                <option value="Ultra Rara">Ultra Rara</option>
+                <option value="Promo">Promo</option>
               </Select>
 
-              <Select
-                label="Idioma"
-                value={language}
-                onChange={handleLanguageChange}
-              >
-                <option value="Português">
-                  Português
-                </option>
-
-                <option value="Inglês">
-                  Inglês
-                </option>
-
-                <option value="Japonês">
-                  Japonês
-                </option>
+              <Select label="Idioma" value={language} onChange={handleLanguageChange}>
+                <option value="Português">Português</option>
+                <option value="Inglês">Inglês</option>
+                <option value="Japonês">Japonês</option>
               </Select>
             </div>
 
@@ -587,7 +285,7 @@ export function CardFormPage() {
                 min="0.01"
                 step="0.01"
                 placeholder="0,00"
-                error={priceError}
+                error={form.formState.errors.price?.message}
                 {...form.register("price")}
               />
 
@@ -597,114 +295,45 @@ export function CardFormPage() {
                 min="0"
                 step="1"
                 placeholder="0"
-                error={stockError}
+                error={form.formState.errors.stockQuantity?.message}
                 {...form.register("stockQuantity")}
               />
             </div>
 
-            <div className="rounded-lg border border-line bg-ink/40 p-4">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
-                  <Package size={20} />
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-white">
-                    Embalagem da carta
-                  </h3>
-
-                  <p className="mt-1 text-sm text-slate-400">
-                    As medidas iniciais consideram uma carta
-                    protegida e embalada para envio.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Input
-                  label="Peso (kg)"
-                  type="number"
-                  min="0.01"
-                  max="30"
-                  step="0.01"
-                  error={
-                    form.formState.errors.weight?.message
-                  }
-                  {...form.register("weight")}
-                />
-
-                <Input
-                  label="Largura (cm)"
-                  type="number"
-                  min="1"
-                  max="200"
-                  step="0.1"
-                  error={
-                    form.formState.errors.width?.message
-                  }
-                  {...form.register("width")}
-                />
-
-                <Input
-                  label="Altura (cm)"
-                  type="number"
-                  min="1"
-                  max="200"
-                  step="0.1"
-                  error={
-                    form.formState.errors.height?.message
-                  }
-                  {...form.register("height")}
-                />
-
-                <Input
-                  label="Comprimento (cm)"
-                  type="number"
-                  min="1"
-                  max="200"
-                  step="0.1"
-                  error={
-                    form.formState.errors.length?.message
-                  }
-                  {...form.register("length")}
-                />
-              </div>
-
-              <p className="mt-3 text-xs text-slate-500">
-                Ajuste os valores quando utilizar uma
-                embalagem diferente ou proteção adicional.
+            <div className="rounded-lg border border-skybrand/20 bg-skybrand/5 p-4">
+              <p className="text-sm font-semibold text-skysoft">
+                Embalagem calculada automaticamente
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                O peso e as dimensões serão calculados conforme a quantidade de cartas
+                adicionadas ao pedido.
               </p>
             </div>
 
             <Textarea
               label="Descrição e observações"
               rows={13}
-              error={descriptionError}
+              error={form.formState.errors.description?.message}
               {...form.register("description")}
             />
 
             <p className="-mt-3 text-xs text-slate-500">
-              Você pode alterar livremente a descrição e
-              adicionar detalhes sobre riscos, bordas,
-              dobras ou outras marcas da carta.
+              Você pode alterar livremente a descrição e adicionar detalhes sobre riscos,
+              bordas, dobras ou outras marcas da carta.
             </p>
 
-            <input
-              type="hidden"
-              {...form.register("imgUrl")}
-            />
-
-            <input
-              type="hidden"
-              {...form.register("categoryId")}
-            />
+            <input type="hidden" {...form.register("imgUrl")} />
+            <input type="hidden" {...form.register("categoryId")} />
+            <input type="hidden" {...form.register("weight")} />
+            <input type="hidden" {...form.register("width")} />
+            <input type="hidden" {...form.register("height")} />
+            <input type="hidden" {...form.register("length")} />
 
             {selectedCard.imageUrl ? (
               <div className="rounded-lg border border-line bg-white/5 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Imagem externa
                 </p>
-
                 <p className="mt-2 break-all text-sm text-slate-300">
                   {selectedCard.imageUrl}
                 </p>
@@ -723,12 +352,10 @@ export function CardFormPage() {
               </p>
             ) : null}
 
-            {!categoriesQuery.isLoading &&
-            !cardCategory ? (
+            {!categoriesQuery.isLoading && !cardCategory ? (
               <p className="rounded-md border border-yellow-400/30 bg-yellow-400/10 p-3 text-sm text-yellow-200">
-                A categoria Carta ou Cartas não foi
-                encontrada. Crie essa categoria antes de
-                cadastrar a carta.
+                A categoria Carta ou Cartas não foi encontrada. Crie essa categoria antes
+                de cadastrar a carta.
               </p>
             ) : null}
 
@@ -753,9 +380,7 @@ export function CardFormPage() {
                 !selectedCard
               }
             >
-              {mutation.isPending
-                ? "Salvando..."
-                : "Cadastrar carta"}
+              {mutation.isPending ? "Salvando..." : "Cadastrar carta"}
             </Button>
           </form>
         </Panel>
