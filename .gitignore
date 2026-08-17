@@ -46,3 +46,4 @@ frontend/.env
 # Environment variables
 .env
 .env.*
+!.env.example
