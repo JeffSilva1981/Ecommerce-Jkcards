@@ -32,26 +32,12 @@ export type ResetPasswordPayload = {
 export async function login(
   credentials: LoginCredentials,
 ) {
-  const body = new URLSearchParams();
-
-  body.set("grant_type", "password");
-  body.set("username", credentials.email);
-  body.set("password", credentials.password);
-
-  const basic = btoa(
-    `${import.meta.env.VITE_CLIENT_ID}:${import.meta.env.VITE_CLIENT_SECRET}`,
-  );
-
   const token =
     await publicApiClient.post<TokenResponse>(
-      "/oauth2/token",
-      body,
+      "/auth/login",
       {
-        headers: {
-          Authorization: `Basic ${basic}`,
-          "Content-Type":
-            "application/x-www-form-urlencoded",
-        },
+        email: credentials.email,
+        password: credentials.password,
       },
     );
 
