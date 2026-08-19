@@ -1,51 +1,56 @@
 # JKCards
 
-JKCards is a real e-commerce MVP for Pokémon TCG and collectible card products, built with a Java/Spring Boot backend and a React frontend.
+Full-stack e-commerce platform for Pokémon TCG cards and collectible products, developed as a real business MVP and a professional Java/Spring Boot portfolio project.
 
-The project has two goals:
+[![CI/CD](https://github.com/JeffSilva1981/Ecommerce-Jkcards/actions/workflows/ci.yml/badge.svg)](https://github.com/JeffSilva1981/Ecommerce-Jkcards/actions/workflows/ci.yml)
 
-1. Build a working online store for my own card business.
-2. Use the project as a professional portfolio while simulating the routine of a backend developer working on a real product: MVP delivery, production deployment, bug fixes, incremental tasks and continuous improvements.
+**Live application:** [https://jkcards.tech](https://jkcards.tech)
 
-Live project: https://jkcards.tech
+## About the project
 
-## Project Status
+JKCards was created to support a real collectible-card sales operation while applying professional software development practices to a production application.
 
-The project is currently in MVP stage and deployed to production.
+The project covers the complete development lifecycle: business modeling, REST API design, authentication and authorization, external integrations, automated tests, containerization, secure configuration, production infrastructure and automated deployment.
 
-The current MVP supports:
+## Current status
 
-- Customer registration
-- Customer login
-- Product catalog
-- Shopping cart
-- Checkout/order creation
+The application is deployed to production as an evolving MVP.
+
+Implemented features include:
+
+- Customer registration and authentication
+- Stateless authorization using signed JWTs
+- Role-based access control for customers and administrators
+- Password recovery by e-mail
+- Product and category catalog
+- Product search and pagination
+- Persistent shopping cart
+- Checkout and order creation
 - Customer order history
-- Admin panel
-- Admin order management
-- Manual order status update
-- Product, category and user administration screens
-- Product image upload integration with Cloudinary
-- PostgreSQL database running in Docker
-- Production deployment on a VPS with Nginx and SSL
+- Mercado Pago checkout and payment webhook processing
+- Shipping quotes through Melhor Envio
+- Product image upload through Cloudinary
+- Administrative dashboard
+- Product, category, order and user management
+- Automated backend and frontend validation
+- Automated production deployment through GitHub Actions
 
-Online payment is not integrated yet. Orders are created with `WAITING_PAYMENT` status, and the admin manually updates the order status after payment confirmation.
-
-## Tech Stack
+## Technology stack
 
 ### Backend
 
 - Java 21
 - Spring Boot 3.5.3
 - Spring Web
-- Spring Data JPA / Hibernate
+- Spring Data JPA and Hibernate
 - Spring Security
-- OAuth2 Authorization Server
-- JWT
+- OAuth2 Resource Server
+- JWT with RSA/RS256 signatures
 - Bean Validation
+- Spring Mail
 - PostgreSQL
-- Cloudinary
-- Docker
+- H2 for automated tests
+- Maven Wrapper
 
 ### Frontend
 
@@ -61,64 +66,72 @@ Online payment is not integrated yet. Orders are created with `WAITING_PAYMENT` 
 - Axios
 - Lucide React
 
-### Infrastructure
+### Integrations
 
+- Mercado Pago for checkout and payment confirmation
+- Melhor Envio for shipping quotes and OAuth authorization
+- Cloudinary for product image storage
+- SMTP for password recovery e-mails
+
+### Infrastructure and delivery
+
+- Docker and Docker Compose
 - Hostinger VPS
-- Docker Compose
-- Nginx
-- Let's Encrypt SSL
-- Domain: `jkcards.tech`
+- Nginx reverse proxy and static frontend hosting
+- HTTPS with Let's Encrypt
+- GitHub Actions CI/CD
+- Production backups and automatic backend rollback
 
-## Main Features
+## Main application flows
 
-### Customer Flow
+### Customer flow
 
-- Browse products
-- Search products
-- Create an account
-- Log in
-- Add products to cart
-- Review cart
-- Create an order
-- View order details and status
+1. Browse and search the product catalog.
+2. Create an account or sign in.
+3. Add products to the shopping cart.
+4. Calculate available shipping options.
+5. Create an order and continue to Mercado Pago.
+6. Track the order and payment status.
 
-### Admin Flow
+### Administrator flow
 
-- Log in as admin
-- View dashboard page
-- Manage products
-- Manage categories
-- View customer orders
-- Update order status manually
-- View registered users
+1. Sign in with an administrator account.
+2. View the administrative dashboard.
+3. Manage products, categories and product images.
+4. View customers and orders.
+5. Update order statuses.
+6. Manage the Melhor Envio authorization.
 
-## Backend Overview
+## Authentication and authorization
 
-The backend is a REST API built with Spring Boot.
+Authentication is handled by the application through `POST /auth/login`.
 
-Main resources:
+The backend validates the supplied credentials with Spring Security and returns a signed JWT. Tokens are signed with a private RSA key using RS256 and validated with the corresponding public key.
 
-- `User`
-- `Role`
-- `Product`
-- `Category`
-- `Order`
-- `OrderItem`
-- `Payment`
+The API is stateless: the server does not keep an HTTP session for authenticated users. Each protected request must send the token using the following header:
 
-Order statuses:
+```http
+Authorization: Bearer <access_token>
+```
 
-- `WAITING_PAYMENT`
-- `PAID`
-- `SHIPPED`
-- `DELIVERED`
-- `CANCELED`
+Application roles:
 
-Main endpoints include:
+- `ROLE_OPERATOR`: regular customer
+- `ROLE_ADMIN`: administrator
 
+Private RSA keys, passwords and external-service credentials are provided through environment variables or mounted secret files and are not committed to the repository.
+
+## Main API endpoints
+
+### Authentication
+
+- `POST /auth/login`
 - `POST /auth/register`
-- `POST /oauth2/token`
-- `GET /users/me`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
+
+### Products and categories
+
 - `GET /products`
 - `GET /products/{id}`
 - `POST /products`
@@ -126,166 +139,191 @@ Main endpoints include:
 - `DELETE /products/{id}`
 - `POST /products/upload-image`
 - `GET /categories`
+- `GET /categories/{id}`
+- `POST /categories`
+- `PUT /categories/{id}`
+- `DELETE /categories/{id}`
+
+### Orders, payments and shipping
+
 - `POST /orders`
 - `GET /orders/my`
-- `GET /orders`
 - `GET /orders/{id}`
+- `GET /orders`
 - `PUT /orders/{id}/status`
+- `DELETE /orders/{id}`
+- `POST /payments/webhook`
+- `POST /shipping/quotes`
 
-## Authentication and Authorization
+### Users and administration
 
-Authentication is handled through a custom OAuth2 password grant flow using Spring Authorization Server.
+- `GET /users/me`
+- `GET /users`
+- `GET /users/{id}`
+- `POST /users`
+- `PUT /users/{id}`
+- `DELETE /users/{id}`
+- `GET /dashboard`
+- `GET /shipping/oauth/status`
+- `GET /shipping/oauth/authorization-url`
+- `GET /shipping/oauth/callback`
 
-After login, the API returns a JWT containing the authenticated username and authorities.
+Administrative endpoints are protected by role-based authorization.
 
-Roles used by the application:
+## CI/CD pipeline
 
-- `ROLE_OPERATOR`: regular customer
-- `ROLE_ADMIN`: admin user
+Every push to the `main` branch starts the GitHub Actions pipeline.
 
-Protected backend operations use role-based authorization with Spring Security.
+The pipeline performs the following steps:
 
-## Frontend Overview
+1. Checks out the repository.
+2. Configures Java 21 and Node.js 22.
+3. Generates temporary RSA keys for backend tests.
+4. Runs the backend test suite and Maven build.
+5. Installs frontend dependencies with `npm ci`.
+6. Runs frontend tests and creates the production build.
+7. Stores backend and frontend build artifacts.
+8. Connects to the VPS with a dedicated restricted deployment user.
+9. Uploads the validated artifacts.
+10. Rebuilds and restarts only the backend container.
+11. Performs a backend health check.
+12. Publishes the frontend and keeps a backup of the previous release.
 
-The frontend is a React SPA built with Vite and TypeScript.
+The production deployment runs only after both backend and frontend jobs succeed. Pull requests run validation but do not deploy. If the backend health check fails during deployment, the deployment script restores the previous backend version.
 
-It includes:
+## Production architecture
 
-- Public store layout
-- Authentication pages
-- Protected customer routes
-- Protected admin routes
-- Persistent cart using Zustand
-- API data fetching with TanStack Query
-- Forms with React Hook Form and Zod
-- Dark theme styled with Tailwind CSS
+- Nginx serves the React application and works as a reverse proxy.
+- The Spring Boot backend runs in a Docker container.
+- PostgreSQL runs in a separate Docker container with a persistent volume.
+- HTTPS is provided through Let's Encrypt.
+- RSA keys are mounted into the backend container as read-only secret files.
+- Production credentials remain outside version control.
 
-## Production Deployment
+## Running locally
 
-The application is deployed on a VPS.
-
-Current production setup:
-
-- Backend runs in a Docker container
-- PostgreSQL runs in a Docker container
-- Frontend is built with Vite and served by Nginx
-- Nginx also works as a reverse proxy to the backend
-- HTTPS is enabled with Let's Encrypt
-
-## Running Locally
-
-### Backend
-
-Requirements:
+### Requirements
 
 - Java 21
-- Docker
-- Docker Compose
+- Docker and Docker Compose
+- Node.js and npm
 
-Build the backend:
-
-```bash
-./mvnw clean package -DskipTests
-```
-
-Start the application with Docker Compose:
+### 1. Clone the repository
 
 ```bash
-docker compose up -d --build
+git clone https://github.com/JeffSilva1981/Ecommerce-Jkcards.git
+cd Ecommerce-Jkcards
 ```
 
-### Frontend
+### 2. Configure environment variables
 
-Enter the frontend folder:
+Create a local `.env` file from the provided example and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+The `.env` file contains sensitive local configuration and must not be committed.
+
+### 3. Generate development JWT keys
+
+```bash
+java scripts/GenerateJwtKeys.java
+```
+
+This creates the RSA key pair used to sign and validate JWTs. The generated `secrets` directory is ignored by Git.
+
+### 4. Start PostgreSQL
+
+```bash
+docker compose up -d db
+```
+
+### 5. Start the backend
+
+On Linux or macOS:
+
+```bash
+./mvnw spring-boot:run
+```
+
+On Windows PowerShell:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+The development profile loads idempotent sample data from `data-dev.sql`.
+
+### 6. Start the frontend
 
 ```bash
 cd frontend
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Run locally:
-
-```bash
 npm run dev
 ```
 
-Build for production:
+The frontend is available at `http://localhost:5173` and the backend at `http://localhost:8080` by default.
+
+## Running the tests
+
+Backend:
 
 ```bash
+./mvnw clean verify
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm ci
+npm test
 npm run build
 ```
 
-## Environment Variables
+## Environment configuration
 
-The project uses environment variables for production configuration.
+The main configuration groups are documented in `.env.example`:
 
-Examples:
+- PostgreSQL connection
+- JWT duration and RSA key paths
+- Cloudinary credentials
+- CORS and frontend URL
+- Initial administrator credentials
+- Mercado Pago access token
+- SMTP configuration
+- Melhor Envio API and OAuth configuration
 
-```env
-POSTGRES_DB=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
+Never commit `.env`, production credentials or private RSA keys.
 
-SECURITY_CLIENT_ID=
-SECURITY_CLIENT_SECRET=
-JWT_DURATION=
+## Roadmap
 
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+- Add OpenAPI/Swagger documentation
+- Introduce database migrations with Flyway
+- Expand unit and integration test coverage
+- Automate PostgreSQL backups and retention
+- Improve stock reservation and inventory control
+- Improve observability, structured logging and monitoring
+- Continue accessibility and mobile UX improvements
 
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
+## Project purpose
 
-CORS_ORIGINS=
-VITE_API_URL=
-VITE_CLIENT_ID=
-VITE_CLIENT_SECRET=
-```
+JKCards is both a real business application and a continuously evolving engineering project. It is used to practice the responsibilities involved in maintaining production software:
 
-Sensitive values are not committed to the repository.
-
-## Current Roadmap
-
-Planned improvements:
-
-- Implement backend dashboard summary endpoint
-- Add automatic PostgreSQL backups
-- Improve product stock management
-- Add product active/inactive status
-- Add institutional pages
-- Improve admin dashboard metrics
-- Add API documentation with Swagger/OpenAPI
-- Add database migrations with Flyway
-- Improve automated tests
-- Add CI/CD deployment pipeline
-- Improve UI and mobile experience
-- Add payment instructions and future payment integration
-
-## Why This Project Matters
-
-This project is not only a study project.
-
-JKCards is being developed as a real product for my own Pokémon TCG sales operation. I currently sell through WhatsApp and marketplaces, and this application is my first step toward building my own sales platform.
-
-At the same time, I use this project to practice real backend development routines:
-
-- breaking work into small tasks
-- fixing bugs found during production usage
-- deploying changes manually
-- improving the system incrementally
-- documenting technical decisions
-- maintaining a real MVP used by real customers
-
-The goal is to grow this project as both a business tool and a professional Java backend portfolio.
+- translating business needs into features;
+- designing secure backend flows;
+- integrating external services;
+- diagnosing production issues;
+- protecting sensitive configuration;
+- writing and maintaining automated tests;
+- deploying changes safely;
+- documenting architectural decisions;
+- improving the product incrementally.
 
 ## Author
 
-Developed by Jeff Silva.
+Developed by **Jeferson Ferreira da Silva**.
 
-GitHub: https://github.com/JeffSilva1981
+- GitHub: [JeffSilva1981](https://github.com/JeffSilva1981)
+- Live project: [jkcards.tech](https://jkcards.tech)
