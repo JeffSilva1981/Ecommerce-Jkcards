@@ -21,6 +21,9 @@ services:
       - db
     ports:
       - "8080:8080"
+    volumes:
+      - ./secrets/jwt-private.pem:/run/secrets/jwt-private.pem:ro
+      - ./secrets/jwt-public.pem:/run/secrets/jwt-public.pem:ro
 
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -34,6 +37,8 @@ services:
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
 
       JWT_DURATION: ${JWT_DURATION}
+      JWT_PRIVATE_KEY_PATH: file:/run/secrets/jwt-private.pem
+      JWT_PUBLIC_KEY_PATH: file:/run/secrets/jwt-public.pem
 
       CORS_ORIGINS: ${CORS_ORIGINS}
 
