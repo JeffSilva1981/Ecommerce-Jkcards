@@ -27,6 +27,7 @@ public class UserController {
         return ResponseEntity.ok(dto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<UserDto>> findAll(
             @RequestParam(name = "name", defaultValue = "") String name,
@@ -35,6 +36,7 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> findById(@PathVariable Long id) {
         UserDto result = service.findById(id);
