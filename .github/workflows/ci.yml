@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -13,8 +13,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   backend:
@@ -37,6 +37,14 @@ jobs:
 
       - name: Test and build backend
         run: ./mvnw --batch-mode clean verify
+
+      - name: Save backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-package
+          path: target/jkcards-0.0.1-SNAPSHOT.jar
+          if-no-files-found: error
+          retention-days: 1
 
   frontend:
     name: Frontend
@@ -66,4 +74,71 @@ jobs:
       - name: Build frontend
         run: npm run build
         env:
-          VITE_API_URL: http://localhost:8080
+          VITE_API_URL: https://jkcards.tech
+
+      - name: Save frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-package
+          path: frontend/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - frontend
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Download backend artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: backend-package
+          path: deployment/backend
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: frontend-package
+          path: deployment/frontend
+
+      - name: Prepare deployment files
+        run: |
+          mv deployment/backend/jkcards-0.0.1-SNAPSHOT.jar deployment/backend.jar
+          tar -czf deployment/frontend.tar.gz -C deployment/frontend .
+          printf '%s\n' "$GITHUB_SHA" > deployment/commit-sha.txt
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          chmod 644 "$HOME/.ssh/known_hosts"
+
+      - name: Upload deployment files
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          scp -i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes \
+            deployment/backend.jar \
+            deployment/frontend.tar.gz \
+            deployment/commit-sha.txt \
+            "$VPS_USER@$VPS_HOST:/home/jkdeploy/staging/"
+
+      - name: Deploy application
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "sudo -n /usr/local/sbin/jkcards-deploy"
