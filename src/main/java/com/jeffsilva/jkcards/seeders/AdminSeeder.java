@@ -6,10 +6,12 @@ import com.jeffsilva.jkcards.entities.Role;
 import com.jeffsilva.jkcards.entities.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("!test")
 public class AdminSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
