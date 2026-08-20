@@ -1,18 +1,25 @@
 import { useMutation } from "@tanstack/react-query";
-import { MapPin, Store, Truck } from "lucide-react";
+import {
+  CreditCard,
+  MapPin,
+  ShieldCheck,
+  Store,
+  Truck,
+} from "lucide-react";
 import { type ChangeEvent, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { createOrder } from "../../api/ordersApi";
-import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
-import { Panel } from "../../components/Panel";
+import { storeConfig } from "../../config/storeConfig";
 import { useAuthStore } from "../../stores/authStore";
 import { useCartStore } from "../../stores/cartStore";
 import { useShippingStore } from "../../stores/shippingStore";
 import type { ShippingAddress } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 
-type AddressErrors = Partial<Record<keyof ShippingAddress, string>>;
+type AddressErrors = Partial<
+  Record<keyof ShippingAddress, string>
+>;
 
 function normalizePostalCode(value: string) {
   return value.replace(/\D/g, "").slice(0, 8);
@@ -32,22 +39,21 @@ function createCartSignature(
   items: Array<{
     productId: number;
     quantity: number;
-  }>
+  }>,
 ) {
   return [...items]
-    .sort((first, second) =>
-      first.productId - second.productId
-    )
-    .map((item) =>
-      `${item.productId}:${item.quantity}`
-    )
+    .sort((first, second) => first.productId - second.productId)
+    .map((item) => `${item.productId}:${item.quantity}`)
     .join("|");
 }
 
 export function CheckoutPage() {
   const navigate = useNavigate();
+
   const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
+  const isAuthenticated = useAuthStore(
+    (state) => state.isAuthenticated(),
+  );
 
   const {
     items,
@@ -69,7 +75,7 @@ export function CheckoutPage() {
     recipientPhone: user?.phone ?? "",
     postalCode: selectedShipping
       ? formatPostalCode(
-          selectedShipping.destinationPostalCode
+          selectedShipping.destinationPostalCode,
         )
       : "",
     street: "",
@@ -84,7 +90,7 @@ export function CheckoutPage() {
 
   const cartSignature = useMemo(
     () => createCartSignature(items),
-    [items]
+    [items],
   );
 
   const validSelectedShipping =
@@ -117,16 +123,17 @@ export function CheckoutPage() {
 
       if (!validSelectedShipping) {
         throw new Error(
-          "A valid shipping option is required."
+          "A valid shipping option is required.",
         );
       }
 
       return createOrder({
         items: orderItems,
+
         shippingAddress: {
           ...address,
           postalCode: normalizePostalCode(
-            address.postalCode
+            address.postalCode,
           ),
           state: address.state
             .trim()
@@ -135,6 +142,7 @@ export function CheckoutPage() {
             address.complement?.trim() ||
             undefined,
         },
+
         shipping: {
           method: "SHIPPING",
           serviceId:
@@ -150,7 +158,7 @@ export function CheckoutPage() {
 
       if (order.payment?.checkoutUrl) {
         window.location.assign(
-          order.payment.checkoutUrl
+          order.payment.checkoutUrl,
         );
         return;
       }
@@ -160,7 +168,7 @@ export function CheckoutPage() {
   });
 
   function handleChange(
-    event: ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement>,
   ) {
     const { name, value } = event.target;
 
@@ -210,7 +218,7 @@ export function CheckoutPage() {
 
     if (
       normalizePostalCode(
-        address.postalCode
+        address.postalCode,
       ).length !== 8
     ) {
       nextErrors.postalCode =
@@ -241,7 +249,7 @@ export function CheckoutPage() {
 
     if (
       !/^[A-Za-z]{2}$/.test(
-        address.state.trim()
+        address.state.trim(),
       )
     ) {
       nextErrors.state =
@@ -266,7 +274,9 @@ export function CheckoutPage() {
       <Navigate
         to="/login"
         replace
-        state={{ from: "/checkout" }}
+        state={{
+          from: "/checkout",
+        }}
       />
     );
   }
@@ -290,325 +300,371 @@ export function CheckoutPage() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">
-          Finalizar pedido
-        </h1>
+    <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f4f7fb]">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div>
+          <span className="text-sm font-bold uppercase tracking-wider text-sky-600">
+            Última etapa
+          </span>
 
-        <p className="mt-2 text-sm text-slate-400">
-          {isPickup
-            ? "Revise os dados da retirada antes do pagamento."
-            : "Informe o endereço de entrega e revise os dados antes do pagamento."}
-        </p>
-      </div>
+          <h1 className="mt-2 text-3xl font-black text-[#00102D] sm:text-4xl">
+            Finalizar pedido
+          </h1>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          {isPickup ? (
-            <Panel className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-400/10 text-emerald-300">
-                  <Store size={20} />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    Retirada na loja
-                  </h2>
-
-                  <p className="mt-1 text-sm text-slate-400">
-                    Não será necessário informar um
-                    endereço de entrega.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-4">
-                <div className="flex items-start gap-3">
-                  <MapPin
-                    size={20}
-                    className="mt-0.5 shrink-0 text-emerald-300"
-                  />
-
-                  <div>
-                    <p className="font-semibold text-white">
-                      JKCards
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-300">
-                      Rua Camargo Fleury, nº 75
-                    </p>
-
-                    <p className="text-sm text-slate-300">
-                      Sorocaba/SP
-                    </p>
-
-                    <p className="mt-3 text-xs text-slate-400">
-                      Após a confirmação do pagamento, envie-nos uma mensagem no WhatsApp para agendar a retirada.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Panel>
-          ) : (
-            <Panel className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
-                  <MapPin size={20} />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    Endereço de entrega
-                  </h2>
-
-                  <p className="mt-1 text-sm text-slate-400">
-                    O pedido será enviado para este
-                    endereço.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <Input
-                    label="Nome do destinatário"
-                    name="recipientName"
-                    value={address.recipientName}
-                    onChange={handleChange}
-                    autoComplete="name"
-                    error={errors.recipientName}
-                  />
-                </div>
-
-                <Input
-                  label="Telefone"
-                  name="recipientPhone"
-                  value={address.recipientPhone}
-                  onChange={handleChange}
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="(15) 99999-9999"
-                  error={errors.recipientPhone}
-                />
-
-                <Input
-                  label="CEP"
-                  name="postalCode"
-                  value={address.postalCode}
-                  readOnly
-                  autoComplete="postal-code"
-                  className="cursor-not-allowed opacity-70"
-                  error={errors.postalCode}
-                />
-
-                <div className="sm:col-span-2">
-                  <Input
-                    label="Rua"
-                    name="street"
-                    value={address.street}
-                    onChange={handleChange}
-                    autoComplete="address-line1"
-                    error={errors.street}
-                  />
-                </div>
-
-                <Input
-                  label="Número"
-                  name="number"
-                  value={address.number}
-                  onChange={handleChange}
-                  autoComplete="address-line2"
-                  error={errors.number}
-                />
-
-                <Input
-                  label="Complemento"
-                  name="complement"
-                  value={
-                    address.complement ?? ""
-                  }
-                  onChange={handleChange}
-                  placeholder="Apartamento, bloco ou referência"
-                  error={errors.complement}
-                />
-
-                <Input
-                  label="Bairro"
-                  name="neighborhood"
-                  value={address.neighborhood}
-                  onChange={handleChange}
-                  error={errors.neighborhood}
-                />
-
-                <Input
-                  label="Cidade"
-                  name="city"
-                  value={address.city}
-                  onChange={handleChange}
-                  autoComplete="address-level2"
-                  error={errors.city}
-                />
-
-                <Input
-                  label="Estado"
-                  name="state"
-                  value={address.state}
-                  onChange={handleChange}
-                  autoComplete="address-level1"
-                  placeholder="SP"
-                  maxLength={2}
-                  error={errors.state}
-                />
-              </div>
-            </Panel>
-          )}
-
-          <Panel className="p-5">
-            <h2 className="text-xl font-bold text-white">
-              Itens do pedido
-            </h2>
-
-            <div className="mt-5 space-y-4">
-              {items.map((item) => (
-                <div
-                  key={item.productId}
-                  className="flex items-center justify-between gap-4 border-b border-line pb-4 last:border-b-0 last:pb-0"
-                >
-                  <div>
-                    <p className="font-semibold text-white">
-                      {item.name}
-                    </p>
-
-                    <p className="text-sm text-slate-400">
-                      {item.quantity} x{" "}
-                      {formatCurrency(item.price)}
-                    </p>
-                  </div>
-
-                  <p className="font-bold text-gold">
-                    {formatCurrency(
-                      item.price * item.quantity
-                    )}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Panel>
+          <p className="mt-2 text-sm text-slate-500">
+            {isPickup
+              ? "Revise os dados da retirada antes do pagamento."
+              : "Informe o endereço de entrega e revise os dados antes do pagamento."}
+          </p>
         </div>
 
-        <Panel className="h-fit p-5">
-          <h2 className="text-xl font-bold text-white">
-            Resumo do pedido
-          </h2>
-
-          <div className="mt-5 space-y-3 text-sm text-slate-300">
-            <div className="flex justify-between">
-              <span>Produtos</span>
-              <span>
-                {formatCurrency(productsTotal)}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>
-                {isPickup ? "Retirada" : "Frete"}
-              </span>
-
-              <span>
-                {isPickup
-                  ? "Grátis"
-                  : formatCurrency(
-                      validSelectedShipping?.price ?? 0
-                    )}
-              </span>
-            </div>
-
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-6">
             {isPickup ? (
-              <div className="rounded-md border border-emerald-400/30 bg-emerald-400/10 p-3">
+              <div className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm sm:p-6">
                 <div className="flex items-start gap-3">
-                  <Store
-                    size={18}
-                    className="mt-0.5 shrink-0 text-emerald-300"
-                  />
+                  <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <Store size={21} />
+                  </div>
 
                   <div>
-                    <p className="font-semibold text-white">
+                    <h2 className="text-xl font-black text-[#00102D]">
                       Retirada na loja
-                    </p>
+                    </h2>
 
-                    <p className="mt-1 text-xs text-slate-400">
-                      Rua Camargo Fleury, nº 75
-                    </p>
-
-                    <p className="text-xs text-slate-400">
-                      Sorocaba/SP
+                    <p className="mt-1 text-sm text-slate-500">
+                      Não será necessário informar um
+                      endereço de entrega.
                     </p>
                   </div>
                 </div>
+
+                <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <MapPin
+                      size={20}
+                      className="mt-0.5 shrink-0 text-emerald-700"
+                    />
+
+                    <div>
+                      <p className="font-bold text-[#00102D]">
+                        {storeConfig.name}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-600">
+                        {storeConfig.address.street}
+                      </p>
+
+                      <p className="text-sm text-slate-600">
+                        {storeConfig.address.city}/
+                        {storeConfig.address.shortState}
+                      </p>
+
+                      <p className="mt-3 text-xs leading-5 text-slate-500">
+                        Após a confirmação do pagamento,
+                        envie uma mensagem no WhatsApp para
+                        agendar a retirada.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : validSelectedShipping ? (
-              <div className="rounded-md border border-line bg-white/5 p-3">
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <div className="flex items-start gap-3">
-                  <Truck
-                    size={18}
-                    className="mt-0.5 shrink-0 text-skysoft"
-                  />
+                  <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-700">
+                    <MapPin size={21} />
+                  </div>
 
                   <div>
-                    <p className="font-semibold text-white">
-                      {
-                        validSelectedShipping.carrier
-                      }
-                    </p>
+                    <h2 className="text-xl font-black text-[#00102D]">
+                      Endereço de entrega
+                    </h2>
 
-                    <p className="mt-1 text-xs text-slate-400">
-                      {
-                        validSelectedShipping.serviceName
-                      }
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Entrega estimada em{" "}
-                      {
-                        validSelectedShipping.deliveryDays
-                      }{" "}
-                      {validSelectedShipping.deliveryDays ===
-                      1
-                        ? "dia útil"
-                        : "dias úteis"}
+                    <p className="mt-1 text-sm text-slate-500">
+                      O pedido será enviado para este
+                      endereço.
                     </p>
                   </div>
                 </div>
-              </div>
-            ) : null}
 
-            <div className="flex justify-between border-t border-line pt-3 text-lg font-bold text-white">
-              <span>Total</span>
-              <span>
-                {formatCurrency(orderTotal)}
-              </span>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Input
+                      variant="light"
+                      label="Nome do destinatário"
+                      name="recipientName"
+                      value={address.recipientName}
+                      onChange={handleChange}
+                      autoComplete="name"
+                      error={errors.recipientName}
+                    />
+                  </div>
+
+                  <Input
+                    variant="light"
+                    label="Telefone"
+                    name="recipientPhone"
+                    value={address.recipientPhone}
+                    onChange={handleChange}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="(15) 99999-9999"
+                    error={errors.recipientPhone}
+                  />
+
+                  <Input
+                    variant="light"
+                    label="CEP"
+                    name="postalCode"
+                    value={address.postalCode}
+                    readOnly
+                    autoComplete="postal-code"
+                    className="cursor-not-allowed bg-slate-100 text-slate-500"
+                    error={errors.postalCode}
+                  />
+
+                  <div className="sm:col-span-2">
+                    <Input
+                      variant="light"
+                      label="Rua"
+                      name="street"
+                      value={address.street}
+                      onChange={handleChange}
+                      autoComplete="address-line1"
+                      error={errors.street}
+                    />
+                  </div>
+
+                  <Input
+                    variant="light"
+                    label="Número"
+                    name="number"
+                    value={address.number}
+                    onChange={handleChange}
+                    autoComplete="address-line2"
+                    error={errors.number}
+                  />
+
+                  <Input
+                    variant="light"
+                    label="Complemento"
+                    name="complement"
+                    value={address.complement ?? ""}
+                    onChange={handleChange}
+                    placeholder="Apartamento, bloco ou referência"
+                    error={errors.complement}
+                  />
+
+                  <Input
+                    variant="light"
+                    label="Bairro"
+                    name="neighborhood"
+                    value={address.neighborhood}
+                    onChange={handleChange}
+                    error={errors.neighborhood}
+                  />
+
+                  <Input
+                    variant="light"
+                    label="Cidade"
+                    name="city"
+                    value={address.city}
+                    onChange={handleChange}
+                    autoComplete="address-level2"
+                    error={errors.city}
+                  />
+
+                  <Input
+                    variant="light"
+                    label="Estado"
+                    name="state"
+                    value={address.state}
+                    onChange={handleChange}
+                    autoComplete="address-level1"
+                    placeholder="SP"
+                    maxLength={2}
+                    error={errors.state}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="text-xl font-black text-[#00102D]">
+                Itens do pedido
+              </h2>
+
+              <div className="mt-5 space-y-4">
+                {items.map((item) => (
+                  <div
+                    key={item.productId}
+                    className="flex items-center justify-between gap-4 border-b border-slate-200 pb-4 last:border-b-0 last:pb-0"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-slate-50 p-2">
+                        {item.imgUrl ? (
+                          <img
+                            src={item.imgUrl}
+                            alt={item.name}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : null}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-[#00102D]">
+                          {item.name}
+                        </p>
+
+                        <p className="text-sm text-slate-500">
+                          {item.quantity} x{" "}
+                          {formatCurrency(item.price)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="shrink-0 font-black text-[#00102D]">
+                      {formatCurrency(
+                        item.price * item.quantity,
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {mutation.isError ? (
-            <p className="mt-4 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-              Não foi possível criar o pedido.
-              Confira os dados e tente novamente.
-            </p>
-          ) : null}
+          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-60">
+            <h2 className="text-xl font-black text-[#00102D]">
+              Resumo do pedido
+            </h2>
 
-          <Button
-            className="mt-5 w-full"
-            disabled={mutation.isPending}
-            onClick={handleConfirmOrder}
-          >
-            {mutation.isPending
-              ? "Criando pedido..."
-              : "Confirmar e efetuar pagamento"}
-          </Button>
-        </Panel>
+            <div className="mt-5 space-y-3 text-sm text-slate-600">
+              <div className="flex justify-between">
+                <span>Produtos</span>
+
+                <span className="font-bold text-slate-900">
+                  {formatCurrency(productsTotal)}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>
+                  {isPickup ? "Retirada" : "Frete"}
+                </span>
+
+                <span className="font-bold text-slate-900">
+                  {isPickup
+                    ? "Grátis"
+                    : formatCurrency(
+                        validSelectedShipping?.price ??
+                          0,
+                      )}
+                </span>
+              </div>
+
+              {isPickup ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                  <div className="flex items-start gap-3">
+                    <Store
+                      size={18}
+                      className="mt-0.5 shrink-0 text-emerald-700"
+                    />
+
+                    <div>
+                      <p className="font-bold text-[#00102D]">
+                        Retirada na loja
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        {storeConfig.address.street}
+                      </p>
+
+                      <p className="text-xs text-slate-500">
+                        {storeConfig.address.city}/
+                        {storeConfig.address.shortState}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : validSelectedShipping ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-start gap-3">
+                    <Truck
+                      size={18}
+                      className="mt-0.5 shrink-0 text-sky-700"
+                    />
+
+                    <div>
+                      <p className="font-bold text-[#00102D]">
+                        {validSelectedShipping.carrier}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        {
+                          validSelectedShipping.serviceName
+                        }
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-400">
+                        Entrega estimada em{" "}
+                        {
+                          validSelectedShipping.deliveryDays
+                        }{" "}
+                        {validSelectedShipping.deliveryDays ===
+                        1
+                          ? "dia útil"
+                          : "dias úteis"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex justify-between border-t border-slate-200 pt-4 text-lg font-black text-[#00102D]">
+                <span>Total</span>
+                <span>{formatCurrency(orderTotal)}</span>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3 border-t border-slate-200 pt-5">
+              <div className="flex items-center gap-3 text-sm font-semibold text-slate-600">
+                <ShieldCheck
+                  size={19}
+                  className="text-sky-600"
+                />
+                Ambiente seguro
+              </div>
+
+              <div className="flex items-center gap-3 text-sm font-semibold text-slate-600">
+                <CreditCard
+                  size={19}
+                  className="text-sky-600"
+                />
+                Pagamento processado com segurança
+              </div>
+            </div>
+
+            {mutation.isError ? (
+              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                Não foi possível criar o pedido.
+                Confira os dados e tente novamente.
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              disabled={mutation.isPending}
+              onClick={handleConfirmOrder}
+              className="mt-5 min-h-12 w-full rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
+            >
+              {mutation.isPending
+                ? "Criando pedido..."
+                : "Confirmar e efetuar pagamento"}
+            </button>
+          </aside>
+        </div>
       </div>
     </section>
   );
