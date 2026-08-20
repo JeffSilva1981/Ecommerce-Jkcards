@@ -1,16 +1,26 @@
 import { MessageCircle } from "lucide-react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { PrivacyNotice } from "../components/PrivacyNotice";
 import { storeConfig } from "../config/storeConfig";
 
 export function StoreLayout() {
+  const location = useLocation();
+
+  const isProductsPage =
+    location.pathname === "/" ||
+    location.pathname === "/produtos";
+
   return (
     <div className="flex min-h-screen flex-col bg-ink text-white">
       <Header />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main
+        className={`mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 ${
+          isProductsPage ? "pb-12 pt-0" : "py-8"
+        }`}
+      >
         <Outlet />
       </main>
 

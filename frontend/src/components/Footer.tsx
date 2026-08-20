@@ -6,6 +6,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import jkcardsLogo from "../assets/jkcards-logo-header.png";
 import { storeConfig } from "../config/storeConfig";
 
 const institutionalLinks = [
@@ -61,32 +62,28 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t border-line/80 bg-panel/40">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+    <footer className="border-t border-white/10 bg-[#00102D] text-white">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
           <Link
             to="/"
             onClick={scrollToTop}
-            className="inline-flex items-center gap-3"
+            className="inline-flex items-center"
           >
-            <span className="grid size-11 place-items-center rounded-lg bg-brand-gradient text-sm font-black text-ink shadow-glow-soft">
-              JK
-            </span>
-
-            <div>
-              <p className="font-black text-white">
-                {storeConfig.name}
-              </p>
-
-              <p className="text-xs text-slate-400">
-                Desde {storeConfig.startedIn}
-              </p>
-            </div>
+            <img
+              src={jkcardsLogo}
+              alt="JKCards"
+              className="h-[86px] w-[144px] object-cover object-center"
+            />
           </Link>
 
-          <p className="mt-4 max-w-xs text-sm leading-6 text-slate-400">
-            Cards e produtos colecionáveis com atendimento
-            próximo, compra segura e cuidado em cada pedido.
+          <p className="mt-4 max-w-xs text-sm leading-6 text-slate-300">
+            Cards e produtos colecionáveis com atendimento próximo, compra
+            segura e cuidado em cada pedido.
+          </p>
+
+          <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-sky-400">
+            Desde {storeConfig.startedIn}
           </p>
 
           <div className="mt-5 flex items-center gap-2">
@@ -96,9 +93,9 @@ export function Footer() {
               rel="noreferrer"
               aria-label="Instagram da JKCards"
               title="Instagram"
-              className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-300 transition hover:border-pink-400/60 hover:bg-pink-500/10 hover:text-pink-300"
+              className="grid size-11 place-items-center rounded-xl border border-white/15 bg-white/5 text-slate-300 transition hover:border-pink-400 hover:bg-pink-500/10 hover:text-pink-300"
             >
-              <Instagram size={19} />
+              <Instagram size={20} />
             </a>
 
             <a
@@ -107,9 +104,9 @@ export function Footer() {
               rel="noreferrer"
               aria-label="WhatsApp da JKCards"
               title="WhatsApp"
-              className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-300 transition hover:border-emerald-400/60 hover:bg-emerald-500/10 hover:text-emerald-300"
+              className="grid size-11 place-items-center rounded-xl border border-white/15 bg-white/5 text-slate-300 transition hover:border-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
             >
-              <MessageCircle size={19} />
+              <MessageCircle size={20} />
             </a>
 
             {storeConfig.social.youtube ? (
@@ -119,9 +116,9 @@ export function Footer() {
                 rel="noreferrer"
                 aria-label="YouTube da JKCards"
                 title="YouTube"
-                className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-300 transition hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-300"
+                className="grid size-11 place-items-center rounded-xl border border-white/15 bg-white/5 text-slate-300 transition hover:border-red-400 hover:bg-red-500/10 hover:text-red-300"
               >
-                <Youtube size={19} />
+                <Youtube size={20} />
               </a>
             ) : (
               <button
@@ -129,9 +126,9 @@ export function Footer() {
                 disabled
                 aria-label="YouTube da JKCards em breve"
                 title="YouTube em breve"
-                className="grid size-10 cursor-not-allowed place-items-center rounded-lg border border-line bg-white/5 text-slate-600"
+                className="grid size-11 cursor-not-allowed place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-600"
               >
-                <Youtube size={19} />
+                <Youtube size={20} />
               </button>
             )}
           </div>
@@ -148,13 +145,13 @@ export function Footer() {
             Institucional
           </h2>
 
-          <nav className="mt-4 flex flex-col items-start gap-3">
+          <nav className="mt-5 flex flex-col items-start gap-3">
             {institutionalLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={scrollToTop}
-                className="text-sm text-slate-400 transition hover:text-skysoft"
+                className="text-sm text-slate-300 transition hover:translate-x-1 hover:text-sky-400"
               >
                 {link.label}
               </Link>
@@ -167,13 +164,13 @@ export function Footer() {
             Atendimento
           </h2>
 
-          <nav className="mt-4 flex flex-col items-start gap-3">
+          <nav className="mt-5 flex flex-col items-start gap-3">
             {customerServiceLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={scrollToTop}
-                className="text-sm text-slate-400 transition hover:text-skysoft"
+                className="text-sm text-slate-300 transition hover:translate-x-1 hover:text-sky-400"
               >
                 {link.label}
               </Link>
@@ -186,14 +183,14 @@ export function Footer() {
             Contato
           </h2>
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-5 space-y-4">
             <a
               href={`mailto:${storeConfig.email}`}
-              className="flex items-start gap-3 text-sm text-slate-400 transition hover:text-skysoft"
+              className="flex items-start gap-3 text-sm text-slate-300 transition hover:text-sky-400"
             >
               <Mail
                 size={18}
-                className="mt-0.5 shrink-0 text-skybrand"
+                className="mt-0.5 shrink-0 text-sky-400"
               />
 
               <span className="break-all">
@@ -201,10 +198,10 @@ export function Footer() {
               </span>
             </a>
 
-            <div className="flex items-start gap-3 text-sm leading-6 text-slate-400">
+            <div className="flex items-start gap-3 text-sm leading-6 text-slate-300">
               <MapPin
                 size={18}
-                className="mt-0.5 shrink-0 text-skybrand"
+                className="mt-0.5 shrink-0 text-sky-400"
               />
 
               <address className="not-italic">
@@ -219,24 +216,23 @@ export function Footer() {
               href={storeConfig.social.whatsapp}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-950/20 transition hover:-translate-y-0.5 hover:bg-emerald-400"
             >
-              <MessageCircle size={17} />
+              <MessageCircle size={18} />
               Falar pelo WhatsApp
             </a>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-line/80">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-slate-400 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <p>
-            © {currentYear} {storeConfig.name}. Todos os
-            direitos reservados.
+            © {currentYear} {storeConfig.name}. Todos os direitos reservados.
           </p>
 
           <p>
-            E-commerce de cards e produtos colecionáveis.
+            {storeConfig.description}
           </p>
         </div>
       </div>
