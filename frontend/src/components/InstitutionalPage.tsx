@@ -1,8 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import {
-  ReactNode,
-  useEffect,
-} from "react";
+import { ReactNode, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { storeConfig } from "../config/storeConfig";
 
@@ -25,30 +22,30 @@ export function InstitutionalPage({
       'meta[name="description"]',
     );
     const previousDescription =
-      metaDescription?.getAttribute("content");
+      metaDescription?.getAttribute("content") ?? null;
 
     document.title = `${title} | ${storeConfig.name}`;
 
     if (metaDescription) {
-      metaDescription.setAttribute(
-        "content",
-        description,
-      );
+      metaDescription.setAttribute("content", description);
     }
 
     return () => {
       document.title = previousTitle;
 
-      if (
-        metaDescription &&
-        previousDescription !== null &&
-        previousDescription !== undefined
-      ) {
-        metaDescription.setAttribute(
-          "content",
-          previousDescription,
-        );
+      if (!metaDescription) {
+        return;
       }
+
+      if (previousDescription === null) {
+        metaDescription.removeAttribute("content");
+        return;
+      }
+
+      metaDescription.setAttribute(
+        "content",
+        previousDescription,
+      );
     };
   }, [description, title]);
 
@@ -56,15 +53,15 @@ export function InstitutionalPage({
     <section className="mx-auto w-full max-w-5xl">
       <Link
         to="/"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition hover:text-skysoft"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-cyan-600"
       >
         <ArrowLeft size={17} />
         Voltar para a loja
       </Link>
 
-      <div className="overflow-hidden rounded-2xl border border-line bg-panel/70 shadow-xl shadow-black/10">
-        <header className="border-b border-line bg-gradient-to-br from-skybrand/15 via-transparent to-gold/10 px-6 py-10 sm:px-10">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-skysoft">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <header className="bg-gradient-to-r from-[#00102D] via-[#06234A] to-[#073B66] px-6 py-10 sm:px-10">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">
             {eyebrow}
           </p>
 
@@ -72,12 +69,12 @@ export function InstitutionalPage({
             {title}
           </h1>
 
-          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
+          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-200">
             {description}
           </p>
         </header>
 
-        <div className="space-y-8 px-6 py-8 text-slate-300 sm:px-10 sm:py-10">
+        <div className="space-y-8 px-6 py-8 text-slate-600 sm:px-10 sm:py-10">
           {children}
         </div>
       </div>
@@ -96,11 +93,11 @@ export function InstitutionalSection({
 }: InstitutionalSectionProps) {
   return (
     <section>
-      <h2 className="text-xl font-bold text-white">
+      <h2 className="text-xl font-bold text-[#00102D]">
         {title}
       </h2>
 
-      <div className="mt-3 space-y-3 text-sm leading-7 text-slate-300 sm:text-base">
+      <div className="mt-3 space-y-3 text-sm leading-7 text-slate-600 sm:text-base">
         {children}
       </div>
     </section>
