@@ -1,6 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { LogIn } from "lucide-react";
+import {
+  LogIn,
+  ShieldCheck,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   Link,
@@ -8,9 +11,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { login } from "../../api/authApi";
-import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
-import { Panel } from "../../components/Panel";
 import {
   loginSchema,
   type LoginSchema,
@@ -54,89 +55,118 @@ export function LoginPage() {
   });
 
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center justify-center py-8">
-      <Panel className="w-full p-6">
-        <div className="mb-6 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-skysoft">
-            Acesso JKCards
+    <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f4f7fb]">
+      <div className="mx-auto grid min-h-[650px] max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-16">
+        <div className="hidden lg:block">
+          <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-sky-700">
+            <ShieldCheck size={16} />
+            Ambiente seguro
+          </span>
+
+          <h1 className="mt-6 max-w-lg text-5xl font-black leading-tight text-[#00102D]">
+            Bem-vindo de volta à JKCards.
+          </h1>
+
+          <p className="mt-5 max-w-md text-lg leading-8 text-slate-600">
+            Acesse sua conta para acompanhar pedidos, finalizar compras e
+            gerenciar seus dados.
           </p>
 
-          <h1 className="mt-3 text-3xl font-black text-white">
-            Entrar na conta
-          </h1>
+          <div className="mt-8 rounded-2xl border border-sky-200 bg-sky-50 p-5">
+            <p className="font-bold text-[#00102D]">
+              Seus dados estão protegidos
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              A JKCards utiliza autenticação segura e não armazena sua senha em
+              texto aberto.
+            </p>
+          </div>
         </div>
 
-        <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit(
-            (values) =>
-              mutation.mutate(values),
-          )}
-        >
-          <Input
-            label="E-mail"
-            type="email"
-            autoComplete="email"
-            placeholder="seuemail@exemplo.com"
-            error={
-              form.formState.errors.email?.message
-            }
-            {...form.register("email")}
-          />
+        <div className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+          <div className="mb-7 text-center">
+            <p className="text-sm font-bold uppercase tracking-wider text-sky-600">
+              Acesso JKCards
+            </p>
 
-          <div>
-            <Input
-              label="Senha"
-              type="password"
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-              error={
-                form.formState.errors.password
-                  ?.message
-              }
-              {...form.register("password")}
-            />
+            <h2 className="mt-3 text-3xl font-black text-[#00102D]">
+              Entrar na conta
+            </h2>
 
-            <div className="mt-2 text-right">
-              <Link
-                to="/esqueci-senha"
-                className="text-sm font-semibold text-skysoft transition hover:text-white"
-              >
-                Esqueci minha senha
-              </Link>
-            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              Informe seu e-mail e sua senha para continuar.
+            </p>
           </div>
 
-          {mutation.isError ? (
-            <p className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-              Credenciais inválidas ou API
-              indisponível.
-            </p>
-          ) : null}
-
-          <Button
-            className="w-full"
-            icon={<LogIn size={17} />}
-            disabled={mutation.isPending}
-            type="submit"
+          <form
+            className="space-y-5"
+            onSubmit={form.handleSubmit(
+              (values) => mutation.mutate(values),
+            )}
           >
-            {mutation.isPending
-              ? "Entrando..."
-              : "Entrar"}
-          </Button>
+            <Input
+              variant="light"
+              label="E-mail"
+              type="email"
+              autoComplete="email"
+              placeholder="seuemail@exemplo.com"
+              error={form.formState.errors.email?.message}
+              {...form.register("email")}
+            />
 
-          <p className="text-center text-sm text-slate-400">
-            Ainda não tem conta?{" "}
+            <div>
+              <Input
+                variant="light"
+                label="Senha"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Digite sua senha"
+                error={form.formState.errors.password?.message}
+                {...form.register("password")}
+              />
 
-            <Link
-              to="/cadastro"
-              className="font-semibold text-skysoft transition hover:text-white"
+              <div className="mt-2 text-right">
+                <Link
+                  to="/esqueci-senha"
+                  className="text-sm font-bold text-sky-600 transition hover:text-sky-700"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
+            </div>
+
+            {mutation.isError ? (
+              <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600">
+                Credenciais inválidas ou serviço temporariamente indisponível.
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
             >
-              Criar cadastro
-            </Link>
-          </p>
-        </form>
-      </Panel>
+              <LogIn size={18} />
+
+              {mutation.isPending
+                ? "Entrando..."
+                : "Entrar"}
+            </button>
+
+            <p className="text-center text-sm text-slate-500">
+              Ainda não tem conta?{" "}
+
+              <Link
+                to="/cadastro"
+                className="font-bold text-sky-600 transition hover:text-sky-700"
+              >
+                Criar cadastro
+              </Link>
+            </p>
+          </form>
+        </div>
+      </div>
     </section>
   );
 }

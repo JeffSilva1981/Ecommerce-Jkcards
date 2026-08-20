@@ -11,9 +11,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { resetPassword } from "../../api/authApi";
-import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
-import { Panel } from "../../components/Panel";
 import {
   resetPasswordSchema,
   type ResetPasswordSchema,
@@ -48,161 +46,151 @@ export function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <section className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center justify-center py-8">
-        <Panel className="w-full p-6">
-          <div className="text-center">
-            <div className="mx-auto grid size-14 place-items-center rounded-full border border-yellow-400/30 bg-yellow-400/10 text-yellow-300">
-              <AlertTriangle size={28} />
+      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f4f7fb]">
+        <div className="mx-auto flex min-h-[620px] max-w-7xl items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xl shadow-slate-200/60 sm:p-8">
+            <div className="mx-auto grid size-16 place-items-center rounded-full bg-amber-100 text-amber-700">
+              <AlertTriangle size={30} />
             </div>
 
-            <h1 className="mt-5 text-2xl font-black text-white">
+            <h1 className="mt-5 text-3xl font-black text-[#00102D]">
               Link inválido
             </h1>
 
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              O link de recuperação não possui um token
-              válido. Solicite um novo link.
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              O link de recuperação não possui um token válido. Solicite um
+              novo link para continuar.
             </p>
 
             <Link
               to="/esqueci-senha"
-              className="mt-6 block"
+              className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
             >
-              <Button className="w-full">
-                Solicitar novo link
-              </Button>
+              Solicitar novo link
             </Link>
           </div>
-        </Panel>
+        </div>
       </section>
     );
   }
 
   if (mutation.isSuccess) {
     return (
-      <section className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center justify-center py-8">
-        <Panel className="w-full p-6">
-          <div className="text-center">
-            <div className="mx-auto grid size-14 place-items-center rounded-full border border-emerald-400/30 bg-emerald-400/10 text-emerald-300">
-              <CheckCircle2 size={28} />
+      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f4f7fb]">
+        <div className="mx-auto flex min-h-[620px] max-w-7xl items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-xl shadow-slate-200/60 sm:p-8">
+            <div className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+              <CheckCircle2 size={30} />
             </div>
 
-            <h1 className="mt-5 text-2xl font-black text-white">
+            <h1 className="mt-5 text-3xl font-black text-[#00102D]">
               Senha alterada
             </h1>
 
-            <p className="mt-3 text-sm leading-6 text-slate-400">
+            <p className="mt-3 text-sm leading-6 text-slate-600">
               {mutation.data.message}
             </p>
 
             <p className="mt-2 text-sm text-slate-500">
-              Agora você já pode entrar utilizando sua
-              nova senha.
+              Agora você já pode entrar utilizando sua nova senha.
             </p>
 
             <Link
               to="/login"
-              className="mt-6 block"
+              className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
             >
-              <Button className="w-full">
-                Entrar na minha conta
-              </Button>
+              Entrar na minha conta
             </Link>
           </div>
-        </Panel>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-220px)] w-full max-w-md items-center justify-center py-8">
-      <Panel className="w-full p-6">
-        <div className="mb-6 text-center">
-          <div className="mx-auto grid size-14 place-items-center rounded-full border border-skybrand/30 bg-skybrand/10 text-skysoft">
-            <KeyRound size={27} />
+    <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f4f7fb]">
+      <div className="mx-auto flex min-h-[620px] max-w-7xl items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+          <div className="mb-7 text-center">
+            <div className="mx-auto grid size-16 place-items-center rounded-full bg-sky-100 text-sky-700">
+              <KeyRound size={29} />
+            </div>
+
+            <p className="mt-5 text-sm font-bold uppercase tracking-wider text-sky-600">
+              Nova senha
+            </p>
+
+            <h1 className="mt-3 text-3xl font-black text-[#00102D]">
+              Redefinir senha
+            </h1>
+
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              Crie uma nova senha com pelo menos 8 caracteres.
+            </p>
           </div>
 
-          <p className="mt-4 text-sm font-semibold uppercase tracking-wide text-skysoft">
-            Nova senha
-          </p>
-
-          <h1 className="mt-3 text-3xl font-black text-white">
-            Redefinir senha
-          </h1>
-
-          <p className="mt-3 text-sm leading-6 text-slate-400">
-            Crie uma nova senha com pelo menos 8
-            caracteres.
-          </p>
-        </div>
-
-        <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit(
-            (values) =>
-              mutation.mutate(values),
-          )}
-        >
-          <Input
-            label="Nova senha"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Mínimo de 8 caracteres"
-            error={
-              form.formState.errors.password?.message
-            }
-            {...form.register("password")}
-          />
-
-          <Input
-            label="Confirmar nova senha"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Digite novamente"
-            error={
-              form.formState.errors
-                .confirmPassword?.message
-            }
-            {...form.register(
-              "confirmPassword",
+          <form
+            className="space-y-5"
+            onSubmit={form.handleSubmit(
+              (values) => mutation.mutate(values),
             )}
-          />
-
-          {mutation.isError ? (
-            <div className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-              <p className="font-semibold">
-                Não foi possível alterar a senha.
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-red-200/80">
-                O link pode estar inválido, expirado ou
-                já ter sido utilizado. Solicite um novo
-                link de recuperação.
-              </p>
-            </div>
-          ) : null}
-
-          <Button
-            className="w-full"
-            icon={<KeyRound size={17} />}
-            disabled={mutation.isPending}
-            type="submit"
           >
-            {mutation.isPending
-              ? "Alterando..."
-              : "Salvar nova senha"}
-          </Button>
+            <Input
+              variant="light"
+              label="Nova senha"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Mínimo de 8 caracteres"
+              error={form.formState.errors.password?.message}
+              {...form.register("password")}
+            />
 
-          {mutation.isError ? (
-            <Link
-              to="/esqueci-senha"
-              className="block text-center text-sm font-semibold text-skysoft transition hover:text-white"
+            <Input
+              variant="light"
+              label="Confirmar nova senha"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Digite novamente"
+              error={form.formState.errors.confirmPassword?.message}
+              {...form.register("confirmPassword")}
+            />
+
+            {mutation.isError ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                <p className="font-bold">
+                  Não foi possível alterar a senha.
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-red-500">
+                  O link pode estar inválido, expirado ou já ter sido utilizado.
+                  Solicite um novo link de recuperação.
+                </p>
+              </div>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
             >
-              Solicitar outro link
-            </Link>
-          ) : null}
-        </form>
-      </Panel>
+              <KeyRound size={18} />
+
+              {mutation.isPending
+                ? "Alterando..."
+                : "Salvar nova senha"}
+            </button>
+
+            {mutation.isError ? (
+              <Link
+                to="/esqueci-senha"
+                className="block text-center text-sm font-bold text-sky-600 transition hover:text-sky-700"
+              >
+                Solicitar outro link
+              </Link>
+            ) : null}
+          </form>
+        </div>
+      </div>
     </section>
   );
 }
