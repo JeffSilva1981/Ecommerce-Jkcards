@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getCategories } from "../../api/categoriesApi";
 import { getProducts } from "../../api/productsApi";
-import homeBanner from "../../assets/home-banner-desktop.png";
 import { EmptyState } from "../../components/EmptyState";
+import { HomeHero } from "../../components/HomeHero";
 import { Pagination } from "../../components/Pagination";
 import { ProductCard } from "../../components/ProductCard";
 import { useCartStore } from "../../stores/cartStore";
@@ -22,9 +22,7 @@ export function ProductsPage() {
 
   const name = searchParams.get("name")?.trim() ?? "";
   const categoryIdParam = searchParams.get("categoryId");
-  const parsedCategoryId = categoryIdParam
-    ? Number(categoryIdParam)
-    : undefined;
+  const parsedCategoryId = categoryIdParam ? Number(categoryIdParam) : undefined;
 
   const categoryId =
     parsedCategoryId !== undefined && Number.isFinite(parsedCategoryId)
@@ -32,9 +30,7 @@ export function ProductsPage() {
       : undefined;
 
   const categoryName = searchParams.get("categoryName") ?? "";
-
   const [page, setPage] = useState(0);
-
   const addItem = useCartStore((state) => state.addItem);
 
   const categoriesQuery = useQuery({
@@ -94,10 +90,10 @@ export function ProductsPage() {
     setPage(0);
   }, [categoryId, name]);
 
-  function scrollToTop() {
-    window.scrollTo({
-      top: 0,
+  function scrollToProducts() {
+    document.getElementById("produtos")?.scrollIntoView({
       behavior: "smooth",
+      block: "start",
     });
   }
 
@@ -115,84 +111,96 @@ export function ProductsPage() {
     }
 
     setPage(nextPage);
-    scrollToTop();
-  }
-
-  if (categoriesQuery.isError) {
-    return (
-      <section className="space-y-8">
-        <EmptyState
-          title="Não foi possível carregar as categorias"
-          description="Atualize a página e tente novamente."
-        />
-      </section>
-    );
+    scrollToProducts();
   }
 
   return (
-    <section className="space-y-8">
-      <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden border-y border-line/80 bg-white/5 shadow-inset">
-        <img
-          src={homeBanner}
-          alt="JKCards - Pokémon TCG original"
-          className="h-auto w-full object-contain sm:h-[240px] sm:object-cover lg:h-[320px]"
-        />
-      </div>
+    <section>
+      <HomeHero />
 
-      <div>
-        <h2 className="text-3xl font-black tracking-tight text-white md:text-4xl">
-          {title}
-        </h2>
+      <div className="relative left-1/2 w-screen -translate-x-1/2 border-t border-slate-200 bg-[#f4f7fb]">
+        <div
+          id="produtos"
+          className="mx-auto max-w-7xl scroll-mt-56 px-4 py-14 sm:px-6 lg:px-8 lg:py-16"
+        >
+          <div className="mb-8">
+            <span className="text-sm font-bold uppercase tracking-wider text-sky-600">
+              Catálogo JKCards
+            </span>
 
-        <p className="mt-2 text-sm text-slate-400">
-          Somente itens disponíveis em estoque são exibidos.
-        </p>
-      </div>
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-[#00102D] md:text-4xl">
+              {title}
+            </h2>
 
-      {categoriesQuery.isLoading || query.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div
-              key={index}
-              className="shimmer h-72 rounded-xl border border-line/60 bg-white/5"
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {query.isError ? (
-        <EmptyState
-          title="Não foi possível carregar os produtos"
-          description="Atualize a página e tente novamente."
-        />
-      ) : null}
-
-      {query.data && query.data.content.length > 0 ? (
-        <>
-          <div className="grid animate-fade-in-up gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {query.data.content.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAdd={addItem}
-              />
-            ))}
+            <p className="mt-2 text-sm text-slate-500">
+              Somente itens disponíveis em estoque são exibidos.
+            </p>
           </div>
 
-          <Pagination
-            page={query.data.number}
-            totalPages={query.data.totalPages}
-            onChange={handlePageChange}
-          />
-        </>
-      ) : null}
+          {categoriesQuery.isLoading || query.isLoading ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-[390px] animate-pulse rounded-2xl border border-slate-200 bg-white shadow-sm"
+                >
+                  <div className="h-48 bg-slate-100" />
 
-      {query.data && query.data.content.length === 0 ? (
-        <EmptyState
-          title="Nenhum produto disponível"
-          description="Não encontramos produtos em estoque para os filtros selecionados."
-        />
-      ) : null}
+                  <div className="space-y-4 p-5">
+                    <div className="h-4 w-3/4 rounded bg-slate-200" />
+                    <div className="h-4 w-1/2 rounded bg-slate-200" />
+                    <div className="h-8 w-2/5 rounded bg-slate-200" />
+                    <div className="h-11 w-full rounded-xl bg-slate-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {categoriesQuery.isError ? (
+            <EmptyState
+              title="Não foi possível carregar as categorias"
+              description="Verifique se o backend está funcionando e tente novamente."
+            />
+          ) : null}
+
+          {query.isError ? (
+            <EmptyState
+              title="Não foi possível carregar os produtos"
+              description="Atualize a página e tente novamente."
+            />
+          ) : null}
+
+          {query.data && query.data.content.length > 0 ? (
+            <>
+              <div className="grid animate-fade-in-up gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {query.data.content.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAdd={addItem}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-10">
+                <Pagination
+                  page={query.data.number}
+                  totalPages={query.data.totalPages}
+                  onChange={handlePageChange}
+                />
+              </div>
+            </>
+          ) : null}
+
+          {query.data && query.data.content.length === 0 ? (
+            <EmptyState
+              title="Nenhum produto disponível"
+              description="Não encontramos produtos em estoque para os filtros selecionados."
+            />
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }

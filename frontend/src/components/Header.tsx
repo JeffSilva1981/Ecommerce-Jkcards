@@ -9,12 +9,8 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import {
-  useState,
-} from "react";
-import type {
-  FormEvent,
-} from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import {
   Link,
   useLocation,
@@ -22,10 +18,9 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { getCategories } from "../api/categoriesApi";
-import jkcardsLogo from "../assets/jkcards-logo.png";
+import jkcardsLogo from "../assets/jkcards-logo-header.png";
 import { useAuthStore } from "../stores/authStore";
 import { useCartStore } from "../stores/cartStore";
-import { Button } from "./Button";
 
 export function Header() {
   const navigate = useNavigate();
@@ -34,23 +29,13 @@ export function Header() {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const isAdmin = useAuthStore((state) =>
-    state.isAdmin(),
-  );
+  const isAdmin = useAuthStore((state) => state.isAdmin());
+  const totalItems = useCartStore((state) => state.totalItems());
 
-  const totalItems = useCartStore((state) =>
-    state.totalItems(),
-  );
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [search, setSearch] = useState(searchParams.get("name") ?? "");
 
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
-
-  const [search, setSearch] = useState(
-    searchParams.get("name") ?? "",
-  );
-
-  const activeCategoryId =
-    searchParams.get("categoryId");
+  const activeCategoryId = searchParams.get("categoryId");
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -75,9 +60,10 @@ export function Header() {
   );
 
   function scrollToTop() {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function handleLogout() {
@@ -91,9 +77,7 @@ export function Header() {
     scrollToTop();
   }
 
-  function handleSearchSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const value = search.trim();
@@ -109,10 +93,7 @@ export function Header() {
     scrollToTop();
   }
 
-  function handleCategoryClick(
-    id?: number,
-    name?: string,
-  ) {
+  function handleCategoryClick(id?: number, name?: string) {
     setSearch("");
     setMobileOpen(false);
 
@@ -129,46 +110,44 @@ export function Header() {
 
   return (
     <>
-      <div className="border-b border-yellow-400/30 bg-gold px-4 py-2 text-center text-xs font-black uppercase tracking-wide text-ink sm:text-sm">
-        Aceitamos Pix e cartão de crédito &bull; Envio para
-        todo Brasil &bull; Compra segura
+      <div className="border-b border-sky-400/20 bg-sky-500 px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-white sm:text-sm">
+        Aceitamos Pix e cartão de crédito • Envio para todo o Brasil • Compra
+        segura
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-line/80 bg-ink/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#00102D]/95 shadow-lg backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex min-h-[88px] items-center justify-between gap-4">
             <Link
               to="/produtos"
               onClick={handleLogoClick}
-              className="flex shrink-0 items-center gap-2.5"
+              className="flex shrink-0 items-center"
             >
               <img
                 src={jkcardsLogo}
                 alt="JKCards"
-                className="h-14 w-auto object-contain sm:h-16"
+                className="h-[68px] w-[116px] object-cover object-center sm:h-[76px] sm:w-[128px]"
               />
             </Link>
 
             <form
               onSubmit={handleSearchSubmit}
-              className="hidden min-w-0 flex-1 md:block md:max-w-2xl"
+              className="hidden min-w-0 max-w-2xl flex-1 md:block"
             >
               <div className="relative">
                 <input
                   value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
-                  }
+                  onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar Pokémon TCG, booster, deck, sleeve..."
-                  className="h-11 w-full rounded-md border border-line bg-white px-4 pr-12 text-sm text-ink outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/30"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-5 pr-14 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-500 focus:border-sky-400 focus:ring-4 focus:ring-sky-400/20"
                 />
 
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-ink transition hover:bg-slate-100"
                   aria-label="Buscar produto"
+                  className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-slate-700 transition hover:bg-sky-50 hover:text-sky-600"
                 >
-                  <Search size={20} />
+                  <Search size={21} />
                 </button>
               </div>
             </form>
@@ -177,43 +156,43 @@ export function Header() {
               {isAdmin ? (
                 <Link
                   to="/admin"
-                  className="hidden rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:inline-flex"
                   title="Painel administrativo"
+                  className="hidden size-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200 transition hover:border-sky-400 hover:bg-sky-400/10 hover:text-white md:flex"
                 >
-                  <LayoutDashboard size={18} />
+                  <LayoutDashboard size={19} />
                 </Link>
               ) : null}
 
               {canSeeProfile ? (
                 <Link
                   to="/perfil"
-                  className="rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
                   title="Meu perfil"
+                  className="flex size-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200 transition hover:border-sky-400 hover:bg-sky-400/10 hover:text-white"
                 >
-                  <UserRound size={18} />
+                  <UserRound size={19} />
                 </Link>
               ) : null}
 
               {canSeeOrders ? (
                 <Link
                   to="/pedidos"
-                  className="rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
                   title="Meus pedidos"
+                  className="flex size-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200 transition hover:border-sky-400 hover:bg-sky-400/10 hover:text-white"
                 >
-                  <Package size={18} />
+                  <Package size={19} />
                 </Link>
               ) : null}
 
               {canSeeCart ? (
                 <Link
                   to="/carrinho"
-                  className="relative rounded-lg border border-line bg-white/5 p-2 text-slate-200 transition hover:border-skybrand/60 hover:text-white"
                   title="Carrinho"
+                  className="relative flex size-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-slate-200 transition hover:border-sky-400 hover:bg-sky-400/10 hover:text-white"
                 >
-                  <ShoppingCart size={18} />
+                  <ShoppingCart size={20} />
 
                   {totalItems > 0 ? (
-                    <span className="absolute -right-2 -top-2 grid min-w-5 place-items-center rounded-full bg-gold px-1 text-xs font-bold text-ink shadow-glow-gold">
+                    <span className="absolute -right-2 -top-2 grid min-w-6 place-items-center rounded-full bg-yellow-400 px-1.5 py-0.5 text-xs font-black text-slate-950 shadow-md">
                       {totalItems}
                     </span>
                   ) : null}
@@ -221,52 +200,34 @@ export function Header() {
               ) : null}
 
               {user ? (
-                <Button
-                  variant="ghost"
-                  icon={<LogOut size={17} />}
+                <button
+                  type="button"
                   onClick={handleLogout}
-                  className="hidden sm:inline-flex"
+                  className="hidden h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white sm:flex"
                 >
-                  <span className="hidden sm:inline">
-                    Sair
-                  </span>
-                </Button>
+                  <LogOut size={18} />
+                  Sair
+                </button>
               ) : null}
 
               {canSeeLogin ? (
                 <Link
                   to="/login"
-                  className="hidden sm:block"
+                  className="hidden h-11 items-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-400 sm:flex"
                 >
-                  <Button
-                    variant="secondary"
-                    icon={<UserRound size={17} />}
-                  >
-                    Entrar
-                  </Button>
+                  <UserRound size={18} />
+                  Entrar
                 </Link>
               ) : null}
 
               {hasMobileMenu ? (
                 <button
                   type="button"
-                  className="grid size-10 place-items-center rounded-lg border border-line bg-white/5 text-slate-200 transition hover:border-skybrand/60 hover:text-white md:hidden"
-                  onClick={() =>
-                    setMobileOpen(
-                      (value) => !value,
-                    )
-                  }
-                  aria-label={
-                    mobileOpen
-                      ? "Fechar menu"
-                      : "Abrir menu"
-                  }
+                  onClick={() => setMobileOpen((value) => !value)}
+                  aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
+                  className="grid size-11 place-items-center rounded-xl border border-white/15 bg-white/5 text-slate-200 transition hover:border-sky-400 hover:text-white md:hidden"
                 >
-                  {mobileOpen ? (
-                    <X size={18} />
-                  ) : (
-                    <Menu size={18} />
-                  )}
+                  {mobileOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
               ) : null}
             </div>
@@ -274,29 +235,27 @@ export function Header() {
 
           <form
             onSubmit={handleSearchSubmit}
-            className="md:hidden"
+            className="pb-4 md:hidden"
           >
             <div className="relative">
               <input
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar produto..."
-                className="h-11 w-full rounded-md border border-line bg-white px-4 pr-12 text-sm text-ink outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/30"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-sky-400 focus:ring-4 focus:ring-sky-400/20"
               />
 
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-ink transition hover:bg-slate-100"
                 aria-label="Buscar produto"
+                className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-slate-700 transition hover:bg-sky-50 hover:text-sky-600"
               >
-                <Search size={20} />
+                <Search size={19} />
               </button>
             </div>
           </form>
 
-          <nav className="flex gap-2 overflow-x-auto pb-1">
+          <nav className="flex gap-2 overflow-x-auto overscroll-x-contain border-t border-white/10 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               {
                 id: undefined,
@@ -305,8 +264,7 @@ export function Header() {
               ...(categoriesQuery.data ?? []),
             ].map((category) => {
               const isActive = category.id
-                ? activeCategoryId ===
-                  String(category.id)
+                ? activeCategoryId === String(category.id)
                 : !activeCategoryId && !search;
 
               return (
@@ -314,15 +272,12 @@ export function Header() {
                   key={category.id ?? "all"}
                   type="button"
                   onClick={() =>
-                    handleCategoryClick(
-                      category.id,
-                      category.name,
-                    )
+                    handleCategoryClick(category.id, category.name)
                   }
                   className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
                     isActive
-                      ? "border-skybrand bg-skybrand text-ink"
-                      : "border-line bg-white/5 text-slate-300 hover:border-skybrand/60 hover:text-white"
+                      ? "border-sky-400 bg-sky-400 text-[#00102D] shadow-md shadow-sky-400/20"
+                      : "border-white/15 bg-white/5 text-slate-300 hover:border-sky-400/70 hover:bg-sky-400/10 hover:text-white"
                   }`}
                 >
                   {category.name}
@@ -333,17 +288,15 @@ export function Header() {
         </div>
 
         {mobileOpen ? (
-          <div className="border-t border-line bg-ink/95 backdrop-blur-md md:hidden">
-            <div className="mx-auto max-w-7xl space-y-2 px-4 py-4 sm:px-6">
+          <div className="border-t border-white/10 bg-[#00102D] md:hidden">
+            <div className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6">
               {isAdmin ? (
                 <Link
                   to="/admin"
-                  onClick={() =>
-                    setMobileOpen(false)
-                  }
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  <LayoutDashboard size={17} />
+                  <LayoutDashboard size={18} />
                   Painel administrativo
                 </Link>
               ) : null}
@@ -351,12 +304,10 @@ export function Header() {
               {canSeeProfile ? (
                 <Link
                   to="/perfil"
-                  onClick={() =>
-                    setMobileOpen(false)
-                  }
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  <UserRound size={17} />
+                  <UserRound size={18} />
                   Meu perfil
                 </Link>
               ) : null}
@@ -364,12 +315,10 @@ export function Header() {
               {canSeeOrders ? (
                 <Link
                   to="/pedidos"
-                  onClick={() =>
-                    setMobileOpen(false)
-                  }
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  <Package size={17} />
+                  <Package size={18} />
                   Meus pedidos
                 </Link>
               ) : null}
@@ -377,12 +326,10 @@ export function Header() {
               {canSeeLogin ? (
                 <Link
                   to="/login"
-                  onClick={() =>
-                    setMobileOpen(false)
-                  }
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-white/5"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  <UserRound size={17} />
+                  <UserRound size={18} />
                   Entrar
                 </Link>
               ) : null}
@@ -391,9 +338,9 @@ export function Header() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-white/5"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-slate-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  <LogOut size={17} />
+                  <LogOut size={18} />
                   Sair
                 </button>
               ) : null}

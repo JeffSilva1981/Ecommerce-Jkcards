@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowLeft,
   CreditCard,
   MapPin,
   MessageCircle,
+  Package,
   Store,
   Truck,
+  UserRound,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getOrderById } from "../../api/ordersApi";
 import { Button } from "../../components/Button";
-import { EmptyState } from "../../components/EmptyState";
-import { Panel } from "../../components/Panel";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useAuthStore } from "../../stores/authStore";
 import { formatCurrency } from "../../utils/currency";
@@ -31,9 +32,7 @@ function formatPostalCode(value: string) {
 export function OrderDetailsPage() {
   const { id } = useParams();
   const orderId = Number(id);
-  const isAdmin = useAuthStore((state) =>
-    state.isAdmin()
-  );
+  const isAdmin = useAuthStore((state) => state.isAdmin());
 
   const query = useQuery({
     queryKey: ["order", orderId],
@@ -43,42 +42,58 @@ export function OrderDetailsPage() {
 
   if (query.isLoading) {
     return (
-      <div className="h-72 animate-pulse rounded-lg bg-white/5" />
+      <section className="mx-auto max-w-4xl space-y-5">
+        <div className="h-20 animate-pulse rounded-2xl bg-white" />
+        <div className="h-80 animate-pulse rounded-2xl bg-white" />
+        <div className="h-40 animate-pulse rounded-2xl bg-white" />
+      </section>
     );
   }
 
-  if (!query.data) {
+  if (query.isError || !query.data) {
     return (
-      <EmptyState
-        title="Pedido não encontrado"
-        description="Confira o número do pedido."
-      />
+      <section className="mx-auto max-w-4xl">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-cyan-50 text-cyan-600">
+            <Package size={30} />
+          </div>
+
+          <h1 className="mt-5 text-2xl font-bold text-[#00102D]">
+            Pedido não encontrado
+          </h1>
+
+          <p className="mt-2 text-sm text-slate-500">
+            Confira o número do pedido ou volte para sua lista de compras.
+          </p>
+
+          <Link
+            to="/pedidos"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-6 py-3 font-bold text-white transition hover:bg-cyan-600"
+          >
+            <ArrowLeft size={18} />
+            Voltar aos pedidos
+          </Link>
+        </div>
+      </section>
     );
   }
 
   const order = query.data;
-  const isPickup =
-    order.shipping?.method === "PICKUP";
+  const isPickup = order.shipping?.method === "PICKUP";
 
-  const calculatedProductsTotal =
-    order.items.reduce(
-      (total, item) =>
-        total +
-        (item.subTotal ??
-          item.price * item.quantity),
-      0
-    );
+  const calculatedProductsTotal = order.items.reduce(
+    (total, item) =>
+      total + (item.subTotal ?? item.price * item.quantity),
+    0,
+  );
 
   const productsTotal =
-    order.productsTotal ??
-    calculatedProductsTotal;
+    order.productsTotal ?? calculatedProductsTotal;
 
-  const shippingPrice =
-    order.shipping?.price ?? 0;
+  const shippingPrice = order.shipping?.price ?? 0;
 
   const orderTotal =
-    order.total ??
-    productsTotal + shippingPrice;
+    order.total ?? productsTotal + shippingPrice;
 
   const canPay =
     !isAdmin &&
@@ -87,8 +102,7 @@ export function OrderDetailsPage() {
 
   function handlePayment() {
     if (order.payment?.checkoutUrl) {
-      window.location.href =
-        order.payment.checkoutUrl;
+      window.location.href = order.payment.checkoutUrl;
     }
   }
 
@@ -96,8 +110,7 @@ export function OrderDetailsPage() {
     const itemsText = order.items
       .map((item) => {
         const subtotal =
-          item.subTotal ??
-          item.price * item.quantity;
+          item.subTotal ?? item.price * item.quantity;
 
         return `- ${item.quantity}x ${item.name} - ${formatCurrency(subtotal)}`;
       })
@@ -115,26 +128,38 @@ export function OrderDetailsPage() {
         `Status: ${order.status}\n\n` +
         `Itens:\n${itemsText}\n` +
         deliveryText +
-        `\n\nTotal: ${formatCurrency(orderTotal)}`
+        `\n\nTotal: ${formatCurrency(orderTotal)}`,
     );
 
     window.open(
       `https://wa.me/${whatsappNumber}?text=${message}`,
       "_blank",
-      "noopener,noreferrer"
+      "noopener,noreferrer",
     );
   }
 
   return (
     <section className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <Link
+        to="/pedidos"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-cyan-600"
+      >
+        <ArrowLeft size={17} />
+        Voltar aos pedidos
+      </Link>
+
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between md:p-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <p className="text-sm font-bold uppercase tracking-wider text-cyan-600">
+            Detalhes da compra
+          </p>
+
+          <h1 className="mt-1 text-3xl font-black text-[#00102D]">
             Pedido #{order.id}
           </h1>
 
-          <p className="mt-1 text-sm text-slate-400">
-            {formatDate(order.moment)}
+          <p className="mt-1 text-sm text-slate-500">
+            Realizado em {formatDate(order.moment)}
           </p>
         </div>
 
@@ -142,16 +167,15 @@ export function OrderDetailsPage() {
       </div>
 
       {canPay ? (
-        <Panel className="p-5">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-lg font-bold text-[#00102D]">
                 Pagamento pendente
               </h2>
 
-              <p className="mt-1 text-sm text-slate-400">
-                Clique no botão abaixo para finalizar
-                o pagamento com Mercado Pago.
+              <p className="mt-1 text-sm text-slate-600">
+                Finalize o pagamento para que possamos dar continuidade ao pedido.
               </p>
             </div>
 
@@ -162,34 +186,47 @@ export function OrderDetailsPage() {
               Pagar com Mercado Pago
             </Button>
           </div>
-        </Panel>
+        </div>
       ) : null}
 
-      <Panel className="p-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-lg font-bold text-white">
-            Itens
-          </h2>
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-xl bg-cyan-50 text-cyan-600">
+              <Package size={21} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-[#00102D]">
+                Itens do pedido
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                {order.items.length} produto(s) nesta compra
+              </p>
+            </div>
+          </div>
 
           {!isAdmin ? (
-            <Button
-              variant="secondary"
-              icon={<MessageCircle size={17} />}
+            <button
+              type="button"
               onClick={handleWhatsappOrder}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 font-semibold text-emerald-700 transition hover:bg-emerald-100"
             >
-              Enviar pedido pelo WhatsApp
-            </Button>
+              <MessageCircle size={17} />
+              Falar pelo WhatsApp
+            </button>
           ) : null}
         </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-6 divide-y divide-slate-100">
           {order.items.map((item) => (
             <div
               key={item.productId}
-              className="flex items-center justify-between gap-4 border-b border-line pb-4 last:border-b-0 last:pb-0"
+              className="flex flex-col gap-4 py-5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-4">
-                <div className="flex size-20 shrink-0 items-center justify-center rounded-md bg-white p-2">
+                <div className="flex size-24 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-2">
                   <img
                     src={item.imgUrl}
                     alt={item.name}
@@ -198,41 +235,37 @@ export function OrderDetailsPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="font-semibold text-white">
+                  <p className="font-bold text-[#00102D]">
                     {item.name}
                   </p>
 
-                  <p className="text-sm text-slate-400">
-                    {item.quantity} x{" "}
-                    {formatCurrency(item.price)}
+                  <p className="mt-1 text-sm text-slate-500">
+                    {item.quantity} x {formatCurrency(item.price)}
                   </p>
                 </div>
               </div>
 
-              <p className="shrink-0 font-bold text-gold">
+              <p className="shrink-0 text-lg font-black text-[#00102D]">
                 {formatCurrency(
-                  item.subTotal ??
-                    item.price * item.quantity
+                  item.subTotal ?? item.price * item.quantity,
                 )}
               </p>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 space-y-3 border-t border-line pt-4">
-          <div className="flex items-center justify-between text-sm text-slate-300">
+        <div className="mt-6 rounded-xl bg-slate-50 p-4">
+          <div className="flex items-center justify-between text-sm text-slate-600">
             <span>Produtos</span>
-            <span>
+            <span className="font-semibold text-[#00102D]">
               {formatCurrency(productsTotal)}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-slate-300">
-            <span>
-              {isPickup ? "Retirada" : "Frete"}
-            </span>
+          <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
+            <span>{isPickup ? "Retirada" : "Frete"}</span>
 
-            <span>
+            <span className="font-semibold text-[#00102D]">
               {isPickup
                 ? "Grátis"
                 : order.shipping
@@ -241,154 +274,147 @@ export function OrderDetailsPage() {
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-t border-line pt-3 text-xl font-bold text-white">
+          <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 text-xl font-black text-[#00102D]">
             <span>Total</span>
-            <span>
-              {formatCurrency(orderTotal)}
-            </span>
+            <span>{formatCurrency(orderTotal)}</span>
           </div>
         </div>
-      </Panel>
+      </div>
 
-      {isPickup ? (
-        <Panel className="p-5">
-          <div className="flex items-start gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-400/10 text-emerald-300">
-              <Store size={20} />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-bold text-white">
-                Retirada na loja
-              </h2>
-
-              <div className="mt-3 space-y-1 text-sm text-slate-300">
-                <p className="font-semibold text-white">
-                  JKCards
-                </p>
-
-                <p>Rua Camargo Fleury, nº 75</p>
-                <p>Sorocaba/SP</p>
-              </div>
-
-              <p className="mt-3 text-sm text-slate-400">
-                Após a confirmação do pagamento, envie-nos uma mensagem no WhatsApp para agendar a retirada.
-              </p>
-            </div>
-          </div>
-        </Panel>
-      ) : order.shipping ? (
-        <Panel className="p-5">
-          <div className="flex items-start gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
-              <Truck size={20} />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-bold text-white">
-                Entrega
-              </h2>
-
-              <p className="mt-2 font-semibold text-slate-200">
-                {order.shipping.carrier}
+      <div className="grid gap-6 md:grid-cols-2">
+        {isPickup ? (
+          <InfoCard
+            icon={<Store size={21} />}
+            iconClassName="bg-emerald-50 text-emerald-600"
+            title="Retirada na loja"
+          >
+            <div className="space-y-1 text-sm text-slate-600">
+              <p className="font-bold text-[#00102D]">
+                JKCards
               </p>
 
-              <p className="text-sm text-slate-400">
-                {order.shipping.serviceName}
-              </p>
+              <p>Rua Camargo Fleury, nº 75</p>
+              <p>Sorocaba/SP</p>
+            </div>
 
-              {order.shipping.deliveryDays !=
-              null ? (
-                <p className="mt-2 text-sm text-slate-400">
-                  Prazo estimado:{" "}
+            <p className="mt-4 text-sm text-slate-500">
+              Após a confirmação do pagamento, envie-nos uma mensagem
+              no WhatsApp para agendar a retirada.
+            </p>
+          </InfoCard>
+        ) : order.shipping ? (
+          <InfoCard
+            icon={<Truck size={21} />}
+            iconClassName="bg-cyan-50 text-cyan-600"
+            title="Entrega"
+          >
+            <p className="font-bold text-[#00102D]">
+              {order.shipping.carrier}
+            </p>
+
+            <p className="mt-1 text-sm text-slate-500">
+              {order.shipping.serviceName}
+            </p>
+
+            {order.shipping.deliveryDays != null ? (
+              <p className="mt-3 text-sm text-slate-600">
+                Prazo estimado:{" "}
+                <strong>
                   {order.shipping.deliveryDays}{" "}
-                  {order.shipping.deliveryDays ===
-                  1
+                  {order.shipping.deliveryDays === 1
                     ? "dia útil"
                     : "dias úteis"}
-                </p>
+                </strong>
+              </p>
+            ) : null}
+          </InfoCard>
+        ) : null}
+
+        {!isPickup && order.shippingAddress ? (
+          <InfoCard
+            icon={<MapPin size={21} />}
+            iconClassName="bg-cyan-50 text-cyan-600"
+            title="Endereço de entrega"
+          >
+            <div className="space-y-1 text-sm text-slate-600">
+              <p className="font-bold text-[#00102D]">
+                {order.shippingAddress.recipientName}
+              </p>
+
+              <p>{order.shippingAddress.recipientPhone}</p>
+
+              <p>
+                {order.shippingAddress.street},{" "}
+                {order.shippingAddress.number}
+              </p>
+
+              {order.shippingAddress.complement ? (
+                <p>{order.shippingAddress.complement}</p>
               ) : null}
+
+              <p>{order.shippingAddress.neighborhood}</p>
+
+              <p>
+                {order.shippingAddress.city}/
+                {order.shippingAddress.state}
+              </p>
+
+              <p>
+                CEP:{" "}
+                {formatPostalCode(
+                  order.shippingAddress.postalCode,
+                )}
+              </p>
             </div>
-          </div>
-        </Panel>
-      ) : null}
+          </InfoCard>
+        ) : null}
+      </div>
 
-      {!isPickup && order.shippingAddress ? (
-        <Panel className="p-5">
-          <div className="flex items-start gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
-              <MapPin size={20} />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-bold text-white">
-                Endereço de entrega
-              </h2>
-
-              <div className="mt-3 space-y-1 text-sm text-slate-300">
-                <p className="font-semibold text-white">
-                  {
-                    order.shippingAddress
-                      .recipientName
-                  }
-                </p>
-
-                <p>
-                  {
-                    order.shippingAddress
-                      .recipientPhone
-                  }
-                </p>
-
-                <p>
-                  {order.shippingAddress.street},{" "}
-                  {order.shippingAddress.number}
-                </p>
-
-                {order.shippingAddress
-                  .complement ? (
-                  <p>
-                    {
-                      order.shippingAddress
-                        .complement
-                    }
-                  </p>
-                ) : null}
-
-                <p>
-                  {
-                    order.shippingAddress
-                      .neighborhood
-                  }
-                </p>
-
-                <p>
-                  {order.shippingAddress.city}/
-                  {order.shippingAddress.state}
-                </p>
-
-                <p>
-                  CEP:{" "}
-                  {formatPostalCode(
-                    order.shippingAddress
-                      .postalCode
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Panel>
-      ) : null}
-
-      <Panel className="p-5">
-        <h2 className="text-lg font-bold text-white">
-          Cliente
-        </h2>
-
-        <p className="mt-2 text-slate-300">
+      <InfoCard
+        icon={<UserRound size={21} />}
+        iconClassName="bg-violet-50 text-violet-600"
+        title="Cliente"
+      >
+        <p className="font-semibold text-[#00102D]">
           {order.client.name}
         </p>
-      </Panel>
+      </InfoCard>
     </section>
+  );
+}
+
+type InfoCardProps = {
+  icon: React.ReactNode;
+  iconClassName: string;
+  title: string;
+  children: React.ReactNode;
+};
+
+function InfoCard({
+  icon,
+  iconClassName,
+  title,
+  children,
+}: InfoCardProps) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div
+          className={`grid size-10 shrink-0 place-items-center rounded-xl ${iconClassName}`}
+        >
+          {icon}
+        </div>
+
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-[#00102D]">
+            {title}
+          </h2>
+
+          <div className="mt-3">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

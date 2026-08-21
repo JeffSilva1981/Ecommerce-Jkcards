@@ -3,6 +3,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  ShieldCheck,
   Youtube,
 } from "lucide-react";
 import {
@@ -25,105 +26,60 @@ export function ContactPage() {
       description="Escolha o canal mais conveniente para conversar com a JKCards."
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <a
+        <ContactCard
           href={storeConfig.social.whatsapp}
-          target="_blank"
-          rel="noreferrer"
-          className="group rounded-xl border border-line bg-white/5 p-6 transition hover:-translate-y-1 hover:border-emerald-400/50 hover:bg-emerald-500/10"
-        >
-          <span className="grid size-12 place-items-center rounded-lg bg-emerald-500/10 text-emerald-300">
-            <MessageCircle size={24} />
-          </span>
+          icon={<MessageCircle size={24} />}
+          iconClassName="bg-emerald-50 text-emerald-600"
+          hoverClassName="hover:border-emerald-300"
+          title="WhatsApp"
+          description="Tire dúvidas sobre produtos, pedidos, pagamentos ou entregas diretamente com nosso atendimento."
+          action="Iniciar conversa"
+          actionClassName="text-emerald-600"
+          external
+        />
 
-          <h2 className="mt-4 text-lg font-bold text-white">
-            WhatsApp
-          </h2>
-
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            Tire dúvidas sobre produtos, pedidos, pagamentos
-            ou entregas diretamente com nosso atendimento.
-          </p>
-
-          <span className="mt-4 inline-block text-sm font-bold text-emerald-300">
-            Iniciar conversa
-          </span>
-        </a>
-
-        <a
+        <ContactCard
           href={`mailto:${storeConfig.email}`}
-          className="group rounded-xl border border-line bg-white/5 p-6 transition hover:-translate-y-1 hover:border-skybrand/50 hover:bg-skybrand/10"
-        >
-          <span className="grid size-12 place-items-center rounded-lg bg-skybrand/10 text-skysoft">
-            <Mail size={24} />
-          </span>
+          icon={<Mail size={24} />}
+          iconClassName="bg-cyan-50 text-cyan-600"
+          hoverClassName="hover:border-cyan-300"
+          title="E-mail"
+          description={storeConfig.email}
+          action="Enviar e-mail"
+          actionClassName="text-cyan-600"
+        />
 
-          <h2 className="mt-4 text-lg font-bold text-white">
-            E-mail
-          </h2>
-
-          <p className="mt-2 break-all text-sm leading-6 text-slate-400">
-            {storeConfig.email}
-          </p>
-
-          <span className="mt-4 inline-block text-sm font-bold text-skysoft">
-            Enviar e-mail
-          </span>
-        </a>
-
-        <a
+        <ContactCard
           href={storeConfig.social.instagram}
-          target="_blank"
-          rel="noreferrer"
-          className="group rounded-xl border border-line bg-white/5 p-6 transition hover:-translate-y-1 hover:border-pink-400/50 hover:bg-pink-500/10"
-        >
-          <span className="grid size-12 place-items-center rounded-lg bg-pink-500/10 text-pink-300">
-            <Instagram size={24} />
-          </span>
-
-          <h2 className="mt-4 text-lg font-bold text-white">
-            Instagram
-          </h2>
-
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            Acompanhe novidades e conteúdos da JKCards no
-            Instagram.
-          </p>
-
-          <span className="mt-4 inline-block text-sm font-bold text-pink-300">
-            @jkcardsstore
-          </span>
-        </a>
+          icon={<Instagram size={24} />}
+          iconClassName="bg-pink-50 text-pink-600"
+          hoverClassName="hover:border-pink-300"
+          title="Instagram"
+          description="Acompanhe novidades, produtos e conteúdos da JKCards no Instagram."
+          action="@jkcardsstore"
+          actionClassName="text-pink-600"
+          external
+        />
 
         {storeConfig.social.youtube ? (
-          <a
+          <ContactCard
             href={storeConfig.social.youtube}
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-xl border border-line bg-white/5 p-6 transition hover:-translate-y-1 hover:border-red-400/50 hover:bg-red-500/10"
-          >
-            <span className="grid size-12 place-items-center rounded-lg bg-red-500/10 text-red-300">
-              <Youtube size={24} />
-            </span>
-
-            <h2 className="mt-4 text-lg font-bold text-white">
-              YouTube
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Acompanhe vídeos e conteúdos da JKCards.
-            </p>
-
-            <span className="mt-4 inline-block text-sm font-bold text-red-300">
-              Acessar canal
-            </span>
-          </a>
+            icon={<Youtube size={24} />}
+            iconClassName="bg-red-50 text-red-600"
+            hoverClassName="hover:border-red-300"
+            title="YouTube"
+            description="Acompanhe vídeos e conteúdos da JKCards."
+            action="Acessar canal"
+            actionClassName="text-red-600"
+            external
+          />
         ) : (
-          <div className="rounded-xl border border-line bg-white/[0.03] p-6">
-            <span className="grid size-12 place-items-center rounded-lg bg-white/5 text-slate-500">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+            <span className="grid size-12 place-items-center rounded-xl bg-slate-200 text-slate-500">
               <Youtube size={24} />
             </span>
 
-            <h2 className="mt-4 text-lg font-bold text-slate-300">
+            <h2 className="mt-4 text-lg font-bold text-[#00102D]">
               YouTube
             </h2>
 
@@ -139,38 +95,38 @@ export function ContactPage() {
       </div>
 
       <InstitutionalSection title="Para agilizar o atendimento">
-        <p>
-          Se o contato estiver relacionado a uma compra,
-          informe o número do pedido e o e-mail utilizado no
-          cadastro.
-        </p>
+        <div className="grid gap-3">
+          <GuidanceItem>
+            Se o contato estiver relacionado a uma compra, informe
+            o número do pedido e o e-mail utilizado no cadastro.
+          </GuidanceItem>
 
-        <p>
-          Em casos de avaria, produto incorreto ou
-          divergência, envie também fotos que mostrem a
-          embalagem e o produto recebido.
-        </p>
+          <GuidanceItem>
+            Em casos de avaria, produto incorreto ou divergência,
+            envie também fotos que mostrem a embalagem e o produto
+            recebido.
+          </GuidanceItem>
 
-        <p>
-          Nunca envie sua senha, senha bancária ou dados
-          completos do cartão pelos canais de atendimento.
-        </p>
+          <GuidanceItem>
+            Nunca envie sua senha, senha bancária ou dados completos
+            do cartão pelos canais de atendimento.
+          </GuidanceItem>
+        </div>
       </InstitutionalSection>
 
       <InstitutionalSection title="Localização">
-        <div className="flex flex-col gap-5 rounded-xl border border-line bg-white/5 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
-            <MapPin
-              size={24}
-              className="mt-0.5 shrink-0 text-skysoft"
-            />
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-cyan-50 text-cyan-600">
+              <MapPin size={23} />
+            </div>
 
             <div>
-              <h3 className="font-bold text-white">
+              <h3 className="font-bold text-[#00102D]">
                 JKCards
               </h3>
 
-              <address className="mt-2 text-sm not-italic leading-6 text-slate-300">
+              <address className="mt-2 text-sm not-italic leading-6 text-slate-600">
                 {storeConfig.address.street}
                 <br />
                 {storeConfig.address.city}/
@@ -183,25 +139,108 @@ export function ContactPage() {
             href={mapUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-line bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:border-skybrand/60 hover:text-skysoft"
+            className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#00102D] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#06234A]"
           >
             Abrir no mapa
           </a>
         </div>
 
         <p className="text-xs leading-5 text-slate-500">
-          Antes de se deslocar até o endereço, consulte o
+          Antes de se deslocar até o endereço, consulte nosso
           atendimento para confirmar a disponibilidade de
           atendimento ou retirada presencial.
         </p>
       </InstitutionalSection>
 
-      <div className="rounded-xl border border-gold/20 bg-gold/10 p-5 text-sm leading-6 text-slate-300">
-        Esta página não possui um formulário de envio porque
-        isso exigiria processamento no backend. Os botões
-        acima abrem canais externos que já estão disponíveis
-        e funcionando.
+      <div className="flex items-start gap-4 rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-cyan-600 shadow-sm">
+          <ShieldCheck size={21} />
+        </div>
+
+        <div>
+          <h2 className="font-bold text-[#00102D]">
+            Atendimento seguro
+          </h2>
+
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Utilize somente os canais oficiais informados nesta
+            página e nunca compartilhe senhas ou dados completos de
+            pagamento.
+          </p>
+        </div>
       </div>
     </InstitutionalPage>
+  );
+}
+
+type ContactCardProps = {
+  href: string;
+  icon: React.ReactNode;
+  iconClassName: string;
+  hoverClassName: string;
+  title: string;
+  description: string;
+  action: string;
+  actionClassName: string;
+  external?: boolean;
+};
+
+function ContactCard({
+  href,
+  icon,
+  iconClassName,
+  hoverClassName,
+  title,
+  description,
+  action,
+  actionClassName,
+  external = false,
+}: ContactCardProps) {
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      className={`group rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md ${hoverClassName}`}
+    >
+      <span
+        className={`grid size-12 place-items-center rounded-xl ${iconClassName}`}
+      >
+        {icon}
+      </span>
+
+      <h2 className="mt-4 text-lg font-bold text-[#00102D]">
+        {title}
+      </h2>
+
+      <p className="mt-2 break-words text-sm leading-6 text-slate-600">
+        {description}
+      </p>
+
+      <span
+        className={`mt-4 inline-block text-sm font-bold ${actionClassName}`}
+      >
+        {action}
+      </span>
+    </a>
+  );
+}
+
+type GuidanceItemProps = {
+  children: React.ReactNode;
+};
+
+function GuidanceItem({ children }: GuidanceItemProps) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <ShieldCheck
+        size={19}
+        className="mt-0.5 shrink-0 text-cyan-600"
+      />
+
+      <p className="text-sm leading-6 text-slate-600">
+        {children}
+      </p>
+    </div>
   );
 }

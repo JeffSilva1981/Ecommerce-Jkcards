@@ -1,4 +1,5 @@
 import {
+  ChevronDown,
   HelpCircle,
   Mail,
   MessageCircle,
@@ -101,24 +102,25 @@ export function FaqPage() {
         {questions.map((item, index) => (
           <details
             key={item.question}
-            className="group rounded-xl border border-line bg-white/5 open:border-skybrand/30 open:bg-skybrand/5"
+            className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 transition open:border-cyan-300 open:bg-white open:shadow-sm"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold text-white">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold text-[#00102D]">
               <span className="flex items-center gap-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-skybrand/10 text-xs font-black text-skysoft">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-cyan-50 text-xs font-black text-cyan-600">
                   {index + 1}
                 </span>
 
                 {item.question}
               </span>
 
-              <span className="text-xl text-skysoft transition group-open:rotate-45">
-                +
-              </span>
+              <ChevronDown
+                size={20}
+                className="shrink-0 text-cyan-600 transition group-open:rotate-180"
+              />
             </summary>
 
-            <div className="border-t border-line/70 px-5 py-4">
-              <p className="text-sm leading-7 text-slate-300">
+            <div className="border-t border-slate-200 px-5 py-4">
+              <p className="text-sm leading-7 text-slate-600">
                 {item.answer}
               </p>
             </div>
@@ -126,22 +128,21 @@ export function FaqPage() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-skybrand/20 bg-skybrand/10 p-6">
+      <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-6">
         <div className="flex items-start gap-4">
-          <HelpCircle
-            size={24}
-            className="mt-0.5 shrink-0 text-skysoft"
-          />
+          <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-cyan-600 shadow-sm">
+            <HelpCircle size={23} />
+          </div>
 
           <div>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold text-[#00102D]">
               Ainda ficou com alguma dúvida?
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Entre em contato com a JKCards. Se a dúvida for
-              sobre uma compra, informe também o número do
-              pedido para facilitar o atendimento.
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Entre em contato com a JKCards. Se a dúvida for sobre
+              uma compra, informe também o número do pedido para
+              facilitar o atendimento.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -149,7 +150,7 @@ export function FaqPage() {
                 href={storeConfig.social.whatsapp}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-400"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600"
               >
                 <MessageCircle size={17} />
                 WhatsApp
@@ -157,7 +158,7 @@ export function FaqPage() {
 
               <a
                 href={`mailto:${storeConfig.email}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-line bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:border-skybrand/60"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-[#00102D] transition hover:border-cyan-400 hover:text-cyan-700"
               >
                 <Mail size={17} />
                 Enviar e-mail
@@ -165,7 +166,7 @@ export function FaqPage() {
 
               <Link
                 to="/contato"
-                className="inline-flex items-center rounded-lg border border-line bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:border-skybrand/60"
+                className="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-[#00102D] transition hover:border-cyan-400 hover:text-cyan-700"
               >
                 Ver todos os contatos
               </Link>
