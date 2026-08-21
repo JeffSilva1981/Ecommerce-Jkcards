@@ -30,9 +30,9 @@ export function StoreLayout() {
         rel="noreferrer"
         aria-label="Falar com a JKCards pelo WhatsApp"
         title="Falar pelo WhatsApp"
-        className="fixed bottom-5 right-5 z-50 flex size-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-950/40 transition hover:-translate-y-1 hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-ink"
+        className="fixed bottom-3 right-3 z-50 flex size-11 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-950/40 transition hover:-translate-y-1 hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-ink sm:bottom-5 sm:right-5 sm:size-14"
       >
-        <MessageCircle size={28} />
+        <MessageCircle className="size-5 sm:size-7" />
       </a>
 
       <PrivacyNotice />

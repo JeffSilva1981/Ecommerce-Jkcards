@@ -255,7 +255,7 @@ export function Header() {
             </div>
           </form>
 
-          <nav className="flex gap-2 overflow-x-auto border-t border-white/10 py-3">
+          <nav className="flex gap-2 overflow-x-auto overscroll-x-contain border-t border-white/10 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               {
                 id: undefined,
