@@ -33,7 +33,7 @@ function createVisiblePages(
     0,
   );
 
-  let end = Math.min(
+  const end = Math.min(
     start + maximumVisiblePages,
     totalPages,
   );
@@ -85,6 +85,9 @@ export function Pagination({
     onChange(nextPage);
   }
 
+  const navigationButtonClasses =
+    "border-slate-300 bg-white text-slate-700 shadow-sm hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-100";
+
   return (
     <nav
       className="flex flex-col items-center justify-between gap-4 sm:flex-row"
@@ -93,6 +96,7 @@ export function Pagination({
       <Button
         type="button"
         variant="secondary"
+        className={navigationButtonClasses}
         icon={<ChevronLeft size={16} />}
         disabled={page <= 0}
         onClick={() => handleChange(page - 1)}
@@ -121,8 +125,8 @@ export function Pagination({
                 }`}
                 className={`grid size-10 place-items-center rounded-md border text-sm font-semibold transition ${
                   isActive
-                    ? "border-skybrand bg-skybrand text-ink"
-                    : "border-line bg-white/5 text-slate-300 hover:border-skybrand/60 hover:text-white"
+                    ? "border-sky-400 bg-sky-400 text-[#00102D] shadow-sm"
+                    : "border-slate-300 bg-white text-slate-700 shadow-sm hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700"
                 }`}
               >
                 {pageNumber + 1}
@@ -131,7 +135,7 @@ export function Pagination({
           })}
         </div>
 
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-slate-500">
           Página {page + 1} de {totalPages}
         </span>
       </div>
@@ -139,6 +143,7 @@ export function Pagination({
       <Button
         type="button"
         variant="secondary"
+        className={navigationButtonClasses}
         icon={<ChevronRight size={16} />}
         disabled={
           page >= totalPages - 1
