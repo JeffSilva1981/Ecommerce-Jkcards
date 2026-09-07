@@ -21,6 +21,8 @@ export const mockProducts: Product[] = [
     imgUrl:
       "https://images.unsplash.com/photo-1613771404721-1f92d799e49f?auto=format&fit=crop&w=900&q=80",
     stockQuantity: 12,
+    available: true,
+    maxQuantityPerOrder: null,
     categories: [mockCategories[0]],
   },
   {
@@ -32,6 +34,8 @@ export const mockProducts: Product[] = [
     imgUrl:
       "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=900&q=80",
     stockQuantity: 8,
+    available: true,
+    maxQuantityPerOrder: null,
     categories: [mockCategories[1]],
   },
   {
@@ -43,6 +47,8 @@ export const mockProducts: Product[] = [
     imgUrl:
       "https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=900&q=80",
     stockQuantity: 20,
+    available: true,
+    maxQuantityPerOrder: null,
     categories: [mockCategories[2]],
   },
   {
@@ -54,6 +60,8 @@ export const mockProducts: Product[] = [
     imgUrl:
       "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=900&q=80",
     stockQuantity: 1,
+    available: true,
+    maxQuantityPerOrder: null,
     categories: [mockCategories[3]],
   },
   {
@@ -65,6 +73,8 @@ export const mockProducts: Product[] = [
     imgUrl:
       "https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=900&q=80",
     stockQuantity: 5,
+    available: true,
+    maxQuantityPerOrder: null,
     categories: [mockCategories[0], mockCategories[2]],
   },
   {
@@ -76,6 +86,8 @@ export const mockProducts: Product[] = [
     imgUrl:
       "https://images.unsplash.com/photo-1580247817119-c6c9a3f47f5f?auto=format&fit=crop&w=900&q=80",
     stockQuantity: 0,
+    available: true,
+    maxQuantityPerOrder: null,
     categories: [mockCategories[2]],
   },
 ];
@@ -131,7 +143,10 @@ export const mockOrders: Order[] = [
     moment: "2026-06-05T18:30:00Z",
     status: "PAID",
     client: { id: 2, name: "Admin JKCards" },
-    payment: { id: 102, moment: "2026-06-05T19:05:00Z" },
+    payment: {
+      id: 102,
+      moment: "2026-06-05T19:05:00Z",
+    },
     items: [
       {
         productId: 4,
@@ -146,16 +161,40 @@ export const mockOrders: Order[] = [
   },
 ];
 
+function calculateInventoryValue(products: Product[]) {
+  const totalInCents = products.reduce(
+    (total, product) =>
+      total +
+      Math.round(product.price * 100) *
+        product.stockQuantity,
+    0,
+  );
+
+  return totalInCents / 100;
+}
+
+function calculateStockUnits(products: Product[]) {
+  return products.reduce(
+    (total, product) => total + product.stockQuantity,
+    0,
+  );
+}
+
 export const mockDashboard: DashboardSummary = {
   ordersCount: 34,
   grossRevenue: 8630.4,
   netRevenue: 5120.2,
   averageTicket: 253.84,
-  inventoryValue: 1800.0,
-  productsCount: 8,
-  stockUnits: 88,
-  outOfStockProducts: 1,
-  waitingPaymentOrders: 2,
+
+  inventoryValue: calculateInventoryValue(mockProducts),
+  productsCount: mockProducts.length,
+  stockUnits: calculateStockUnits(mockProducts),
+  outOfStockProducts: mockProducts.filter(
+    (product) => product.stockQuantity <= 0,
+  ).length,
+
+  waitingPaymentOrders: 8,
+
   byStatus: [
     { status: "WAITING_PAYMENT", count: 8 },
     { status: "PAID", count: 15 },
@@ -163,4 +202,21 @@ export const mockDashboard: DashboardSummary = {
     { status: "DELIVERED", count: 4 },
     { status: "CANCELED", count: 1 },
   ],
+
+  inventoryByCategory: mockCategories.map((category) => {
+    const categoryProducts = mockProducts.filter(
+      (product) =>
+        product.categories.some(
+          (productCategory) =>
+            productCategory.id === category.id,
+        ),
+    );
+
+    return {
+      categoryId: category.id,
+      categoryName: category.name,
+      inventoryValue: calculateInventoryValue(categoryProducts),
+      stockUnits: calculateStockUnits(categoryProducts),
+    };
+  }),
 };

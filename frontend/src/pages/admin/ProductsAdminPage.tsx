@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import {
-  FormEvent,
+  type FormEvent,
   useEffect,
   useState,
 } from "react";
@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 import { getCategories } from "../../api/categoriesApi";
 import {
   deleteProduct,
-  getProducts,
+  getProductsAdmin,
 } from "../../api/productsApi";
 import { Button } from "../../components/Button";
 import { Pagination } from "../../components/Pagination";
@@ -41,8 +41,7 @@ export function ProductsAdminPage() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
-  const [appliedSearch, setAppliedSearch] =
-    useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [page, setPage] = useState(0);
 
   const [deletingProductId, setDeletingProductId] =
@@ -74,10 +73,9 @@ export function ProductsAdminPage() {
     ],
 
     queryFn: () =>
-      getProducts({
+      getProductsAdmin({
         name: appliedSearch,
-        excludeCategoryId:
-          cardCategory?.id,
+        excludeCategoryId: cardCategory?.id,
         page,
         size: PAGE_SIZE,
       }),
@@ -102,30 +100,30 @@ export function ProductsAdminPage() {
         );
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: ["admin-products"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["products"],
-      });
-
-      setDeletingProductId(null);
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["admin-products"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["admin-cards"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["products"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["store-products"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["dashboard"],
+        }),
+      ]);
 
       alert("Produto excluído com sucesso.");
     },
 
     onError: (error) => {
-      console.error(
-        "Erro ao excluir produto:",
-        error,
-      );
-
-      setDeletingProductId(null);
-
-      alert(
-        "Não foi possível excluir o produto.",
-      );
+      console.error("Erro ao excluir produto:", error);
+      alert("Não foi possível excluir o produto.");
     },
 
     onSettled: () => {
@@ -137,7 +135,6 @@ export function ProductsAdminPage() {
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
-
     setAppliedSearch(search.trim());
     setPage(0);
   }
@@ -152,6 +149,10 @@ export function ProductsAdminPage() {
     id: number,
     name: string,
   ) {
+    if (deleteMutation.isPending) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja realmente excluir o produto "${name}"? Essa ação não pode ser desfeita.`,
     );
@@ -173,17 +174,38 @@ export function ProductsAdminPage() {
     });
   }
 
+  function handleRetry() {
+    if (categoriesQuery.isError) {
+      void categoriesQuery.refetch();
+      return;
+    }
+
+    void query.refetch();
+  }
+
   const products = query.data?.content ?? [];
 
+  const hasError =
+    categoriesQuery.isError || query.isError;
+
+  const isLoading =
+    categoriesQuery.isLoading ||
+    (categoriesQuery.isSuccess && query.isLoading);
+
+  const canShowProducts =
+    categoriesQuery.isSuccess &&
+    query.isSuccess &&
+    !hasError;
+
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-black text-[#00102D]">
             Produtos
           </h1>
 
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-500">
             Boosters, decks, acessórios, jogos e outros
             produtos gerais.
           </p>
@@ -211,31 +233,35 @@ export function ProductsAdminPage() {
         </div>
       </div>
 
-      <Panel className="p-5">
+      <Panel className="p-5 sm:p-6">
         <form
           onSubmit={handleSearch}
           className="flex flex-col gap-3 sm:flex-row"
         >
           <div className="relative flex-1">
             <input
+              aria-label="Buscar produto pelo nome"
               value={search}
               onChange={(event) =>
                 setSearch(event.target.value)
               }
               placeholder="Buscar produto pelo nome..."
-              className="h-11 w-full rounded-md border border-line bg-ink/70 px-4 pr-11 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/20"
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
 
             <Search
               size={18}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
+              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
             />
           </div>
 
           <Button
             type="submit"
             icon={<Search size={17} />}
-            disabled={query.isFetching}
+            disabled={
+              query.isFetching ||
+              categoriesQuery.isFetching
+            }
           >
             Buscar
           </Button>
@@ -253,78 +279,99 @@ export function ProductsAdminPage() {
         </form>
 
         {appliedSearch ? (
-          <p className="mt-3 text-sm text-slate-400">
+          <p className="mt-3 text-sm text-slate-500">
             Resultados para:{" "}
-            <strong className="text-white">
+            <strong className="text-[#00102D]">
               {appliedSearch}
             </strong>
           </p>
         ) : null}
+
+        <p className="mt-4 text-sm leading-6 text-slate-500">
+          Esta listagem inclui produtos disponíveis e ocultos.
+          Produtos ocultos continuam no estoque e nos valores
+          do dashboard. Use Editar para liberar a venda ou
+          alterar o limite por pedido.
+        </p>
       </Panel>
 
-      {!cardCategory &&
-      !categoriesQuery.isLoading ? (
-        <p className="rounded-md border border-yellow-400/30 bg-yellow-400/10 p-3 text-sm text-yellow-200">
+      {categoriesQuery.isSuccess && !cardCategory ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           A categoria Carta ou Cartas não foi encontrada.
-          Enquanto ela não existir, não será possível
-          separar os dois catálogos.
+          Enquanto ela não existir, não será possível separar
+          os dois catálogos.
         </p>
       ) : null}
 
       <Panel className="overflow-hidden">
-        {categoriesQuery.isLoading ||
-        query.isLoading ? (
-          <div className="p-6 text-sm text-slate-400">
+        {isLoading && !hasError ? (
+          <div className="p-6 text-sm text-slate-500">
             Carregando produtos...
           </div>
         ) : null}
 
-        {categoriesQuery.isError ||
-        query.isError ? (
-          <div className="p-6">
-            <p className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
+        {hasError ? (
+          <div className="space-y-4 p-6">
+            <p
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            >
               Não foi possível carregar os produtos.
             </p>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleRetry}
+              disabled={
+                categoriesQuery.isFetching ||
+                query.isFetching
+              }
+            >
+              Tentar novamente
+            </Button>
           </div>
         ) : null}
 
-        {!query.isLoading &&
-        !query.isError &&
-        products.length === 0 ? (
+        {canShowProducts && products.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="font-semibold text-white">
+            <p className="font-bold text-[#00102D]">
               Nenhum produto encontrado
             </p>
 
-            <p className="mt-1 text-sm text-slate-400">
-              Ajuste a pesquisa ou cadastre um novo
-              produto.
+            <p className="mt-2 text-sm text-slate-500">
+              Ajuste a pesquisa ou cadastre um novo produto.
             </p>
           </div>
         ) : null}
 
-        {products.length > 0 ? (
+        {canShowProducts && products.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
-              <thead className="border-b border-line bg-white/5 text-slate-300">
+            <table className="w-full min-w-[1100px] text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
                 <tr>
-                  <th className="px-4 py-3">
+                  <th scope="col" className="px-4 py-4">
                     Produto
                   </th>
-
-                  <th className="px-4 py-3">
+                  <th scope="col" className="px-4 py-4">
                     Preço
                   </th>
-
-                  <th className="px-4 py-3">
+                  <th scope="col" className="px-4 py-4">
                     Estoque
                   </th>
-
-                  <th className="px-4 py-3">
+                  <th scope="col" className="px-4 py-4">
+                    Disponibilidade
+                  </th>
+                  <th scope="col" className="px-4 py-4">
+                    Limite por pedido
+                  </th>
+                  <th scope="col" className="px-4 py-4">
                     Imagem
                   </th>
-
-                  <th className="px-4 py-3 text-right">
+                  <th
+                    scope="col"
+                    className="px-4 py-4 text-right"
+                  >
                     Ações
                   </th>
                 </tr>
@@ -335,8 +382,7 @@ export function ProductsAdminPage() {
                   const stockQuantity =
                     product.stockQuantity ?? 0;
 
-                  const isOutOfStock =
-                    stockQuantity === 0;
+                  const isOutOfStock = stockQuantity <= 0;
 
                   const isDeleting =
                     deleteMutation.isPending &&
@@ -345,30 +391,52 @@ export function ProductsAdminPage() {
                   return (
                     <tr
                       key={product.id}
-                      className="border-b border-line last:border-b-0"
+                      className="border-b border-slate-100 transition last:border-b-0 hover:bg-sky-50/50"
                     >
-                      <td className="px-4 py-3 font-medium text-white">
+                      <td className="px-4 py-4 font-semibold text-[#00102D]">
                         {product.name}
                       </td>
 
-                      <td className="px-4 py-3 font-semibold text-gold">
+                      <td className="whitespace-nowrap px-4 py-4 font-bold text-[#00102D]">
                         {formatCurrency(product.price)}
                       </td>
 
-                      <td className="px-4 py-3">
+                      <td className="whitespace-nowrap px-4 py-4">
                         {isOutOfStock ? (
-                          <span className="rounded-full border border-red-400/30 bg-red-400/10 px-2 py-1 text-xs font-semibold text-red-200">
+                          <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
                             Esgotado
                           </span>
                         ) : (
-                          <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-xs font-semibold text-emerald-200">
+                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                             {stockQuantity} em estoque
                           </span>
                         )}
                       </td>
 
-                      <td className="px-4 py-3">
-                        <div className="flex size-12 items-center justify-center overflow-hidden rounded bg-white p-1">
+                      <td className="whitespace-nowrap px-4 py-4">
+                        {product.available ? (
+                          <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                            Disponível
+                          </span>
+                        ) : (
+                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                            Oculto
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-4 text-slate-600">
+                        {product.maxQuantityPerOrder == null
+                          ? "Sem limite"
+                          : `${product.maxQuantityPerOrder} ${
+                              product.maxQuantityPerOrder === 1
+                                ? "unidade"
+                                : "unidades"
+                            }`}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1">
                           {product.imgUrl ? (
                             <img
                               src={product.imgUrl}
@@ -377,24 +445,33 @@ export function ProductsAdminPage() {
                               className="max-h-full max-w-full object-contain"
                             />
                           ) : (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-center text-[10px] text-slate-400">
                               Sem imagem
                             </span>
                           )}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex justify-end gap-2">
                           <Link
                             to={`/admin/produtos/${product.id}`}
+                            aria-disabled={deleteMutation.isPending}
+                            tabIndex={
+                              deleteMutation.isPending
+                                ? -1
+                                : undefined
+                            }
+                            onClick={(event) => {
+                              if (deleteMutation.isPending) {
+                                event.preventDefault();
+                              }
+                            }}
                           >
                             <Button
                               variant="secondary"
                               icon={<Edit size={15} />}
-                              disabled={
-                                deleteMutation.isPending
-                              }
+                              disabled={deleteMutation.isPending}
                             >
                               Editar
                             </Button>
@@ -403,9 +480,7 @@ export function ProductsAdminPage() {
                           <Button
                             variant="danger"
                             icon={<Trash2 size={15} />}
-                            disabled={
-                              deleteMutation.isPending
-                            }
+                            disabled={deleteMutation.isPending}
                             onClick={() =>
                               handleDeleteProduct(
                                 product.id,
@@ -428,7 +503,7 @@ export function ProductsAdminPage() {
         ) : null}
       </Panel>
 
-      {query.data ? (
+      {canShowProducts && query.data ? (
         <Pagination
           page={query.data.number}
           totalPages={query.data.totalPages}

@@ -16,11 +16,19 @@ public class ProductDto {
 
     private Long id;
 
-    @Size(min = 3, max = 100, message = "The name must be between 3 and 100 characters long.")
+    @Size(
+            min = 3,
+            max = 100,
+            message = "The name must be between 3 and 100 characters long."
+    )
     @NotBlank(message = "Name must not be empty.")
     private String name;
 
-    @Size(min = 10, max = 1500, message = "The description must be between 10 and 1500 characters long.")
+    @Size(
+            min = 10,
+            max = 1500,
+            message = "The description must be between 10 and 1500 characters long."
+    )
     @NotBlank(message = "Description must not be empty.")
     private String description;
 
@@ -33,6 +41,29 @@ public class ProductDto {
     @NotNull(message = "The stock quantity must not be empty.")
     @PositiveOrZero(message = "The stock quantity cannot be negative.")
     private Integer stockQuantity;
+
+    /**
+     * Estoque recebido pelo administrador ao abrir o formulário.
+     * Usado para detectar edição com dados desatualizados.
+     */
+    @PositiveOrZero(
+            message = "The expected stock quantity cannot be negative."
+    )
+    private Integer expectedStockQuantity;
+
+    /**
+     * Define se o produto pode aparecer e ser comprado pelos clientes.
+     */
+    private boolean available = true;
+
+    /**
+     * Limite máximo deste produto por pedido.
+     * Null significa sem limite.
+     */
+    @Positive(
+            message = "The maximum quantity per order must be greater than zero."
+    )
+    private Integer maxQuantityPerOrder;
 
     @Positive(message = "The weight must be greater than zero.")
     private Double weight;
@@ -70,6 +101,9 @@ public class ProductDto {
         this.price = price;
         this.imgUrl = imgUrl;
         this.stockQuantity = stockQuantity;
+        this.expectedStockQuantity = stockQuantity;
+        this.available = true;
+        this.maxQuantityPerOrder = null;
         this.weight = weight;
         this.width = width;
         this.height = height;
@@ -77,19 +111,27 @@ public class ProductDto {
     }
 
     public ProductDto(Product entity) {
-        id = entity.getId();
-        name = entity.getName();
-        description = entity.getDescription();
-        price = entity.getPrice();
-        imgUrl = entity.getImgUrl();
-        stockQuantity = entity.getStockQuantity();
-        weight = entity.getWeight();
-        width = entity.getWidth();
-        height = entity.getHeight();
-        length = entity.getLength();
+        this.id = entity.getId();
+        this.name = entity.getName();
+        this.description = entity.getDescription();
+        this.price = entity.getPrice();
+        this.imgUrl = entity.getImgUrl();
+        this.stockQuantity = entity.getStockQuantity();
+
+        this.expectedStockQuantity = entity.getStockQuantity() == null
+                ? 0
+                : entity.getStockQuantity();
+
+        this.available = entity.isAvailable();
+        this.maxQuantityPerOrder = entity.getMaxQuantityPerOrder();
+
+        this.weight = entity.getWeight();
+        this.width = entity.getWidth();
+        this.height = entity.getHeight();
+        this.length = entity.getLength();
 
         for (Category category : entity.getCategories()) {
-            categories.add(new CategoryDto(category));
+            this.categories.add(new CategoryDto(category));
         }
     }
 
@@ -115,6 +157,30 @@ public class ProductDto {
 
     public Integer getStockQuantity() {
         return stockQuantity;
+    }
+
+    public Integer getExpectedStockQuantity() {
+        return expectedStockQuantity;
+    }
+
+    public void setExpectedStockQuantity(Integer expectedStockQuantity) {
+        this.expectedStockQuantity = expectedStockQuantity;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public Integer getMaxQuantityPerOrder() {
+        return maxQuantityPerOrder;
+    }
+
+    public void setMaxQuantityPerOrder(Integer maxQuantityPerOrder) {
+        this.maxQuantityPerOrder = maxQuantityPerOrder;
     }
 
     public Double getWeight() {

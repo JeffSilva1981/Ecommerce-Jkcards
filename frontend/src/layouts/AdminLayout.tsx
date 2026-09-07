@@ -4,15 +4,19 @@ import { Header } from "../components/Header";
 
 export function AdminLayout() {
   return (
-    <div className="min-h-screen bg-ink text-white">
+    <div className="min-h-screen bg-[#f4f7fb] text-slate-700">
       <Header />
-      <div className="lg:flex">
+
+      <div className="lg:flex lg:items-start">
         <AdminSidebar />
-        <main className="w-full px-4 py-6 sm:px-6 lg:px-8">
+
+        <main
+          className="min-w-0 w-full flex-1 px-4 py-6 sm:px-6 lg:px-8"
+          style={{ colorScheme: "light" }}
+        >
           <Outlet />
         </main>
       </div>
     </div>
   );
 }
-

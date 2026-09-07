@@ -18,6 +18,19 @@ export type ProductListParams = {
   size?: number;
 };
 
+function normalizeProductPage(
+  data: Page<ProductSummary> | null | undefined,
+  params: ProductListParams,
+) {
+  return {
+    content: data?.content ?? [],
+    totalPages: data?.totalPages ?? 1,
+    totalElements: data?.totalElements ?? 0,
+    size: data?.size ?? params.size ?? 8,
+    number: data?.number ?? params.page ?? 0,
+  };
+}
+
 export async function getProducts(
   params: ProductListParams = {},
 ) {
@@ -27,28 +40,37 @@ export async function getProducts(
     params,
   });
 
-  return {
-    content: response.data?.content ?? [],
-    totalPages:
-      response.data?.totalPages ?? 1,
-    totalElements:
-      response.data?.totalElements ?? 0,
-    size:
-      response.data?.size ??
-      (params.size ?? 8),
-    number:
-      response.data?.number ??
-      (params.page ?? 0),
-  };
+  return normalizeProductPage(response.data, params);
 }
 
 export async function getProductById(
   id: number,
 ) {
-  const response =
-    await publicApiClient.get<Product>(
-      `/products/${id}`,
-    );
+  const response = await publicApiClient.get<Product>(
+    `/products/${id}`,
+  );
+
+  return response.data;
+}
+
+export async function getProductsAdmin(
+  params: ProductListParams = {},
+) {
+  const response = await apiClient.get<
+    Page<ProductSummary>
+  >("/products/admin", {
+    params,
+  });
+
+  return normalizeProductPage(response.data, params);
+}
+
+export async function getProductByIdAdmin(
+  id: number,
+) {
+  const response = await apiClient.get<Product>(
+    `/products/admin/${id}`,
+  );
 
   return response.data;
 }
@@ -57,7 +79,7 @@ export async function saveProduct(
   payload: ProductFormData,
   id?: number,
 ) {
-  if (id) {
+  if (id !== undefined) {
     const response = await apiClient.put<Product>(
       `/products/${id}`,
       payload,

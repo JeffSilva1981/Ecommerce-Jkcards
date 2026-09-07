@@ -33,7 +33,9 @@ INSERT INTO tb_product (
     weight,
     width,
     height,
-    length
+    length,
+    available,
+    max_quantity_per_order
 )
 SELECT
     'Booster Box Pokemon Mega Evolucao',
@@ -44,7 +46,9 @@ SELECT
     0.80,
     20.0,
     12.0,
-    14.0
+    14.0,
+    TRUE,
+    NULL
 WHERE NOT EXISTS (
     SELECT 1
     FROM tb_product
@@ -60,7 +64,9 @@ INSERT INTO tb_product (
     weight,
     width,
     height,
-    length
+    length,
+    available,
+    max_quantity_per_order
 )
 SELECT
     'Deck Batalha Pokemon TCG',
@@ -71,7 +77,9 @@ SELECT
     0.40,
     12.0,
     8.0,
-    18.0
+    18.0,
+    TRUE,
+    NULL
 WHERE NOT EXISTS (
     SELECT 1
     FROM tb_product
@@ -87,7 +95,9 @@ INSERT INTO tb_product (
     weight,
     width,
     height,
-    length
+    length,
+    available,
+    max_quantity_per_order
 )
 SELECT
     'Sleeves Premium 100 unidades',
@@ -98,7 +108,9 @@ SELECT
     0.20,
     8.0,
     3.0,
-    12.0
+    12.0,
+    TRUE,
+    NULL
 WHERE NOT EXISTS (
     SELECT 1
     FROM tb_product
@@ -114,7 +126,9 @@ INSERT INTO tb_product (
     weight,
     width,
     height,
-    length
+    length,
+    available,
+    max_quantity_per_order
 )
 SELECT
     'Carta Avulsa Holografica',
@@ -125,7 +139,9 @@ SELECT
     0.10,
     7.0,
     1.0,
-    10.0
+    10.0,
+    TRUE,
+    NULL
 WHERE NOT EXISTS (
     SELECT 1
     FROM tb_product
@@ -141,7 +157,7 @@ AND NOT EXISTS (
     SELECT 1
     FROM tb_product_category pc
     WHERE pc.product_id = p.id
-    AND pc.category_id = c.id
+      AND pc.category_id = c.id
 );
 
 INSERT INTO tb_product_category (product_id, category_id)
@@ -153,7 +169,7 @@ AND NOT EXISTS (
     SELECT 1
     FROM tb_product_category pc
     WHERE pc.product_id = p.id
-    AND pc.category_id = c.id
+      AND pc.category_id = c.id
 );
 
 INSERT INTO tb_product_category (product_id, category_id)
@@ -165,7 +181,7 @@ AND NOT EXISTS (
     SELECT 1
     FROM tb_product_category pc
     WHERE pc.product_id = p.id
-    AND pc.category_id = c.id
+      AND pc.category_id = c.id
 );
 
 INSERT INTO tb_product_category (product_id, category_id)
@@ -177,5 +193,5 @@ AND NOT EXISTS (
     SELECT 1
     FROM tb_product_category pc
     WHERE pc.product_id = p.id
-    AND pc.category_id = c.id
+      AND pc.category_id = c.id
 );

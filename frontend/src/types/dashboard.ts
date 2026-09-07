@@ -5,6 +5,13 @@ export type DashboardStatusSummary = {
   count: number;
 };
 
+export type CategoryInventorySummary = {
+  categoryId: number;
+  categoryName: string;
+  inventoryValue: number;
+  stockUnits: number;
+};
+
 export type DashboardSummary = {
   ordersCount: number;
   grossRevenue: number;
@@ -16,4 +23,5 @@ export type DashboardSummary = {
   outOfStockProducts: number;
   waitingPaymentOrders: number;
   byStatus: DashboardStatusSummary[];
+  inventoryByCategory: CategoryInventorySummary[];
 };

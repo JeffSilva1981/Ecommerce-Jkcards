@@ -14,17 +14,26 @@ public class DashboardDto {
     private Long stockUnits;
     private Long outOfStockProducts;
     private Long waitingPaymentOrders;
+
     private List<DashboardStatusDto> byStatus = new ArrayList<>();
 
-    public DashboardDto(){
+    private List<CategoryInventoryDto> inventoryByCategory = new ArrayList<>();
 
+    public DashboardDto() {
     }
 
-    public DashboardDto(Long ordersCount, Double grossRevenue, Double netRevenue,
-                        Double averageTicket, Double inventoryValue, Long productsCount,
-                        Long stockUnits, Long outOfStockProducts, Long waitingPaymentOrders,
-                        List<DashboardStatusDto> byStatus) {
-
+    public DashboardDto(
+            Long ordersCount,
+            Double grossRevenue,
+            Double netRevenue,
+            Double averageTicket,
+            Double inventoryValue,
+            Long productsCount,
+            Long stockUnits,
+            Long outOfStockProducts,
+            Long waitingPaymentOrders,
+            List<DashboardStatusDto> byStatus
+    ) {
         this.ordersCount = ordersCount;
         this.grossRevenue = grossRevenue;
         this.netRevenue = netRevenue;
@@ -75,5 +84,17 @@ public class DashboardDto {
 
     public List<DashboardStatusDto> getByStatus() {
         return byStatus;
+    }
+
+    public List<CategoryInventoryDto> getInventoryByCategory() {
+        return inventoryByCategory;
+    }
+
+    public void setInventoryByCategory(
+            List<CategoryInventoryDto> inventoryByCategory
+    ) {
+        this.inventoryByCategory = inventoryByCategory == null
+                ? new ArrayList<>()
+                : new ArrayList<>(inventoryByCategory);
     }
 }

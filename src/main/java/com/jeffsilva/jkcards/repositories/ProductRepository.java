@@ -1,11 +1,16 @@
 package com.jeffsilva.jkcards.repositories;
 
 import com.jeffsilva.jkcards.entities.Product;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository
         extends JpaRepository<Product, Long> {
@@ -13,8 +18,9 @@ public interface ProductRepository
     @Query("""
             SELECT obj
             FROM Product obj
-            WHERE UPPER(obj.name)
-                LIKE UPPER(CONCAT('%', :name, '%'))
+            WHERE obj.available = true
+              AND UPPER(obj.name)
+                  LIKE UPPER(CONCAT('%', :name, '%'))
             """)
     Page<Product> searchByName(
             @Param("name") String name,
@@ -25,7 +31,8 @@ public interface ProductRepository
             SELECT DISTINCT obj
             FROM Product obj
             JOIN obj.categories category
-            WHERE category.id = :categoryId
+            WHERE obj.available = true
+              AND category.id = :categoryId
               AND (
                   :name = ''
                   OR UPPER(obj.name)
@@ -35,6 +42,72 @@ public interface ProductRepository
     Page<Product> searchByNameAndCategory(
             @Param("name") String name,
             @Param("categoryId") Long categoryId,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+                    SELECT DISTINCT obj
+                    FROM Product obj
+                    LEFT JOIN obj.categories category
+                    WHERE obj.available = true
+                      AND (
+                          :name = ''
+                          OR UPPER(obj.name)
+                             LIKE UPPER(CONCAT('%', :name, '%'))
+                      )
+                      AND (
+                          :categoryId IS NULL
+                          OR category.id = :categoryId
+                      )
+                      AND (
+                          :excludeCategoryId IS NULL
+                          OR obj.id NOT IN (
+                              SELECT excludedProduct.id
+                              FROM Product excludedProduct
+                              JOIN excludedProduct.categories excludedCategory
+                              WHERE excludedCategory.id = :excludeCategoryId
+                          )
+                      )
+                      AND (
+                          :inStock = false
+                          OR COALESCE(obj.stockQuantity, 0) > 0
+                      )
+                    """,
+            countQuery = """
+                    SELECT COUNT(DISTINCT obj.id)
+                    FROM Product obj
+                    LEFT JOIN obj.categories category
+                    WHERE obj.available = true
+                      AND (
+                          :name = ''
+                          OR UPPER(obj.name)
+                             LIKE UPPER(CONCAT('%', :name, '%'))
+                      )
+                      AND (
+                          :categoryId IS NULL
+                          OR category.id = :categoryId
+                      )
+                      AND (
+                          :excludeCategoryId IS NULL
+                          OR obj.id NOT IN (
+                              SELECT excludedProduct.id
+                              FROM Product excludedProduct
+                              JOIN excludedProduct.categories excludedCategory
+                              WHERE excludedCategory.id = :excludeCategoryId
+                          )
+                      )
+                      AND (
+                          :inStock = false
+                          OR COALESCE(obj.stockQuantity, 0) > 0
+                      )
+                    """
+    )
+    Page<Product> search(
+            @Param("name") String name,
+            @Param("categoryId") Long categoryId,
+            @Param("excludeCategoryId") Long excludeCategoryId,
+            @Param("inStock") boolean inStock,
             Pageable pageable
     );
 
@@ -94,11 +167,10 @@ public interface ProductRepository
                     )
                     """
     )
-    Page<Product> search(
+    Page<Product> searchAdmin(
             @Param("name") String name,
             @Param("categoryId") Long categoryId,
-            @Param("excludeCategoryId")
-            Long excludeCategoryId,
+            @Param("excludeCategoryId") Long excludeCategoryId,
             @Param("inStock") boolean inStock,
             Pageable pageable
     );
@@ -131,4 +203,35 @@ public interface ProductRepository
                OR obj.stockQuantity IS NULL
             """)
     Long countOutOfStockProducts();
+
+    @Query("""
+            SELECT category.id,
+                   category.name,
+                   COALESCE(
+                       SUM(
+                           product.price *
+                           COALESCE(product.stockQuantity, 0)
+                       ),
+                       0
+                   ),
+                   COALESCE(
+                       SUM(COALESCE(product.stockQuantity, 0)),
+                       0
+                   )
+            FROM Category category
+            LEFT JOIN category.products product
+            GROUP BY category.id, category.name
+            ORDER BY category.name
+            """)
+    List<Object[]> inventoryByCategory();
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT product
+            FROM Product product
+            WHERE product.id = :id
+            """)
+    Optional<Product> findByIdForUpdate(
+            @Param("id") Long id
+    );
 }

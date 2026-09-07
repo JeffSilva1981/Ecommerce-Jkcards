@@ -16,6 +16,8 @@ import com.jeffsilva.jkcards.repositories.OrderItemRepository;
 import com.jeffsilva.jkcards.repositories.OrderRepository;
 import com.jeffsilva.jkcards.repositories.ProductRepository;
 import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,18 +26,21 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class OrderServiceTests {
 
     @InjectMocks
     private OrderService service;
+
+    @Mock
+    private EntityManager entityManager;
 
     @Mock
     private OrderRepository repository;
@@ -125,15 +130,7 @@ public class OrderServiceTests {
         mockAuthenticatedUserAndProduct();
         mockRepositorySave();
         mockPaymentPreference();
-
-        Mockito.when(
-                shippingService.validateSelectedQuote(
-                        Mockito.any(
-                                ShippingQuoteRequestDto.class
-                        ),
-                        Mockito.eq(2L)
-                )
-        ).thenReturn(shippingQuote);
+        mockShippingQuote();
 
         var result = service.insert(orderCreateDto);
 
@@ -144,150 +141,104 @@ public class OrderServiceTests {
                 result.getStatus()
         );
 
-        Assertions.assertEquals(
-                1,
-                result.getItems().size()
-        );
-
+        Assertions.assertEquals(1, result.getItems().size());
         Assertions.assertEquals(
                 3,
                 result.getItems().get(0).getQuantity()
         );
 
-        Assertions.assertEquals(
-                7,
-                product.getStockQuantity()
-        );
+        Assertions.assertEquals(7, product.getStockQuantity());
 
-        Assertions.assertNotNull(
-                result.getShipping()
-        );
-
+        Assertions.assertNotNull(result.getShipping());
         Assertions.assertEquals(
                 DeliveryMethod.SHIPPING,
                 result.getShipping().getMethod()
         );
-
         Assertions.assertEquals(
                 2L,
                 result.getShipping().getServiceId()
         );
-
         Assertions.assertEquals(
                 "PAC",
                 result.getShipping().getServiceName()
         );
-
         Assertions.assertEquals(
                 "Correios",
                 result.getShipping().getCarrier()
         );
-
         Assertions.assertEquals(
                 20.0,
                 result.getShipping().getPrice()
         );
 
-        Assertions.assertNotNull(
-                result.getShippingAddress()
-        );
-
+        Assertions.assertNotNull(result.getShippingAddress());
         Assertions.assertEquals(
                 "18000000",
                 result.getShippingAddress().getPostalCode()
         );
-
         Assertions.assertEquals(
                 "Sorocaba",
                 result.getShippingAddress().getCity()
         );
-
         Assertions.assertEquals(
                 "SP",
                 result.getShippingAddress().getState()
         );
 
-        Assertions.assertNotNull(
-                result.getPayment()
-        );
-
+        Assertions.assertNotNull(result.getPayment());
         Assertions.assertEquals(
                 "https://mercadopago.com/checkout",
                 result.getPayment().getCheckoutUrl()
         );
 
-        Assertions.assertEquals(
-                150.0,
-                result.getProductsTotal()
-        );
-
-        Assertions.assertEquals(
-                170.0,
-                result.getTotal()
-        );
+        Assertions.assertEquals(150.0, result.getProductsTotal());
+        Assertions.assertEquals(170.0, result.getTotal());
 
         ArgumentCaptor<ShippingQuoteRequestDto> quoteCaptor =
-                ArgumentCaptor.forClass(
-                        ShippingQuoteRequestDto.class
-                );
+                ArgumentCaptor.forClass(ShippingQuoteRequestDto.class);
 
-        Mockito.verify(
-                shippingService
-        ).validateSelectedQuote(
+        Mockito.verify(shippingService).validateSelectedQuote(
                 quoteCaptor.capture(),
                 Mockito.eq(2L)
         );
 
-        ShippingQuoteRequestDto quoteRequest =
-                quoteCaptor.getValue();
+        ShippingQuoteRequestDto quoteRequest = quoteCaptor.getValue();
 
         Assertions.assertEquals(
                 "18000-000",
                 quoteRequest.getDestinationPostalCode()
         );
-
-        Assertions.assertEquals(
-                1,
-                quoteRequest.getItems().size()
-        );
-
+        Assertions.assertEquals(1, quoteRequest.getItems().size());
         Assertions.assertEquals(
                 1L,
                 quoteRequest.getItems().get(0).getProductId()
         );
-
         Assertions.assertEquals(
                 3,
                 quoteRequest.getItems().get(0).getQuantity()
         );
 
-        Mockito.verify(
-                productRepository,
-                Mockito.times(1)
-        ).findById(1L);
+        Mockito.verify(productRepository).findByIdForUpdate(1L);
 
-        Mockito.verify(
-                repository,
-                Mockito.times(2)
-        ).save(Mockito.any(Order.class));
-
-        Mockito.verify(
-                orderItemRepository
-        ).saveAll(Mockito.anyCollection());
-
-        Mockito.verify(
-                mercadoPagoService
-        ).createPaymentPreference(
-                Mockito.any(Order.class)
+        Mockito.verify(entityManager).refresh(
+                product,
+                LockModeType.PESSIMISTIC_WRITE
         );
+
+        Mockito.verify(repository, Mockito.times(2))
+                .save(Mockito.any(Order.class));
+
+        Mockito.verify(orderItemRepository)
+                .saveAll(Mockito.anyCollection());
+
+        Mockito.verify(mercadoPagoService)
+                .createPaymentPreference(Mockito.any(Order.class));
     }
 
     @Test
     public void insertShouldCreateOrderWithPickupWithoutCallingShippingService() {
         OrderCreateDto pickupOrder = new OrderCreateDto(
-                List.of(
-                        new OrderCreateItemDto(1L, 3)
-                ),
+                List.of(new OrderCreateItemDto(1L, 3)),
                 null,
                 new ShippingSelectionDto(
                         DeliveryMethod.PICKUP,
@@ -304,69 +255,45 @@ public class OrderServiceTests {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1L, result.getId());
 
-        Assertions.assertNotNull(
-                result.getShipping()
-        );
-
+        Assertions.assertNotNull(result.getShipping());
         Assertions.assertEquals(
                 DeliveryMethod.PICKUP,
                 result.getShipping().getMethod()
         );
-
-        Assertions.assertNull(
-                result.getShipping().getServiceId()
-        );
-
+        Assertions.assertNull(result.getShipping().getServiceId());
         Assertions.assertEquals(
                 "Retirada na loja",
                 result.getShipping().getServiceName()
         );
-
         Assertions.assertEquals(
                 "JKCards",
                 result.getShipping().getCarrier()
         );
-
         Assertions.assertEquals(
                 0.0,
                 result.getShipping().getPrice()
         );
+        Assertions.assertNull(result.getShipping().getDeliveryDays());
+        Assertions.assertNull(result.getShippingAddress());
 
-        Assertions.assertNull(
-                result.getShipping().getDeliveryDays()
-        );
+        Assertions.assertEquals(7, product.getStockQuantity());
+        Assertions.assertEquals(150.0, result.getProductsTotal());
+        Assertions.assertEquals(150.0, result.getTotal());
 
-        Assertions.assertNull(
-                result.getShippingAddress()
-        );
+        Mockito.verifyNoInteractions(shippingService);
 
-        Assertions.assertEquals(
-                7,
-                product.getStockQuantity()
-        );
+        Mockito.verify(productRepository).findByIdForUpdate(1L);
 
-        Assertions.assertEquals(
-                150.0,
-                result.getProductsTotal()
-        );
-
-        Assertions.assertEquals(
-                150.0,
-                result.getTotal()
-        );
-
-        Mockito.verifyNoInteractions(
-                shippingService
+        Mockito.verify(entityManager).refresh(
+                product,
+                LockModeType.PESSIMISTIC_WRITE
         );
 
         ArgumentCaptor<Order> orderCaptor =
                 ArgumentCaptor.forClass(Order.class);
 
-        Mockito.verify(
-                mercadoPagoService
-        ).createPaymentPreference(
-                orderCaptor.capture()
-        );
+        Mockito.verify(mercadoPagoService)
+                .createPaymentPreference(orderCaptor.capture());
 
         Order savedOrder = orderCaptor.getValue();
 
@@ -374,15 +301,8 @@ public class OrderServiceTests {
                 DeliveryMethod.PICKUP,
                 savedOrder.getDeliveryMethod()
         );
-
-        Assertions.assertEquals(
-                0.0,
-                savedOrder.getShippingPrice()
-        );
-
-        Assertions.assertNull(
-                savedOrder.getShippingAddress()
-        );
+        Assertions.assertEquals(0.0, savedOrder.getShippingPrice());
+        Assertions.assertNull(savedOrder.getShippingAddress());
     }
 
     @Test
@@ -390,66 +310,120 @@ public class OrderServiceTests {
         product.setStockQuantity(2);
 
         mockAuthenticatedUserAndProduct();
-
-        Mockito.when(
-                shippingService.validateSelectedQuote(
-                        Mockito.any(
-                                ShippingQuoteRequestDto.class
-                        ),
-                        Mockito.eq(2L)
-                )
-        ).thenReturn(shippingQuote);
+        mockShippingQuote();
 
         Assertions.assertThrows(
                 DataBaseException.class,
                 () -> service.insert(orderCreateDto)
         );
 
+        Assertions.assertEquals(2, product.getStockQuantity());
+
+        Mockito.verify(entityManager).refresh(
+                product,
+                LockModeType.PESSIMISTIC_WRITE
+        );
+
+        verifyOrderWasNotSavedOrSentToPayment();
+    }
+
+    @Test
+    public void insertShouldRejectOrderWhenRefreshedStockIsInsufficient() {
+        // A entidade ainda contém o estoque lido durante a cotação.
+        product.setStockQuantity(10);
+
+        mockAuthenticatedUserAndProduct();
+        mockShippingQuote();
+
+        // Simula o banco retornando estoque menor após outra compra.
+        Mockito.doAnswer(invocation -> {
+            Product refreshedProduct = invocation.getArgument(0);
+            refreshedProduct.setStockQuantity(2);
+            return null;
+        }).when(entityManager).refresh(
+                product,
+                LockModeType.PESSIMISTIC_WRITE
+        );
+
+        DataBaseException exception = Assertions.assertThrows(
+                DataBaseException.class,
+                () -> service.insert(orderCreateDto)
+        );
+
         Assertions.assertEquals(
-                2,
-                product.getStockQuantity()
+                "Insufficient stock for product: Booster Pokémon",
+                exception.getMessage()
+        );
+        Assertions.assertEquals(2, product.getStockQuantity());
+
+        verifyOrderWasNotSavedOrSentToPayment();
+    }
+
+    @Test
+    public void insertShouldDeductQuantityFromRefreshedStock() {
+        // O valor em memória está desatualizado.
+        product.setStockQuantity(10);
+
+        mockAuthenticatedUserAndProduct();
+        mockRepositorySave();
+        mockPaymentPreference();
+        mockShippingQuote();
+
+        // O banco agora possui apenas cinco unidades.
+        Mockito.doAnswer(invocation -> {
+            Product refreshedProduct = invocation.getArgument(0);
+            refreshedProduct.setStockQuantity(5);
+            return null;
+        }).when(entityManager).refresh(
+                product,
+                LockModeType.PESSIMISTIC_WRITE
         );
 
-        Mockito.verify(
-                repository,
-                Mockito.never()
-        ).save(Mockito.any(Order.class));
+        var result = service.insert(orderCreateDto);
 
-        Mockito.verify(
-                orderItemRepository,
-                Mockito.never()
-        ).saveAll(Mockito.anyCollection());
-
-        Mockito.verify(
-                mercadoPagoService,
-                Mockito.never()
-        ).createPaymentPreference(
-                Mockito.any(Order.class)
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(
+                3,
+                result.getItems().get(0).getQuantity()
         );
+
+        // Deve descontar três de cinco, e não de dez.
+        Assertions.assertEquals(2, product.getStockQuantity());
+
+        Mockito.verify(orderItemRepository)
+                .saveAll(Mockito.anyCollection());
+
+        Mockito.verify(mercadoPagoService)
+                .createPaymentPreference(Mockito.any(Order.class));
     }
 
     private void mockAuthenticatedUserAndProduct() {
-        Mockito.when(
-                userService.authenticated()
-        ).thenReturn(user);
+        Mockito.when(userService.authenticated()).thenReturn(user);
 
+        Mockito.when(productRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(product));
+    }
+
+    private void mockShippingQuote() {
         Mockito.when(
-                productRepository.findById(1L)
-        ).thenReturn(Optional.of(product));
+                shippingService.validateSelectedQuote(
+                        Mockito.any(ShippingQuoteRequestDto.class),
+                        Mockito.eq(2L)
+                )
+        ).thenReturn(shippingQuote);
     }
 
     private void mockRepositorySave() {
-        Mockito.when(
-                repository.save(Mockito.any(Order.class))
-        ).thenAnswer(invocation -> {
-            Order order = invocation.getArgument(0);
+        Mockito.when(repository.save(Mockito.any(Order.class)))
+                .thenAnswer(invocation -> {
+                    Order order = invocation.getArgument(0);
 
-            if (order.getId() == null) {
-                order.setId(1L);
-            }
+                    if (order.getId() == null) {
+                        order.setId(1L);
+                    }
 
-            return order;
-        });
+                    return order;
+                });
     }
 
     private void mockPaymentPreference() {
@@ -469,5 +443,16 @@ public class OrderServiceTests {
                     order
             );
         });
+    }
+
+    private void verifyOrderWasNotSavedOrSentToPayment() {
+        Mockito.verify(repository, Mockito.never())
+                .save(Mockito.any(Order.class));
+
+        Mockito.verify(orderItemRepository, Mockito.never())
+                .saveAll(Mockito.anyCollection());
+
+        Mockito.verify(mercadoPagoService, Mockito.never())
+                .createPaymentPreference(Mockito.any(Order.class));
     }
 }

@@ -29,8 +29,24 @@ public class Product {
     private String description;
 
     private Double price;
+
     private String imgUrl;
+
     private Integer stockQuantity = 0;
+
+    /**
+     * Define se o produto aparece e pode ser comprado pelos clientes.
+     * Produtos indisponíveis continuam contando no estoque e no dashboard.
+     */
+    @Column(nullable = false)
+    private boolean available = true;
+
+    /**
+     * Limite máximo de unidades deste produto por pedido.
+     * Null significa que não existe limite.
+     */
+    private Integer maxQuantityPerOrder;
+
     private Double weight;
     private Double width;
     private Double height;
@@ -68,6 +84,8 @@ public class Product {
         this.price = price;
         this.imgUrl = imgUrl;
         this.stockQuantity = stockQuantity;
+        this.available = true;
+        this.maxQuantityPerOrder = null;
         this.weight = weight;
         this.width = width;
         this.height = height;
@@ -120,6 +138,22 @@ public class Product {
 
     public void setStockQuantity(Integer stockQuantity) {
         this.stockQuantity = stockQuantity;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public Integer getMaxQuantityPerOrder() {
+        return maxQuantityPerOrder;
+    }
+
+    public void setMaxQuantityPerOrder(Integer maxQuantityPerOrder) {
+        this.maxQuantityPerOrder = maxQuantityPerOrder;
     }
 
     public Double getWeight() {

@@ -6,7 +6,7 @@ import {
   Search,
 } from "lucide-react";
 import {
-  FormEvent,
+  type FormEvent,
   useState,
 } from "react";
 import {
@@ -32,25 +32,20 @@ export function PokemonCardSelector({
   onSelect,
 }: PokemonCardSelectorProps) {
   const [search, setSearch] = useState("");
-  const [activeSearch, setActiveSearch] =
-    useState("");
-  const [results, setResults] = useState<
-    PokemonCardSearchResult[]
-  >([]);
+  const [activeSearch, setActiveSearch] = useState("");
+  const [results, setResults] =
+    useState<PokemonCardSearchResult[]>([]);
+
   const [page, setPage] = useState(1);
   const [searching, setSearching] = useState(false);
-  const [loadingMore, setLoadingMore] =
-    useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectingId, setSelectingId] =
     useState<string | null>(null);
-  const [hasSearched, setHasSearched] =
-    useState(false);
-  const [showResults, setShowResults] =
-    useState(true);
+
+  const [hasSearched, setHasSearched] = useState(false);
+  const [showResults, setShowResults] = useState(true);
   const [hasMore, setHasMore] = useState(false);
-  const [error, setError] = useState<string | null>(
-    null,
-  );
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSearch(
     event: FormEvent<HTMLFormElement>,
@@ -60,9 +55,7 @@ export function PokemonCardSelector({
     const normalizedSearch = search.trim();
 
     if (normalizedSearch.length < 2) {
-      setError(
-        "Digite pelo menos 2 caracteres para pesquisar.",
-      );
+      setError("Digite pelo menos 2 caracteres para pesquisar.");
       return;
     }
 
@@ -80,20 +73,13 @@ export function PokemonCardSelector({
       );
 
       setResults(cards);
-      setHasMore(
-        cards.length === POKEMON_CARDS_PAGE_SIZE,
-      );
+      setHasMore(cards.length === POKEMON_CARDS_PAGE_SIZE);
     } catch (requestError) {
-      console.error(
-        "Erro ao pesquisar cartas:",
-        requestError,
-      );
+      console.error("Erro ao pesquisar cartas:", requestError);
 
       setResults([]);
       setHasMore(false);
-      setError(
-        "Não foi possível pesquisar as cartas agora.",
-      );
+      setError("Não foi possível pesquisar as cartas agora.");
     } finally {
       setSearching(false);
     }
@@ -128,16 +114,12 @@ export function PokemonCardSelector({
           (card) => !cardIds.has(card.id),
         );
 
-        return [
-          ...currentResults,
-          ...uniqueNewCards,
-        ];
+        return [...currentResults, ...uniqueNewCards];
       });
 
       setPage(nextPage);
       setHasMore(
-        newCards.length ===
-          POKEMON_CARDS_PAGE_SIZE,
+        newCards.length === POKEMON_CARDS_PAGE_SIZE,
       );
     } catch (requestError) {
       console.error(
@@ -145,9 +127,7 @@ export function PokemonCardSelector({
         requestError,
       );
 
-      setError(
-        "Não foi possível carregar mais cartas.",
-      );
+      setError("Não foi possível carregar mais cartas.");
     } finally {
       setLoadingMore(false);
     }
@@ -176,10 +156,7 @@ export function PokemonCardSelector({
           });
       }, 150);
     } catch (requestError) {
-      console.error(
-        "Erro ao carregar a carta:",
-        requestError,
-      );
+      console.error("Erro ao carregar a carta:", requestError);
 
       setError(
         "Não foi possível carregar os detalhes da carta.",
@@ -201,14 +178,14 @@ export function PokemonCardSelector({
   }
 
   return (
-    <div className="space-y-5">
-      <Panel className="p-5">
+    <div className="space-y-6">
+      <Panel className="p-5 sm:p-6">
         <div>
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-black text-[#00102D]">
             Buscar no catálogo Pokémon
           </h2>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-slate-500">
             Pesquise pelo nome e carregue quantas
             versões forem necessárias.
           </p>
@@ -220,17 +197,18 @@ export function PokemonCardSelector({
         >
           <div className="relative flex-1">
             <input
+              aria-label="Nome da carta Pokémon"
               value={search}
               onChange={(event) =>
                 setSearch(event.target.value)
               }
               placeholder="Ex.: Pikachu, Charizard, Mew..."
-              className="h-11 w-full rounded-md border border-line bg-ink/70 px-4 pr-11 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-skybrand focus:ring-2 focus:ring-skybrand/20"
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-4 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
 
             <Search
               size={18}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
+              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
             />
           </div>
 
@@ -253,16 +231,19 @@ export function PokemonCardSelector({
         </form>
 
         {error ? (
-          <p className="mt-4 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
+          <p
+            role="alert"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          >
             {error}
           </p>
         ) : null}
       </Panel>
 
       {selectedCard ? (
-        <Panel className="border-skybrand/40 bg-skybrand/5 p-5">
+        <Panel className="border-sky-200 bg-sky-50 p-5 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row">
-            <div className="flex h-64 w-full shrink-0 items-center justify-center rounded-lg bg-white/5 p-3 sm:w-48">
+            <div className="flex h-64 w-full shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-3 sm:w-48">
               {selectedCard.imageUrl ? (
                 <img
                   src={selectedCard.imageUrl}
@@ -272,28 +253,27 @@ export function PokemonCardSelector({
               ) : (
                 <ImageOff
                   size={32}
-                  className="text-slate-500"
+                  className="text-slate-400"
                 />
               )}
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                 <Check size={14} />
                 Carta selecionada
               </div>
 
-              <h3 className="mt-4 text-2xl font-black text-white">
+              <h3 className="mt-4 text-2xl font-black text-[#00102D]">
                 {selectedCard.name}
               </h3>
 
-              <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                 <div>
                   <dt className="text-slate-500">
                     Coleção
                   </dt>
-
-                  <dd className="font-semibold text-slate-200">
+                  <dd className="mt-1 font-semibold text-[#00102D]">
                     {selectedCard.setName}
                   </dd>
                 </div>
@@ -302,8 +282,7 @@ export function PokemonCardSelector({
                   <dt className="text-slate-500">
                     Número
                   </dt>
-
-                  <dd className="font-semibold text-slate-200">
+                  <dd className="mt-1 font-semibold text-[#00102D]">
                     {selectedCard.localId}
                   </dd>
                 </div>
@@ -312,10 +291,8 @@ export function PokemonCardSelector({
                   <dt className="text-slate-500">
                     Raridade
                   </dt>
-
-                  <dd className="font-semibold text-slate-200">
-                    {selectedCard.rarity ??
-                      "Não informada"}
+                  <dd className="mt-1 font-semibold text-[#00102D]">
+                    {selectedCard.rarity ?? "Não informada"}
                   </dd>
                 </div>
 
@@ -323,8 +300,7 @@ export function PokemonCardSelector({
                   <dt className="text-slate-500">
                     ID externo
                   </dt>
-
-                  <dd className="break-all font-semibold text-slate-200">
+                  <dd className="mt-1 break-all font-semibold text-[#00102D]">
                     {selectedCard.externalId}
                   </dd>
                 </div>
@@ -349,11 +325,11 @@ export function PokemonCardSelector({
       results.length === 0 &&
       !error ? (
         <Panel className="p-8 text-center">
-          <p className="font-semibold text-white">
+          <p className="font-bold text-[#00102D]">
             Nenhuma carta encontrada
           </p>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-500">
             Tente pesquisar outro nome.
           </p>
         </Panel>
@@ -363,11 +339,11 @@ export function PokemonCardSelector({
         <div>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-black text-[#00102D]">
                 Resultados
               </h2>
 
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-500">
                 {results.length} carta(s) carregada(s).
               </p>
             </div>
@@ -384,15 +360,14 @@ export function PokemonCardSelector({
               const thumbnail =
                 getPokemonCardThumbnail(card.image);
 
-              const isSelecting =
-                selectingId === card.id;
+              const isSelecting = selectingId === card.id;
 
               return (
                 <Panel
                   key={card.id}
-                  className="overflow-hidden transition"
+                  className="flex flex-col overflow-hidden transition hover:border-sky-300 hover:shadow-md"
                 >
-                  <div className="flex h-64 items-center justify-center bg-white/5 p-3">
+                  <div className="flex h-64 items-center justify-center border-b border-slate-100 bg-slate-50 p-3">
                     {thumbnail ? (
                       <img
                         src={thumbnail}
@@ -403,40 +378,40 @@ export function PokemonCardSelector({
                     ) : (
                       <ImageOff
                         size={32}
-                        className="text-slate-500"
+                        className="text-slate-400"
                       />
                     )}
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="line-clamp-2 font-bold text-white">
+                  <div className="flex flex-1 flex-col p-4">
+                    <h3 className="line-clamp-2 font-bold text-[#00102D]">
                       {card.name}
                     </h3>
 
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 text-sm text-slate-500">
                       Número: {card.localId}
                     </p>
 
-                    <Button
-                      type="button"
-                      className="mt-4 w-full"
-                      disabled={Boolean(selectingId)}
-                      icon={
-                        isSelecting ? (
-                          <LoaderCircle
-                            size={16}
-                            className="animate-spin"
-                          />
-                        ) : undefined
-                      }
-                      onClick={() =>
-                        handleSelect(card.id)
-                      }
-                    >
-                      {isSelecting
-                        ? "Carregando..."
-                        : "Selecionar"}
-                    </Button>
+                    <div className="mt-auto pt-4">
+                      <Button
+                        type="button"
+                        className="w-full"
+                        disabled={Boolean(selectingId)}
+                        icon={
+                          isSelecting ? (
+                            <LoaderCircle
+                              size={16}
+                              className="animate-spin"
+                            />
+                          ) : undefined
+                        }
+                        onClick={() => handleSelect(card.id)}
+                      >
+                        {isSelecting
+                          ? "Carregando..."
+                          : "Selecionar"}
+                      </Button>
+                    </div>
                   </div>
                 </Panel>
               );

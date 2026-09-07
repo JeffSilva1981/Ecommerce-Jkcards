@@ -4,13 +4,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Pencil, Trash2 } from "lucide-react";
+import { FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   createCategory,
   deleteCategory,
   getCategories,
   updateCategory,
 } from "../../api/categoriesApi";
+import { Button } from "../../components/Button";
+import { Input } from "../../components/Input";
 import { Panel } from "../../components/Panel";
 import type { Category } from "../../types/category";
 
@@ -26,6 +28,17 @@ export function CategoriesAdminPage() {
     queryKey: ["categories"],
     queryFn: getCategories,
   });
+
+  async function refreshCategories() {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["categories"],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard"],
+      }),
+    ]);
+  }
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -43,22 +56,14 @@ export function CategoriesAdminPage() {
     },
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["categories"],
-      });
-
+      await refreshCategories();
       closeModal();
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteCategory,
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["categories"],
-      });
-    },
+    onSuccess: refreshCategories,
   });
 
   function openCreateModal() {
@@ -91,6 +96,10 @@ export function CategoriesAdminPage() {
   }
 
   function handleDelete(category: Category) {
+    if (deleteMutation.isPending) {
+      return;
+    }
+
     const confirmed = window.confirm(
       `Deseja realmente excluir a categoria "${category.name}"?`,
     );
@@ -104,146 +113,237 @@ export function CategoriesAdminPage() {
   }
 
   return (
-    <section className="space-y-5">
-      <div className="flex items-center justify-between">
+    <section className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-black text-[#00102D]">
             Categorias
           </h1>
 
-          <p className="mt-2 text-sm text-slate-400">
-            Gerenciamento de categorias do sistema
+          <p className="mt-2 text-sm text-slate-500">
+            Organize as categorias dos produtos da loja.
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          icon={<Plus size={18} />}
           onClick={openCreateModal}
-          className="rounded-md bg-skybrand px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          disabled={deleteMutation.isPending}
         >
-          + Nova Categoria
-        </button>
+          Nova categoria
+        </Button>
       </div>
 
-      <Panel className="p-5">
+      <Panel className="p-5 sm:p-6">
         {query.isLoading ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             Carregando categorias...
           </p>
-        ) : null}
-
-        {query.isError ? (
-          <p className="rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-            Não foi possível carregar as categorias.
-          </p>
-        ) : null}
-
-        {query.data?.length === 0 ? (
-          <p className="text-sm text-slate-400">
-            Nenhuma categoria cadastrada.
-          </p>
-        ) : null}
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {query.data?.map((category) => (
-            <div
-              key={category.id}
-              className="rounded-md border border-line bg-white/5 p-4"
+        ) : query.isError ? (
+          <div className="space-y-4">
+            <p
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
             >
-              <p className="text-xs text-slate-500">
-                #{category.id}
-              </p>
+              Não foi possível carregar as categorias.
+            </p>
 
-              <p className="mt-1 font-semibold text-white">
-                {category.name}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => openEditModal(category)}
-                  disabled={deleteMutation.isPending}
-                  className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-skybrand/60 hover:text-white disabled:opacity-50"
-                >
-                  <Pencil size={15} />
-                  Editar
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDelete(category)}
-                  disabled={deleteMutation.isPending}
-                  className="inline-flex items-center gap-2 rounded-md border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-400/20 disabled:opacity-50"
-                >
-                  <Trash2 size={15} />
-                  Excluir
-                </button>
-              </div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={query.isFetching}
+              onClick={() => void query.refetch()}
+            >
+              Tentar novamente
+            </Button>
+          </div>
+        ) : query.data?.length === 0 ? (
+          <div className="py-8 text-center">
+            <div className="mx-auto grid size-14 place-items-center rounded-xl bg-sky-50 text-sky-600">
+              <FolderTree size={26} />
             </div>
-          ))}
-        </div>
+
+            <h2 className="mt-4 text-lg font-bold text-[#00102D]">
+              Nenhuma categoria cadastrada
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Clique em Nova categoria para começar.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {query.data?.map((category) => {
+              const isDeleting =
+                deleteMutation.isPending &&
+                deleteMutation.variables === category.id;
+
+              return (
+                <div
+                  key={category.id}
+                  className="flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-4 transition hover:border-sky-300 hover:shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="grid size-10 place-items-center rounded-xl bg-sky-50 text-sky-600">
+                      <FolderTree size={20} />
+                    </div>
+
+                    <span className="text-xs font-medium text-slate-400">
+                      #{category.id}
+                    </span>
+                  </div>
+
+                  <p className="mt-4 break-words font-bold text-[#00102D]">
+                    {category.name}
+                  </p>
+
+                  <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      icon={<Pencil size={15} />}
+                      onClick={() => openEditModal(category)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      Editar
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="danger"
+                      icon={<Trash2 size={15} />}
+                      onClick={() => handleDelete(category)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      {isDeleting ? "Excluindo..." : "Excluir"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {deleteMutation.isError ? (
-          <p className="mt-4 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-            Não foi possível excluir a categoria. Verifique se existem
-            produtos vinculados a ela.
+          <p
+            role="alert"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
+            Não foi possível excluir a categoria. Verifique
+            se existem produtos vinculados a ela.
           </p>
         ) : null}
       </Panel>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-md rounded-md bg-slate-900 p-5">
-            <h2 className="text-lg font-semibold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="category-modal-title"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+            style={{ colorScheme: "light" }}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Escape" &&
+                !saveMutation.isPending
+              ) {
+                closeModal();
+              }
+
+              if (event.key === "Tab") {
+                const controls =
+                  event.currentTarget.querySelectorAll<HTMLElement>(
+                    'input:not([disabled]), button:not([disabled])',
+                  );
+
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+
+                if (!first || !last) {
+                  return;
+                }
+
+                if (
+                  event.shiftKey &&
+                  document.activeElement === first
+                ) {
+                  event.preventDefault();
+                  last.focus();
+                } else if (
+                  !event.shiftKey &&
+                  document.activeElement === last
+                ) {
+                  event.preventDefault();
+                  first.focus();
+                }
+              }
+            }}
+          >
+            <h2
+              id="category-modal-title"
+              className="text-xl font-black text-[#00102D]"
+            >
               {editingCategory
                 ? "Atualizar categoria"
                 : "Nova categoria"}
             </h2>
 
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  handleSave();
-                }
+            <p className="mt-2 text-sm text-slate-500">
+              Informe o nome que será exibido na loja.
+            </p>
+
+            <form
+              className="mt-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleSave();
               }}
-              placeholder="Nome da categoria"
-              autoFocus
-              className="mt-4 w-full rounded-md border border-line bg-transparent p-2 text-white outline-none focus:border-skybrand"
-            />
-
-            {saveMutation.isError ? (
-              <p className="mt-3 rounded-md border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">
-                Não foi possível salvar a categoria. Tente novamente.
-              </p>
-            ) : null}
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeModal}
+            >
+              <Input
+                id="category-name"
+                label="Nome da categoria"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Ex.: Boosters"
+                autoFocus
+                required
                 disabled={saveMutation.isPending}
-                className="rounded-md border border-line px-4 py-2 text-white disabled:opacity-50"
-              >
-                Cancelar
-              </button>
+              />
 
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={
-                  !name.trim() || saveMutation.isPending
-                }
-                className="rounded-md bg-skybrand px-4 py-2 text-white disabled:opacity-50"
-              >
-                {saveMutation.isPending
-                  ? "Salvando..."
-                  : editingCategory
-                    ? "Atualizar"
-                    : "Salvar"}
-              </button>
-            </div>
+              {saveMutation.isError ? (
+                <p
+                  role="alert"
+                  className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                >
+                  Não foi possível salvar a categoria.
+                  Tente novamente.
+                </p>
+              ) : null}
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeModal}
+                  disabled={saveMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={!name.trim() || saveMutation.isPending}
+                >
+                  {saveMutation.isPending
+                    ? "Salvando..."
+                    : editingCategory
+                      ? "Atualizar"
+                      : "Salvar"}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       ) : null}

@@ -6,27 +6,31 @@ import com.jeffsilva.jkcards.repositories.ProductRepository;
 import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.services.exceptions.ResourceNotFoundException;
 import com.jeffsilva.jkcards.tests.Factory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Optional;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class ProductServiceTests {
 
     @InjectMocks
     private ProductService service;
+
+    @Mock
+    private EntityManager entityManager;
 
     @Mock
     private ProductRepository repository;
@@ -199,6 +203,7 @@ public class ProductServiceTests {
         Assertions.assertEquals(product.getPrice(), result.getPrice());
 
         Mockito.verify(repository).findById(existingId);
+        Mockito.verifyNoInteractions(entityManager);
     }
 
     @Test
@@ -212,16 +217,23 @@ public class ProductServiceTests {
         );
 
         Mockito.verify(repository).findById(nonExistingId);
+        Mockito.verifyNoInteractions(entityManager);
     }
 
     @Test
     public void insertShouldReturnProductDtoWhenValidData() {
-        Mockito.when(repository.save(ArgumentMatchers.any()))
-                .thenReturn(product);
+        // Retorna a entidade realmente construída pelo serviço.
+        Mockito.when(repository.save(Mockito.any(Product.class)))
+                .thenAnswer(invocation -> {
+                    Product savedProduct = invocation.getArgument(0);
+                    savedProduct.setId(existingId);
+                    return savedProduct;
+                });
 
         var result = service.insert(productDto);
 
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(existingId, result.getId());
         Assertions.assertEquals(productDto.getName(), result.getName());
         Assertions.assertEquals(
                 productDto.getDescription(),
@@ -230,20 +242,25 @@ public class ProductServiceTests {
         Assertions.assertEquals(productDto.getPrice(), result.getPrice());
         Assertions.assertEquals(productDto.getImgUrl(), result.getImgUrl());
         Assertions.assertEquals(
+                productDto.getStockQuantity(),
+                result.getStockQuantity()
+        );
+        Assertions.assertEquals(
                 productDto.getCategories().size(),
                 result.getCategories().size()
         );
 
-        Mockito.verify(repository).save(ArgumentMatchers.any());
+        Mockito.verify(repository).save(Mockito.any(Product.class));
+        Mockito.verifyNoInteractions(entityManager);
     }
 
     @Test
     public void updateShouldUpdateProductWhenExistingId() {
-        Mockito.when(repository.findById(existingId))
+        Mockito.when(repository.findByIdForUpdate(existingId))
                 .thenReturn(Optional.of(product));
 
-        Mockito.when(repository.save(ArgumentMatchers.any()))
-                .thenReturn(product);
+        Mockito.when(repository.save(Mockito.any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         var result = service.update(existingId, productDto);
 
@@ -256,17 +273,27 @@ public class ProductServiceTests {
         Assertions.assertEquals(productDto.getPrice(), result.getPrice());
         Assertions.assertEquals(productDto.getImgUrl(), result.getImgUrl());
         Assertions.assertEquals(
+                productDto.getStockQuantity(),
+                result.getStockQuantity()
+        );
+        Assertions.assertEquals(
                 productDto.getCategories().size(),
                 result.getCategories().size()
         );
 
-        Mockito.verify(repository).findById(existingId);
-        Mockito.verify(repository).save(ArgumentMatchers.any());
+        var inOrder = Mockito.inOrder(repository, entityManager);
+
+        inOrder.verify(repository).findByIdForUpdate(existingId);
+        inOrder.verify(entityManager).refresh(
+                product,
+                LockModeType.PESSIMISTIC_WRITE
+        );
+        inOrder.verify(repository).save(product);
     }
 
     @Test
     public void updateShouldThrowResourceNotFoundExceptionWhenNonExistingId() {
-        Mockito.when(repository.findById(nonExistingId))
+        Mockito.when(repository.findByIdForUpdate(nonExistingId))
                 .thenReturn(Optional.empty());
 
         Assertions.assertThrows(
@@ -274,19 +301,18 @@ public class ProductServiceTests {
                 () -> service.update(nonExistingId, productDto)
         );
 
-        Mockito.verify(repository).findById(nonExistingId);
+        Mockito.verify(repository).findByIdForUpdate(nonExistingId);
+
         Mockito.verify(repository, Mockito.never())
-                .save(ArgumentMatchers.any());
+                .save(Mockito.any(Product.class));
+
+        Mockito.verifyNoInteractions(entityManager);
     }
 
     @Test
     public void deleteShouldDoNothingWhenExistingId() {
         Mockito.when(repository.existsById(existingId))
                 .thenReturn(true);
-
-        Mockito.doNothing()
-                .when(repository)
-                .deleteById(existingId);
 
         service.delete(existingId);
 
@@ -305,6 +331,7 @@ public class ProductServiceTests {
         );
 
         Mockito.verify(repository).existsById(nonExistingId);
+
         Mockito.verify(repository, Mockito.never())
                 .deleteById(nonExistingId);
     }

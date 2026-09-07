@@ -56,14 +56,24 @@ const links = [
 
 export function AdminSidebar() {
   return (
-    <aside className="border-b border-line/80 bg-panel/70 backdrop-blur lg:min-h-[calc(100vh-65px)] lg:w-64 lg:border-b-0 lg:border-r">
-      <div className="hidden px-6 pb-2 pt-6 lg:block">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Painel
+    <aside
+      className="border-b border-slate-200 bg-white lg:w-64 lg:shrink-0 lg:self-stretch lg:border-b-0 lg:border-r"
+      style={{ colorScheme: "light" }}
+    >
+      <div className="hidden px-6 pb-3 pt-6 lg:block">
+        <p className="text-xs font-bold uppercase tracking-wider text-sky-600">
+          Administração
+        </p>
+
+        <p className="mt-2 text-lg font-black text-[#00102D]">
+          Painel da loja
         </p>
       </div>
 
-      <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:px-3 lg:py-2">
+      <nav
+        aria-label="Menu administrativo"
+        className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:px-3 lg:pb-6"
+      >
         {links.map((link) => {
           const Icon = link.icon;
 
@@ -73,14 +83,14 @@ export function AdminSidebar() {
               to={link.to}
               end={link.end}
               className={({ isActive }) =>
-                `inline-flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                `inline-flex min-h-11 shrink-0 items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
                   isActive
-                    ? "bg-brand-gradient text-ink shadow-glow-soft"
-                    : "text-slate-300 hover:bg-white/10 hover:text-white"
+                    ? "border-sky-500 bg-sky-500 text-white shadow-sm"
+                    : "border-transparent text-slate-600 hover:border-sky-100 hover:bg-sky-50 hover:text-sky-700"
                 }`
               }
             >
-              <Icon size={17} />
+              <Icon size={18} aria-hidden="true" />
               {link.label}
             </NavLink>
           );

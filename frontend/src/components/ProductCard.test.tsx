@@ -1,18 +1,32 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { useCartStore } from "../stores/cartStore";
+import type { ProductSummary } from "../types/product";
 import { ProductCard } from "./ProductCard";
 
-const product = {
+const product: ProductSummary = {
   id: 1,
   name: "Booster Eclipse Azul",
   price: 29.9,
   imgUrl: "https://example.com/card.jpg",
   stockQuantity: 10,
+  available: true,
+  maxQuantityPerOrder: null,
 };
 
 describe("ProductCard", () => {
+  beforeEach(() => {
+    useCartStore.getState().clear();
+  });
+
   it("renders product data and triggers add action", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
@@ -23,11 +37,21 @@ describe("ProductCard", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Booster Eclipse Azul")).toBeInTheDocument();
-    expect(screen.getByText("R$ 29,90")).toBeInTheDocument();
+    expect(
+      screen.getByText("Booster Eclipse Azul"),
+    ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /adicionar/i }));
+    expect(
+      screen.getByText(/R\$\s*29,90/),
+    ).toBeInTheDocument();
 
+    await user.click(
+      screen.getByRole("button", {
+        name: /adicionar ao carrinho/i,
+      }),
+    );
+
+    expect(onAdd).toHaveBeenCalledTimes(1);
     expect(onAdd).toHaveBeenCalledWith(product);
   });
 });

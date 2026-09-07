@@ -35,57 +35,79 @@ public class ProductController {
             CloudinaryService cloudinaryService
     ) {
         this.service = service;
-        this.cloudinaryService =
-                cloudinaryService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductMinDto>>
-    findAll(
-            @RequestParam(
-                    name = "name",
-                    defaultValue = ""
-            )
+    public ResponseEntity<Page<ProductMinDto>> findAll(
+            @RequestParam(name = "name", defaultValue = "")
             String name,
 
-            @RequestParam(
-                    name = "categoryId",
-                    required = false
-            )
+            @RequestParam(name = "categoryId", required = false)
             Long categoryId,
 
-            @RequestParam(
-                    name = "excludeCategoryId",
-                    required = false
-            )
+            @RequestParam(name = "excludeCategoryId", required = false)
             Long excludeCategoryId,
 
-            @RequestParam(
-                    name = "inStock",
-                    defaultValue = "false"
-            )
+            @RequestParam(name = "inStock", defaultValue = "false")
             boolean inStock,
 
             Pageable pageable
     ) {
-        Page<ProductMinDto> result =
-                service.findAll(
-                        name,
-                        categoryId,
-                        excludeCategoryId,
-                        inStock,
-                        pageable
-                );
+        Page<ProductMinDto> result = service.findAll(
+                name,
+                categoryId,
+                excludeCategoryId,
+                inStock,
+                pageable
+        );
 
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> findById(
-            @PathVariable Long id
+            @PathVariable("id") Long id
     ) {
-        ProductDto result =
-                service.findById(id);
+        ProductDto result = service.findById(id);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/admin")
+    public ResponseEntity<Page<ProductMinDto>> findAllAdmin(
+            @RequestParam(name = "name", defaultValue = "")
+            String name,
+
+            @RequestParam(name = "categoryId", required = false)
+            Long categoryId,
+
+            @RequestParam(name = "excludeCategoryId", required = false)
+            Long excludeCategoryId,
+
+            @RequestParam(name = "inStock", defaultValue = "false")
+            boolean inStock,
+
+            Pageable pageable
+    ) {
+        Page<ProductMinDto> result = service.findAllAdmin(
+                name,
+                categoryId,
+                excludeCategoryId,
+                inStock,
+                pageable
+        );
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ProductDto> findByIdAdmin(
+            @PathVariable("id") Long id
+    ) {
+        ProductDto result = service.findByIdAdmin(id);
 
         return ResponseEntity.ok(result);
     }
@@ -95,28 +117,25 @@ public class ProductController {
     public ResponseEntity<ProductDto> created(
             @Valid @RequestBody ProductDto dto
     ) {
-        ProductDto result =
-                service.insert(dto);
+        ProductDto result = service.insert(dto);
 
+        // A consulta administrativa também permite abrir produtos ocultos.
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
-                .path("/{id}")
+                .path("/admin/{id}")
                 .buildAndExpand(result.getId())
                 .toUri();
 
-        return ResponseEntity
-                .created(uri)
-                .body(result);
+        return ResponseEntity.created(uri).body(result);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ProductDto> update(
             @Valid @RequestBody ProductDto dto,
-            @PathVariable Long id
+            @PathVariable("id") Long id
     ) {
-        ProductDto result =
-                service.update(id, dto);
+        ProductDto result = service.update(id, dto);
 
         return ResponseEntity.ok(result);
     }
@@ -124,23 +143,19 @@ public class ProductController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable Long id
+            @PathVariable("id") Long id
     ) {
         service.delete(id);
 
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/upload-image")
     public ResponseEntity<String> uploadImage(
-            @RequestParam("file")
-            MultipartFile file
+            @RequestParam("file") MultipartFile file
     ) {
-        String imageUrl =
-                cloudinaryService.uploadImage(file);
+        String imageUrl = cloudinaryService.uploadImage(file);
 
         return ResponseEntity.ok(imageUrl);
     }

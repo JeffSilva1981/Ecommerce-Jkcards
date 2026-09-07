@@ -7,6 +7,9 @@ export type Product = {
   price: number;
   imgUrl?: string;
   stockQuantity: number;
+  expectedStockQuantity?: number;
+  available: boolean;
+  maxQuantityPerOrder: number | null;
   weight?: number | null;
   width?: number | null;
   height?: number | null;
@@ -16,7 +19,13 @@ export type Product = {
 
 export type ProductSummary = Pick<
   Product,
-  "id" | "name" | "price" | "imgUrl" | "stockQuantity"
+  | "id"
+  | "name"
+  | "price"
+  | "imgUrl"
+  | "stockQuantity"
+  | "available"
+  | "maxQuantityPerOrder"
 >;
 
 export type ProductFormData = {
@@ -25,9 +34,12 @@ export type ProductFormData = {
   price: number;
   imgUrl?: string;
   stockQuantity: number;
-  weight?: number;
-  width?: number;
-  height?: number;
-  length?: number;
+  expectedStockQuantity?: number;
+  available: boolean;
+  maxQuantityPerOrder: number | null;
+  weight?: number | null;
+  width?: number | null;
+  height?: number | null;
+  length?: number | null;
   categories: Array<Pick<Category, "id">>;
 };

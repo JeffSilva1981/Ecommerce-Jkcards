@@ -22,6 +22,9 @@ import com.jeffsilva.jkcards.repositories.ProductRepository;
 import com.jeffsilva.jkcards.services.exceptions.DataBaseException;
 import com.jeffsilva.jkcards.services.exceptions.ResourceNotFoundException;
 import com.jeffsilva.jkcards.services.exceptions.ShippingException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -33,10 +36,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
 public class OrderService {
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private OrderRepository repository;
@@ -61,7 +68,10 @@ public class OrderService {
 
     @Transactional
     public OrderDto findById(Long id) {
-        Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order = repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found"));
+
         authService.validateSelfOrdAdmin(order.getClient().getId());
 
         return new OrderDto(order);
@@ -90,6 +100,10 @@ public class OrderService {
 
     @Transactional
     public OrderDto insert(OrderCreateDto dto) {
+        if (dto == null) {
+            throw new DataBaseException("The order data is required.");
+        }
+
         Map<Long, Integer> consolidatedItems = consolidateItems(dto.getItems());
 
         Order order = new Order();
@@ -98,6 +112,9 @@ public class OrderService {
         order.setClient(service.authenticated());
 
         configureDelivery(dto, consolidatedItems, order);
+
+        // Revalida os produtos sob bloqueio após a cotação de frete.
+        // Também executa essas validações para retirada na loja.
         addOrderItems(consolidatedItems, order);
 
         order = repository.save(order);
@@ -112,7 +129,17 @@ public class OrderService {
 
     @Transactional
     public OrderDto updateStatus(Long id, OrderStatusDto dto) {
-        Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        if (dto == null || dto.status() == null) {
+            throw new DataBaseException("The order status is required.");
+        }
+
+        Order order = repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found"));
+
+        // Usa o mesmo bloqueio do webhook antes da alteração manual.
+        entityManager.refresh(order, LockModeType.PESSIMISTIC_WRITE);
+
         order.setStatus(dto.status());
         order = repository.save(order);
 
@@ -121,25 +148,64 @@ public class OrderService {
 
     @Transactional
     public void delete(Long id) {
-        Order order = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order = repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found"));
+
+        entityManager.refresh(order, LockModeType.PESSIMISTIC_WRITE);
 
         try {
-            for (OrderItem item : order.getItems()) {
-                Product product = item.getProduct();
-                Integer currentStock = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
-                Integer quantityToReturn = item.getQuantity() == null ? 0 : item.getQuantity();
-                product.setStockQuantity(currentStock + quantityToReturn);
+            List<OrderItem> items = new ArrayList<>(order.getItems());
+
+            // Usa a mesma ordem de bloqueio da criação de pedidos.
+            items.sort((first, second) ->
+                    first.getProduct().getId()
+                            .compareTo(second.getProduct().getId())
+            );
+
+            for (OrderItem item : items) {
+                Long productId = item.getProduct().getId();
+
+                Product product = productRepository.findByIdForUpdate(productId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Product not found: " + productId
+                                )
+                        );
+
+                entityManager.refresh(product, LockModeType.PESSIMISTIC_WRITE);
+
+                int currentStock = product.getStockQuantity() == null
+                        ? 0
+                        : product.getStockQuantity();
+
+                int quantityToReturn = item.getQuantity() == null
+                        ? 0
+                        : item.getQuantity();
+
+                // A devolução ao estoque também vale para produtos ocultos.
+                product.setStockQuantity(
+                        Math.addExact(currentStock, quantityToReturn)
+                );
             }
 
-            orderItemRepository.deleteAll(order.getItems());
+            orderItemRepository.deleteAll(items);
             repository.delete(order);
+            repository.flush();
+        } catch (ArithmeticException e) {
+            throw new DataBaseException("The product quantity is too large.");
         } catch (DataIntegrityViolationException e) {
             throw new DataBaseException("Integrity violation");
         }
     }
 
-    private void configureDelivery(OrderCreateDto dto, Map<Long, Integer> consolidatedItems, Order order) {
-        if (dto.getShipping() == null || dto.getShipping().getMethod() == null) {
+    private void configureDelivery(
+            OrderCreateDto dto,
+            Map<Long, Integer> consolidatedItems,
+            Order order
+    ) {
+        if (dto.getShipping() == null
+                || dto.getShipping().getMethod() == null) {
             throw new ShippingException("A delivery method must be selected.");
         }
 
@@ -159,7 +225,9 @@ public class OrderService {
             throw new ShippingException("A shipping service must be selected.");
         }
 
-        ShippingQuoteRequestDto quoteRequest = createShippingQuoteRequest(dto, consolidatedItems);
+        ShippingQuoteRequestDto quoteRequest =
+                createShippingQuoteRequest(dto, consolidatedItems);
+
         ShippingQuoteDto selectedQuote = shippingService.validateSelectedQuote(
                 quoteRequest,
                 dto.getShipping().getServiceId()
@@ -179,11 +247,35 @@ public class OrderService {
     }
 
     private Map<Long, Integer> consolidateItems(List<OrderCreateItemDto> items) {
+        if (items == null || items.isEmpty()) {
+            throw new DataBaseException(
+                    "The order must contain at least one item."
+            );
+        }
+
         Map<Long, Integer> consolidatedItems = new LinkedHashMap<>();
 
         for (OrderCreateItemDto item : items) {
+            if (item == null
+                    || item.getProductId() == null
+                    || item.getProductId() <= 0) {
+                throw new DataBaseException(
+                        "The product identifier is invalid."
+                );
+            }
+
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                throw new DataBaseException(
+                        "Invalid quantity for product: " + item.getProductId()
+                );
+            }
+
             try {
-                consolidatedItems.merge(item.getProductId(), item.getQuantity(), Math::addExact);
+                consolidatedItems.merge(
+                        item.getProductId(),
+                        item.getQuantity(),
+                        Math::addExact
+                );
             } catch (ArithmeticException e) {
                 throw new DataBaseException("The product quantity is too large.");
             }
@@ -192,37 +284,55 @@ public class OrderService {
         return consolidatedItems;
     }
 
-    private ShippingQuoteRequestDto createShippingQuoteRequest(OrderCreateDto dto, Map<Long, Integer> consolidatedItems) {
+    private ShippingQuoteRequestDto createShippingQuoteRequest(
+            OrderCreateDto dto,
+            Map<Long, Integer> consolidatedItems
+    ) {
         List<ShippingQuoteItemDto> quoteItems = new ArrayList<>();
 
         for (Map.Entry<Long, Integer> entry : consolidatedItems.entrySet()) {
-            quoteItems.add(new ShippingQuoteItemDto(entry.getKey(), entry.getValue()));
+            quoteItems.add(
+                    new ShippingQuoteItemDto(entry.getKey(), entry.getValue())
+            );
         }
 
-        return new ShippingQuoteRequestDto(dto.getShippingAddress().getPostalCode(), quoteItems);
+        return new ShippingQuoteRequestDto(
+                dto.getShippingAddress().getPostalCode(),
+                quoteItems
+        );
     }
 
-    private void addOrderItems(Map<Long, Integer> consolidatedItems, Order order) {
-        for (Map.Entry<Long, Integer> entry : consolidatedItems.entrySet()) {
-            Long productId = entry.getKey();
-            Integer requestedQuantity = entry.getValue();
+    private void addOrderItems(
+            Map<Long, Integer> consolidatedItems,
+            Order order
+    ) {
+        List<Long> productIds = new ArrayList<>(consolidatedItems.keySet());
+        productIds.sort(Long::compareTo);
 
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+        for (Long productId : productIds) {
+            Integer requestedQuantity = consolidatedItems.get(productId);
 
-            Integer currentStock = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
-
-            if (requestedQuantity <= 0) {
-                throw new DataBaseException("Invalid quantity for product: " + product.getName());
+            if (requestedQuantity == null || requestedQuantity <= 0) {
+                throw new DataBaseException(
+                        "Invalid quantity for product: " + productId
+                );
             }
 
-            if (currentStock < requestedQuantity) {
-                throw new DataBaseException("Insufficient stock for product: " + product.getName());
-            }
+            Product product = productRepository.findByIdForUpdate(productId)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Product not found: " + productId
+                            )
+                    );
 
-            if (product.getPrice() == null || product.getPrice() <= 0) {
-                throw new DataBaseException("Invalid price for product: " + product.getName());
-            }
+            // Atualiza os dados que podem ter sido lidos durante a cotação.
+            entityManager.refresh(product, LockModeType.PESSIMISTIC_WRITE);
+
+            validateProductForPurchase(product, requestedQuantity);
+
+            int currentStock = product.getStockQuantity() == null
+                    ? 0
+                    : product.getStockQuantity();
 
             product.setStockQuantity(currentStock - requestedQuantity);
 
@@ -237,6 +347,46 @@ public class OrderService {
         }
     }
 
+    private void validateProductForPurchase(
+            Product product,
+            int requestedQuantity
+    ) {
+        if (!product.isAvailable()) {
+            throw new DataBaseException(
+                    "Produto indisponível para compra: " + product.getName()
+            );
+        }
+
+        Integer maxQuantityPerOrder = product.getMaxQuantityPerOrder();
+
+        if (maxQuantityPerOrder != null
+                && requestedQuantity > maxQuantityPerOrder) {
+            throw new DataBaseException(
+                    "Limite de " + maxQuantityPerOrder
+                            + " unidade(s) por pedido para: "
+                            + product.getName()
+            );
+        }
+
+        int currentStock = product.getStockQuantity() == null
+                ? 0
+                : product.getStockQuantity();
+
+        if (currentStock < requestedQuantity) {
+            throw new DataBaseException(
+                    "Insufficient stock for product: " + product.getName()
+            );
+        }
+
+        Double price = product.getPrice();
+
+        if (price == null || !Double.isFinite(price) || price <= 0) {
+            throw new DataBaseException(
+                    "Invalid price for product: " + product.getName()
+            );
+        }
+    }
+
     private void copyShippingAddress(ShippingAddressDto source, Order order) {
         ShippingAddress address = new ShippingAddress(
                 source.getRecipientName().trim(),
@@ -247,7 +397,7 @@ public class OrderService {
                 normalizeOptionalText(source.getComplement()),
                 source.getNeighborhood().trim(),
                 source.getCity().trim(),
-                source.getState().trim().toUpperCase()
+                source.getState().trim().toUpperCase(Locale.ROOT)
         );
 
         order.setShippingAddress(address);

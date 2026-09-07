@@ -30,7 +30,7 @@ const variants = {
 export function Input({
   label,
   error,
-  variant = "dark",
+  variant = "light",
   className,
   id,
   ...props
@@ -39,10 +39,7 @@ export function Input({
   const styles = variants[variant];
 
   return (
-    <label
-      htmlFor={inputId}
-      className="block"
-    >
+    <label htmlFor={inputId} className="block">
       <span
         className={cn(
           "mb-2 block text-sm font-semibold",
@@ -55,7 +52,7 @@ export function Input({
       <input
         id={inputId}
         className={cn(
-          "h-11 w-full rounded-xl border px-3 text-sm outline-none transition focus:ring-4",
+          "h-11 w-full rounded-xl border px-3 text-sm outline-none transition focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60",
           styles.input,
           error && styles.errorInput,
           className,

@@ -8,12 +8,16 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants = {
   primary:
-    "bg-brand-gradient text-ink shadow-glow hover:shadow-glow hover:brightness-110 active:brightness-95",
+    "border border-transparent bg-sky-500 text-white shadow-sm hover:bg-sky-600 active:bg-sky-700",
+
   secondary:
-    "border border-line bg-white/5 text-white backdrop-blur hover:border-skybrand/60 hover:bg-white/10",
-  ghost: "text-slate-200 hover:bg-white/10",
+    "border border-slate-200 bg-white text-sky-700 shadow-sm hover:border-sky-300 hover:bg-sky-50 active:bg-sky-100",
+
+  ghost:
+    "border border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200",
+
   danger:
-    "border border-red-400/40 bg-red-400/10 text-red-200 hover:bg-red-400/20",
+    "border border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100 active:bg-red-200",
 };
 
 export function Button({
@@ -26,8 +30,8 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold tracking-tight transition-all duration-150",
-        "focus-visible:ring-2 focus-visible:ring-skybrand/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ink",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition duration-150",
+        "focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
         "active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
         variants[variant],
         className,

@@ -1,7 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./Button";
 
 type PaginationProps = {
@@ -23,40 +20,20 @@ function createVisiblePages(
     );
   }
 
-  const pages: number[] = [];
-  const half = Math.floor(
-    maximumVisiblePages / 2,
-  );
+  const half = Math.floor(maximumVisiblePages / 2);
 
-  let start = Math.max(
-    currentPage - half,
+  const start = Math.max(
     0,
+    Math.min(
+      currentPage - half,
+      totalPages - maximumVisiblePages,
+    ),
   );
 
-  const end = Math.min(
-    start + maximumVisiblePages,
-    totalPages,
+  return Array.from(
+    { length: maximumVisiblePages },
+    (_, index) => start + index,
   );
-
-  if (
-    end - start <
-    maximumVisiblePages
-  ) {
-    start = Math.max(
-      end - maximumVisiblePages,
-      0,
-    );
-  }
-
-  for (
-    let pageNumber = start;
-    pageNumber < end;
-    pageNumber++
-  ) {
-    pages.push(pageNumber);
-  }
-
-  return pages;
 }
 
 export function Pagination({
@@ -68,10 +45,7 @@ export function Pagination({
     return null;
   }
 
-  const visiblePages = createVisiblePages(
-    page,
-    totalPages,
-  );
+  const visiblePages = createVisiblePages(page, totalPages);
 
   function handleChange(nextPage: number) {
     if (
@@ -86,7 +60,7 @@ export function Pagination({
   }
 
   const navigationButtonClasses =
-    "border-slate-300 bg-white text-slate-700 shadow-sm hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-100";
+    "disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-100";
 
   return (
     <nav
@@ -97,36 +71,29 @@ export function Pagination({
         type="button"
         variant="secondary"
         className={navigationButtonClasses}
-        icon={<ChevronLeft size={16} />}
+        icon={<ChevronLeft size={17} />}
         disabled={page <= 0}
         onClick={() => handleChange(page - 1)}
       >
         Anterior
       </Button>
 
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-3">
         <div className="flex flex-wrap justify-center gap-2">
           {visiblePages.map((pageNumber) => {
-            const isActive =
-              pageNumber === page;
+            const isActive = pageNumber === page;
 
             return (
               <button
                 key={pageNumber}
                 type="button"
-                onClick={() =>
-                  handleChange(pageNumber)
-                }
-                aria-current={
-                  isActive ? "page" : undefined
-                }
-                aria-label={`Ir para a página ${
-                  pageNumber + 1
-                }`}
-                className={`grid size-10 place-items-center rounded-md border text-sm font-semibold transition ${
+                onClick={() => handleChange(pageNumber)}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={`Ir para a página ${pageNumber + 1}`}
+                className={`grid size-11 place-items-center rounded-xl border text-sm font-bold shadow-sm transition focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
                   isActive
-                    ? "border-sky-400 bg-sky-400 text-[#00102D] shadow-sm"
-                    : "border-slate-300 bg-white text-slate-700 shadow-sm hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700"
+                    ? "border-sky-500 bg-sky-500 text-white"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700"
                 }`}
               >
                 {pageNumber + 1}
@@ -144,10 +111,8 @@ export function Pagination({
         type="button"
         variant="secondary"
         className={navigationButtonClasses}
-        icon={<ChevronRight size={16} />}
-        disabled={
-          page >= totalPages - 1
-        }
+        icon={<ChevronRight size={17} />}
+        disabled={page >= totalPages - 1}
         onClick={() => handleChange(page + 1)}
       >
         Próxima
