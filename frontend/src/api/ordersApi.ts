@@ -17,8 +17,19 @@ export async function getMyOrders() {
   return response.data?.content ?? [];
 }
 
-export async function getAdminOrders() {
-  const response = await apiClient.get<Page<Order>>("/orders");
+export type AdminOrderFilters = {
+  page: number;
+  size: number;
+  search?: string;
+  status?: OrderStatus | "";
+  from?: string;
+  until?: string;
+};
+
+export async function getAdminOrders(params?: AdminOrderFilters) {
+  const response = await apiClient.get<Page<Order>>("/orders", {
+    params: { ...params, status: params?.status || undefined, sort: "id,desc" },
+  });
   return response.data;
 }
 

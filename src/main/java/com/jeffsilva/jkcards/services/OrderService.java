@@ -25,6 +25,7 @@ import com.jeffsilva.jkcards.services.exceptions.ShippingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -88,6 +89,29 @@ public class OrderService {
         }
 
         return entity.map(OrderDto::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderDto> findFiltered(Long client, String search, OrderStatus status,
+                                      Instant from, Instant until, Pageable pageable) {
+        return repository.findAll((root, query, cb) -> {
+            var predicates = new ArrayList<Predicate>();
+            if (client != null) predicates.add(cb.equal(root.get("client").get("id"), client));
+            if (status != null) predicates.add(cb.equal(root.get("status"), status));
+            if (from != null) predicates.add(cb.greaterThanOrEqualTo(root.get("moment"), from));
+            if (until != null) predicates.add(cb.lessThan(root.get("moment"), until));
+            if (search != null && !search.isBlank()) {
+                String term = search.strip().toLowerCase(Locale.ROOT);
+                String escaped = term.replace("!", "!!").replace("%", "!%").replace("_", "!_");
+                var name = cb.like(cb.lower(root.get("client").get("name")), "%" + escaped + "%", '!');
+                try {
+                    predicates.add(cb.or(name, cb.equal(root.get("id"), Long.parseLong(term.replaceFirst("^#", "")))));
+                } catch (NumberFormatException ignored) {
+                    predicates.add(name);
+                }
+            }
+            return cb.and(predicates.toArray(Predicate[]::new));
+        }, pageable).map(OrderDto::new);
     }
 
     @Transactional(readOnly = true)

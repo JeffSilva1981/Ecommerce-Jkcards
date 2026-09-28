@@ -3,6 +3,7 @@ package com.jeffsilva.jkcards.controllers;
 import com.jeffsilva.jkcards.dtos.OrderCreateDto;
 import com.jeffsilva.jkcards.dtos.OrderDto;
 import com.jeffsilva.jkcards.dtos.OrderStatusDto;
+import com.jeffsilva.jkcards.entities.enums.OrderStatus;
 import com.jeffsilva.jkcards.services.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.time.Instant;
 
 @RestController
 @RequestMapping(value = "/orders")
@@ -33,9 +35,13 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<Page<OrderDto>> findAll(
             @RequestParam(value = "client", required = false) Long client,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant until,
             Pageable pageable) {
 
-        Page<OrderDto> result = service.findAll(client, pageable);
+        Page<OrderDto> result = service.findFiltered(client, search, status, from, until, pageable);
         return ResponseEntity.ok(result);
     }
 
