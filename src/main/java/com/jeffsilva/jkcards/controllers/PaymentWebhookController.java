@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.mercadopago.exceptions.MPInvalidWebhookSignatureException;
+import com.mercadopago.webhook.WebhookSignatureValidator;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
 
@@ -20,8 +23,13 @@ public class PaymentWebhookController {
     @Autowired
     private PaymentService paymentService;
 
+    @Value("${mercadopago.webhook-secret:}")
+    private String webhookSecret;
+
     @PostMapping("/webhook")
     public ResponseEntity<Void> mercadoPagoWebhook(
+            @RequestHeader(value = "x-signature", required = false) String xSignature,
+            @RequestHeader(value = "x-request-id", required = false) String xRequestId,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "data.id", required = false) Long dataId,
             @RequestBody(required = false) Map<String, Object> body
@@ -53,6 +61,27 @@ public class PaymentWebhookController {
         if (paymentId == null || paymentId <= 0) {
             log.warn("Webhook de pagamento sem identificador válido");
             return ResponseEntity.badRequest().build();
+        }
+
+        if (webhookSecret == null || webhookSecret.isBlank()) {
+            log.error("Segredo do webhook do Mercado Pago não configurado");
+            return ResponseEntity
+                    .status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .build();
+        }
+
+        try {
+            WebhookSignatureValidator.validate(
+                    xSignature,
+                    xRequestId,
+                    dataId == null ? null : dataId.toString(),
+                    webhookSecret
+            );
+        } catch (MPInvalidWebhookSignatureException e) {
+            log.warn("Assinatura inválida no webhook do Mercado Pago");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .build();
         }
 
         try {
